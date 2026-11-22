@@ -141,6 +141,17 @@
   .clear h2{font-size:34px}
   .xp{display:inline-block;background:#ffffff1c;border:2px solid #ffffff2e;border-radius:18px;padding:10px 22px;font-size:26px;margin:10px}
   #tray{color:var(--ink)}
+  .msg:not(:empty){background:#ffffff1c;border-radius:16px;padding:8px 18px;display:table;margin:10px auto}
+  .gt{margin:6px 0 14px}
+  .paper{background:#fffdf5;color:var(--ink);border:3px dashed #d9c9a3;border-radius:20px;padding:20px;font-size:26px;line-height:2.2;margin:14px 0;box-shadow:0 6px 0 #0004}
+  .paper .hint{color:#8a7a9a}
+  .clear .pet .body{animation:cheer .7s ease-in-out infinite}
+  @keyframes cheer{50%{transform:translateY(-20px) scale(1.03,.97)}}
+  .fx{position:fixed;left:50%;top:38%;z-index:310;font-size:44px;font-weight:800;color:#ffd84a;text-shadow:0 4px 0 #0006;pointer-events:none;animation:rise 1s ease-out forwards}
+  @keyframes rise{from{transform:translate(-50%,0) scale(.5);opacity:0}20%{opacity:1;transform:translate(-50%,-10px) scale(1.2)}to{transform:translate(-50%,-90px) scale(1);opacity:0}}
+  .stars.bump{animation:bump .4s}
+  @keyframes bump{40%{transform:scale(1.25);background:#ffd84a55}}
+  .paperc{position:fixed;top:-20px;width:10px;height:16px;z-index:250;animation:fall 2.4s linear forwards}
 </style>
 </head>
 <body>
@@ -270,7 +281,24 @@ const BADGES=[
 function checkBadges(){ for(const b of BADGES){ if(!stats.badges.includes(b.id) && b.c()){ stats.badges.push(b.id); saveStats(); return b; } } return null; }
 function starsText(){ return "🔥 "+stats.streak+" ⭐ "+stars; }
 function toast(html){ const d=document.createElement("div"); d.className="toast"; d.innerHTML=html; document.body.appendChild(d); setTimeout(()=>d.remove(),2400); }
-function confetti(){ const E=["🎉","⭐","✨","🎊","🌟"]; for(let i=0;i<28;i++){ const s=document.createElement("span"); s.className="conf"; s.textContent=E[i%E.length]; s.style.left=(Math.random()*95)+"vw"; s.style.animationDelay=(Math.random()*0.8)+"s"; document.body.appendChild(s); setTimeout(()=>s.remove(),3200); } }
+let _ac=null;
+function ac(){ try{ _ac=_ac||new (window.AudioContext||window.webkitAudioContext)(); if(_ac.state==="suspended") _ac.resume(); }catch(e){} return _ac; }
+function tone(hz,t0,dur,type,vol){ const a=ac(); if(!a) return; const o=a.createOscillator(),g=a.createGain(); o.type=type||"triangle"; o.frequency.value=hz; const t=a.currentTime+t0; g.gain.setValueAtTime(vol||.14,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.02); }
+const sfx={
+  ok(){ [523,659,784].forEach((h,i)=>tone(h,i*.08,.28,"triangle",.16)); tone(1047,.26,.4,"sine",.1); },
+  ng(){ tone(220,0,.18,"sine",.12); tone(185,.14,.28,"sine",.1); },
+  tap(){ tone(900,0,.05,"sine",.05); },
+  clear(){ [523,659,784,1047,784,1047,1319].forEach((h,i)=>tone(h,i*.11,.32,"triangle",.15)); },
+  pop(){ tone(1200,0,.06,"sine",.08); tone(1600,.05,.08,"sine",.06); }
+};
+document.addEventListener("pointerdown",e=>{ ac(); if(e.target.closest&&e.target.closest(".btn,.card,.node,.choice,.chip,.spk,.say,.x")) sfx.tap(); },true);
+function fx(t){ const d=document.createElement("div"); d.className="fx"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),1100); const s=$(".stars"); if(s){ s.classList.remove("bump"); void s.offsetWidth; s.classList.add("bump"); } try{ navigator.vibrate&&navigator.vibrate(25); }catch(e){} }
+function confetti(){
+  const C=["#ff6b9d","#ffd84a","#3ddc97","#4c9bff","#9b6bff","#ff9f43"];
+  for(let i=0;i<46;i++){ const d=document.createElement("i"); d.className="paperc"; d.style.left=(Math.random()*98)+"vw"; d.style.background=C[i%C.length]; d.style.animationDelay=(Math.random()*.7)+"s"; d.style.transform="rotate("+(Math.random()*360)+"deg)"; document.body.appendChild(d); setTimeout(()=>d.remove(),3300); }
+  _confetti();
+}
+function _confetti(){ const E=["🎉","⭐","✨","🎊","🌟"]; for(let i=0;i<28;i++){ const s=document.createElement("span"); s.className="conf"; s.textContent=E[i%E.length]; s.style.left=(Math.random()*95)+"vw"; s.style.animationDelay=(Math.random()*0.8)+"s"; document.body.appendChild(s); setTimeout(()=>s.remove(),3200); } }
 function chime(f){ try{ const ac=new (window.AudioContext||window.webkitAudioContext)(); (f||[660,880]).forEach((hz,i)=>{ const o=ac.createOscillator(),g=ac.createGain(); o.type="sine"; o.frequency.value=hz; const t0=ac.currentTime+i*0.12; g.gain.setValueAtTime(0.15,t0); g.gain.exponentialRampToValueAtTime(0.001,t0+0.25); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+0.3); }); }catch(e){} }
 function statusCard(){
   rollover(); const lv=levelOf(stars); const pct=Math.min(100,Math.round(stats.today/stats.goal*100));
@@ -279,7 +307,7 @@ function statusCard(){
     <button class="btn ghost" onclick="go('badges')">🏅</button></div>`;
 }
 function badgesView(){
-  $("#app").innerHTML = header("home")+`<h1 style="margin-top:14px">🏅 バッジ</h1><div class="grid">`+BADGES.map(b=>{const on=stats.badges.includes(b.id);return `<div class="card" style="${on?'':'filter:grayscale(1);opacity:.45'}"><div class="em">${b.em}</div><div class="ja" style="font-size:20px">${b.t}</div></div>`}).join("")+`</div>`;
+  $("#app").innerHTML = gameHead("🏅","バッジ")+`<div class="grid">`+BADGES.map(b=>{const on=stats.badges.includes(b.id);return `<div class="card" style="${on?'':'filter:grayscale(1);opacity:.45'}"><div class="em">${b.em}</div><div class="ja" style="font-size:20px">${b.t}</div></div>`}).join("")+`</div>`;
 }
 function addStar(){
   stars++; try{localStorage.setItem("stars",stars)}catch(e){}
@@ -293,7 +321,8 @@ function addStar(){
   saveStats();
   const now=Date.now(); combo=(now-lastStarAt<25000)?combo+1:1; lastStarAt=now;
   const s=$(".stars"); if(s) s.textContent=starsText();
-  chime();
+  fx(combo>=3?"+1 ⭐ 🔥×"+combo:"+1 ⭐");
+  if(!goalHit) sfx.ok();
   if(goalHit){ chime([523,659,784,1047]); confetti(); toast("🎯 きょうの もくひょう たっせい！<br>🔥 "+stats.streak+"にち れんぞく"); }
   else if(combo===3||combo===5||combo===10){ toast("🔥 れんぞく せいかい ×"+combo); }
   const nb=checkBadges(); if(nb) setTimeout(()=>toast(nb.em+" バッジ「"+nb.t+"」"),goalHit?2800:800);
@@ -390,6 +419,7 @@ function header(backTo){
     <div class="hud"><span class="stars">${starsText()}</span><button class="btn ghost gear" onclick="openPanel()" aria-label="おうちのひと">⚙️</button></div>
   </header>`;
 }
+function gameHead(em,t,back){ return header(back||"home")+`<div class="unit u-g gt"><span>${em} ${t}</span></div>`; }
 function lessonHead(backTo,pct){
   return `<div class="lhead"><button class="x" onclick="go('${backTo}')">✕</button><div class="pbar"><i style="width:${pct}%"></i></div><span class="stars">${starsText()}</span></div>`;
 }
@@ -398,6 +428,7 @@ function sheet(ok,tt,sb,label,cb){
   const d=document.createElement("div"); d.className="sheet "+(ok?"ok":"ng");
   d.innerHTML=`<div><div class="tt">${tt}</div>${sb?`<div class="sb">${sb}</div>`:""}</div><button class="btn">${label}</button>`;
   document.body.appendChild(d);
+  if(!ok){ sfx.ng(); try{ navigator.vibrate&&navigator.vibrate(60); }catch(e){} }
   d.querySelector("button").onclick=()=>{ d.remove(); if(cb) cb(); };
 }
 function isDone(k){ try{ return (JSON.parse(localStorage.getItem("done")||"[]")).includes(k); }catch(e){ return false; } }
@@ -519,8 +550,8 @@ function storyPlay(id){
   }
 }
 function storyEnd(S){
-  addStar(); confetti(); chime([523,659,784,1047]); doneAdd("story:"+S.id);
-  $("#app").innerHTML=`<div class="clear">${petBody(200)}<h2>${S.em} ${S.title} クリア！</h2><div class="xp">⭐ +1</div>
+  addStar(); confetti(); sfx.clear(); doneAdd("story:"+S.id);
+  $("#app").innerHTML=`<div class="clear">${petBody(200,100)}<h2>${S.em} ${S.title} クリア！</h2><div class="xp">⭐ +1</div>
     <div class="bar"><button class="btn" onclick="go('home')">つぎへ ▶</button><button class="btn ghost" onclick="storyI=0;go('story:${S.id}')">もういちど</button></div></div>`;
 }
 
@@ -557,7 +588,7 @@ function petSVG(m,hearts,sz){
    ${mouth}${acc.includes("M68 52")?acc:""}
   </g></svg></span>`;
 }
-function petBody(sz){ return petSVG(petMood(),pet.hearts,sz||90); }
+function petBody(sz,m){ return petSVG(m==null?petMood():m,pet.hearts,sz||90); }
 function petFace(m){ return ""; }
 function petTap(){
   const el=document.querySelector(".stage .pet"); if(el){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
@@ -708,7 +739,7 @@ async function petSpeak(){
 
 function petNote(){
   const L=pet.learned||{}, ks=Object.keys(L), hn=opt().hint;
-  $("#app").innerHTML=header("pet")+`<h2 style="text-align:center">📒 ことばノート</h2><p class="hint" style="text-align:center">いえた ことばが たまるよ（${ks.length}）</p><div style="max-width:560px;margin:0 auto">`+
+  $("#app").innerHTML=gameHead("📒","ことばノート","pet")+`<p class="hint" style="text-align:center">いえた ことばが たまるよ（${ks.length}）</p><div style="max-width:560px;margin:0 auto">`+
    (ks.length?ks.map((k,i)=>`<div class="scene" style="margin:8px 0;cursor:pointer" data-k="${i}">${k}${hn?`<div class="hint" style="font-size:16px;font-weight:400">${L[k].ne}</div>`:""}<small>${"⭐".repeat(Math.min(5,L[k].n))}</small></div>`).join(""):`<p style="text-align:center">まだ ありません。おせわを してみよう！</p>`)+`</div>`;
   document.querySelectorAll("[data-k]").forEach(el=>el.onclick=()=>speak(ks[el.dataset.k]));
 }
@@ -758,7 +789,7 @@ let evId=null, evI=0, evTry=0;
 const evx=s=>nm(s).split("{pet}").join(pet.name);
 function evList(){
   const hn=opt().hint;
-  $("#app").innerHTML=header("pet")+`<h2 style="text-align:center">🎒 おでかけ</h2><p class="hint" style="text-align:center">❤️ ${pet.hearts} （おせわを すると ふえるよ）</p><div style="max-width:560px;margin:0 auto">`+
+  $("#app").innerHTML=gameHead("🚌","おでかけ","pet")+`<p class="hint" style="text-align:center">❤️ ${pet.hearts} （おせわを すると ふえるよ）</p><div style="max-width:560px;margin:0 auto">`+
    EVENTS.map(e=>e.need<=pet.hearts?`<div class="scene" style="margin:10px 0;cursor:pointer" onclick="evId='${e.id}';evI=0;go('event')"><span class="big">${e.em}</span>${e.title}${hn?`<small>${e.ne}</small>`:""}</div>`
     :`<div class="scene" style="margin:10px 0;opacity:.5;cursor:default"><span class="big">🔒</span>❤️ ${e.need} で ひらく<small>${e.title}</small></div>`).join("")+`</div>`;
 }
@@ -804,7 +835,7 @@ let kanaMode="hira", kanaSel="あ";
 function toKana(c){ return kanaMode==="kata" ? String.fromCharCode(c.charCodeAt(0)+0x60) : c; }
 function nazori(){
   const chars=Array.from(HIRA);
-  $("#app").innerHTML = header("course:"+course) + `<div style="display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-items:flex-start"><div style="flex:1 1 380px;max-width:520px"><div style="text-align:center;margin:10px 0">
+  $("#app").innerHTML = gameHead("✍️","ひらがな・カタカナ") + `<div style="display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-items:flex-start"><div style="flex:1 1 380px;max-width:520px"><div style="text-align:center;margin:10px 0">
     <button class="btn ${kanaMode==='hira'?'':'ghost'}" onclick="kanaMode='hira';nazori()">ひらがな</button>
     <button class="btn ${kanaMode==='kata'?'':'ghost'}" onclick="kanaMode='kata';nazori()">カタカナ</button></div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px">`+
@@ -838,8 +869,8 @@ function manekko(){
   const pool = COURSES[course].scenes.flatMap(s=>s.items);
   const it = pool[Math.floor(Math.random()*pool.length)];
   let mine = null, recorder = null;
-  $("#app").innerHTML = header("course:"+course) +
-    `<h1 style="margin-top:14px">🎤 まねっこ</h1>
+  $("#app").innerHTML = gameHead("🎤","まねっこ") +
+    `
      <div class="grid" style="grid-template-columns:minmax(220px,360px);justify-content:center"><div class="card"><div class="em">${it.em}</div><div class="ja">${disp(it)}</div><div class="es">${hint(it)}</div></div></div>
      <div class="msg" id="msg" style="margin-top:14px"></div>
      <div class="bar">
@@ -987,8 +1018,8 @@ function ageyou(){
   const items = shuffle([g,...shuffle(GIFTS.filter(x=>x!==g)).slice(0,2)]);
   const text = p.name+"に "+g.n+"を あげよう";
   let selected = null;
-  $("#app").innerHTML = header("course:"+course) +
-    `<h1 style="margin-top:14px">🎁 あげよう</h1>
+  $("#app").innerHTML = gameHead("🎁","あげよう") +
+    `
      <div style="text-align:center;font-size:28px;font-weight:700;margin:12px 0">${text}</div>
      <div class="bar"><button class="btn ghost" id="again">🔊 もういちど</button></div>
      <div class="msg" id="msg"></div>
@@ -1063,9 +1094,8 @@ function otayori(){
   if(!missionOrder.length || missionIdx>=missionOrder.length){ missionOrder = shuffle(MISSIONS); missionIdx = 0; }
   const m = missionOrder[missionIdx];
   const h = hint(m);
-  $("#app").innerHTML = header("course:big") +
-    `<h1 style="margin-top:14px">🕵️ おたより ミッション</h1>
-     <div style="background:#fffdf5;border:3px dashed #d9c9a3;border-radius:20px;padding:20px;font-size:26px;line-height:2.2;margin:14px 0">
+  $("#app").innerHTML = gameHead("🕵️","おたより ミッション") +
+    `<div class="paper">
        📄 ${m.text}${h?`<div class="hint" style="margin-top:6px;line-height:1.4">${h}</div>`:""}
      </div>
      <div class="bar"><button class="btn ghost" id="read">🔊 よんでもらう</button></div>
@@ -1105,8 +1135,8 @@ function kyushoku(){
   const cmd = f => f.n + "を おぼんに のせてください";
   function draw(){
     const target = order[step];
-    $("#app").innerHTML = header("course:small") +
-      `<h1 style="margin-top:14px">🍱 きゅうしょく とうばん</h1>
+    $("#app").innerHTML = gameHead("🍱","きゅうしょく とうばん") +
+      `
        <div class="q"><button class="btn" id="again">👩‍🏫 🔊 せんせいの ことば</button></div>
        <div class="msg" id="msg"></div>
        <div id="tray" style="text-align:center;font-size:56px;min-height:90px;background:#fff;border-radius:24px;padding:10px;margin:10px 0;box-shadow:0 5px 0 var(--soft)">🍽️ ${tray.map(t=>t.em).join(" ")}</div>
@@ -1174,8 +1204,8 @@ function quiz(sid){
   });
 }
 function lessonClear(s){
-  doneAdd("scene:"+s.id); confetti(); chime([523,659,784,1047]); qs.sid=null;
-  $("#app").innerHTML=`<div class="clear">${petBody(200)}<h2>${s.em} ${s.title} クリア！</h2><div class="xp">⭐ +5</div>
+  doneAdd("scene:"+s.id); confetti(); sfx.clear(); qs.sid=null;
+  $("#app").innerHTML=`<div class="clear">${petBody(200,100)}<h2>${s.em} ${s.title} クリア！</h2><div class="xp">⭐ +5</div>
     <div class="bar"><button class="btn" onclick="go('home')">つぎの レッスンへ ▶</button><button class="btn ghost" onclick="go('quiz:${s.id}')">もういちど</button></div></div>`;
   speak("クリア！ すごい！");
 }
