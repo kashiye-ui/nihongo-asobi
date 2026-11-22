@@ -337,6 +337,10 @@ function render(){
     otayori();
   } else if(view==="game:ageyou"){
     ageyou();
+  } else if(view==="evlist"){
+    evList();
+  } else if(view==="event"){
+    evPlay();
   } else if(view==="petnote"){
     petNote();
   } else if(view==="pet"){
@@ -491,7 +495,7 @@ function petHome(){
     <div><input id="petName" value="${pet.name}" style="font-size:22px;text-align:center;width:150px;border:0;border-bottom:2px solid var(--accent);background:transparent" onchange="pet.name=this.value.trim()||'コロ';savePet()"></div>
     <div style="margin:8px">❤️ ${pet.hearts} <span style="display:inline-block;width:140px;height:12px;background:#eee;border-radius:6px;vertical-align:middle"><span style="display:block;height:100%;width:${m}%;background:var(--ok);border-radius:6px"></span></span></div>
     <div class="scene" style="max-width:420px;margin:8px auto;cursor:default" id="pbub">🗨️ ${hello}</div>
-    <div style="font-size:16px">きょうの おせわ ${Math.min(3,(pet.day&&pet.day.d===todayStr())?pet.day.n:0)} / 3 &nbsp; <button class="btn ghost" style="font-size:14px;padding:6px 12px" onclick="go('petnote')">📒 ことばノート ${Object.keys(pet.learned||{}).length}</button></div>
+    <div style="font-size:16px">きょうの おせわ ${Math.min(3,(pet.day&&pet.day.d===todayStr())?pet.day.n:0)} / 3 &nbsp; <button class="btn ghost" style="font-size:14px;padding:6px 12px" onclick="go('petnote')">📒 ことばノート ${Object.keys(pet.learned||{}).length}</button> <button class="btn" style="font-size:14px;padding:6px 12px" onclick="go('evlist')">🎒 おでかけ</button></div>
     <p style="font-size:18px">なにを する？</p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">`+
     Object.entries(petActs()).map(([k,a])=>`<button class="btn" style="font-size:22px" onclick="petAsk('${k}')">${a.em} ${a.label}</button>`).join("")+`</div></div>`;
@@ -540,6 +544,91 @@ function petNote(){
   $("#app").innerHTML=header("pet")+`<h2 style="text-align:center">📒 ことばノート</h2><p class="hint" style="text-align:center">いえた ことばが たまるよ（${ks.length}）</p><div style="max-width:560px;margin:0 auto">`+
    (ks.length?ks.map((k,i)=>`<div class="scene" style="margin:8px 0;cursor:pointer" data-k="${i}">${k}${hn?`<div class="hint" style="font-size:16px;font-weight:400">${L[k].ne}</div>`:""}<small>${"⭐".repeat(Math.min(5,L[k].n))}</small></div>`).join(""):`<p style="text-align:center">まだ ありません。おせわを してみよう！</p>`)+`</div>`;
   document.querySelectorAll("[data-k]").forEach(el=>el.onclick=()=>speak(ks[el.dataset.k]));
+}
+
+
+// ===== おせわ イベント：ペットと いっしょに おでかけ（❤️で ひらく）=====
+// talk=あいてが はなす / say=じぶんで いう（おんせい にんしき）
+const TK=(who,em,ja,ne)=>({t:"talk",who,em,ja,ne});
+const SY=(say,ne,keys)=>({t:"say",say,ne,keys});
+const EVENTS=[
+ {id:"asa",need:5,title:"がっこうの あさ",ne:"स्कूलको बिहान",em:"🎒",nodes:[
+  TK("ともだち","🧒","おはよう、{name}！ その いぬ、かわいいね！","शुभ प्रभात, {name}! त्यो कुकुर कति राम्रो!"),
+  SY("おはよう。ありがとう。","शुभ प्रभात। धन्यवाद।",["おはよう","ありがとう"]),
+  TK("ともだち","🧒","なまえは なんて いうの？","नाम के हो?"),
+  SY("{pet}です。","{pet} हो।",["{pet}","です"]),
+  TK("せんせい","👩‍🏫","みなさん、せきに ついて ください。","सबैजना आफ्नो ठाउँमा बस्नुहोस्।"),
+  SY("はい、わかりました。","हुन्छ, बुझें।",["はい","わかりました","分かりました"])]},
+ {id:"kyushoku",need:15,title:"きゅうしょくの じかん",ne:"खाजाको समय",em:"🍱",nodes:[
+  TK("きゅうしょくとうばん","🧑‍🍳","きょうの きゅうしょくは カレーです。","आजको खाजा करी हो।"),
+  SY("いただきます。","खाना खाने (खानुअघि)",["いただきます"]),
+  TK("ともだち","🧒","カレー、すき？","तिमीलाई करी मनपर्छ?"),
+  SY("はい、すきです。","हो, मनपर्छ।",["すき","好き","はい"]),
+  TK("きゅうしょくとうばん","🧑‍🍳","おかわり、ありますよ。","थप छ।"),
+  SY("おかわり、おねがいします。","थप दिनुहोस्, कृपया।",["おかわり","おねがい","お願い"]),
+  TK("ともだち","🧒","おいしかったね！","मीठो थियो!"),
+  SY("ごちそうさまでした。","खाना दिएकोमा धन्यवाद।",["ごちそうさま"])]},
+ {id:"asobi",need:30,title:"ともだちと あそぶ",ne:"साथीसँग खेल्ने",em:"⚽",nodes:[
+  TK("ともだち","🧒","あした、いっしょに あそばない？","भोलि सँगै खेल्दैनौँ?"),
+  SY("うん、いいよ。","हुन्छ, ठीक छ।",["いいよ","うん","いい"]),
+  TK("ともだち","🧒","なにを して あそぶ？","के खेल्ने?"),
+  SY("サッカーが したいな。","फुटबल खेल्न मन छ।",["サッカー","したい"]),
+  TK("ともだち","🧒","いいね！ じゃあ、さんじに こうえんで あおう。","राम्रो! त्यसो भए तीन बजे पार्कमा भेटौँ।"),
+  SY("わかった。またね。","बुझें। फेरि भेटौँला।",["わかった","分かった","また"]),
+  TK("ともだち","🧒","ばいばい！","बाइबाइ!"),
+  SY("ばいばい。","बाइबाइ।",["ばいばい","バイバイ"])]},
+ {id:"komatta",need:50,title:"こまった とき",ne:"समस्या परेको बेला",em:"🆘",nodes:[
+  TK("せんせい","👩‍🏫","{name}、どうしたの？ かおいろが わるいね。","{name}, के भयो? अनुहार राम्रो छैन।"),
+  SY("おなかが いたいです。","पेट दुखेको छ।",["おなか","いたい","痛い"]),
+  TK("せんせい","👩‍🏫","ほけんしつに いきましょう。ひとりで いけますか？","स्वास्थ्य कक्षमा जाऔं। एक्लै जान सक्छौ?"),
+  SY("はい、いけます。","हुन्छ, जान सक्छु।",["はい","いけます","行けます"]),
+  TK("ほけんの せんせい","👩‍⚕️","ねつを はかりましょう。いつから いたいですか？","ज्वरो नाप्नुहोस्। कहिलेदेखि दुखेको हो?"),
+  SY("さっきから いたいです。","भर्खरैदेखि दुखेको हो।",["さっき","いたい","痛い"]),
+  TK("ほけんの せんせい","👩‍⚕️","すこし やすんで いきましょう。おかあさんに れんらくしますね。","अलिकति आराम गरौं। आमालाई खबर गर्छु।"),
+  SY("ありがとうございます。","धन्यवाद।",["ありがとう"])]}
+];
+let evId=null, evI=0, evTry=0;
+const evx=s=>s.split("{name}").join(childName||"").split("{pet}").join(pet.name);
+function evList(){
+  const hn=opt().hint;
+  $("#app").innerHTML=header("pet")+`<h2 style="text-align:center">🎒 おでかけ</h2><p class="hint" style="text-align:center">❤️ ${pet.hearts} （おせわを すると ふえるよ）</p><div style="max-width:560px;margin:0 auto">`+
+   EVENTS.map(e=>e.need<=pet.hearts?`<div class="scene" style="margin:10px 0;cursor:pointer" onclick="evId='${e.id}';evI=0;go('event')"><span class="big">${e.em}</span>${e.title}${hn?`<small>${e.ne}</small>`:""}</div>`
+    :`<div class="scene" style="margin:10px 0;opacity:.5;cursor:default"><span class="big">🔒</span>❤️ ${e.need} で ひらく<small>${e.title}</small></div>`).join("")+`</div>`;
+}
+function evPlay(){
+  const E=EVENTS.find(x=>x.id===evId), n=E.nodes[evI], hn=opt().hint;
+  const head=header("evlist")+`<h2 style="text-align:center;margin:8px 0">${E.em} ${E.title}</h2><div style="text-align:center;font-size:14px;color:#888">${evI+1} / ${E.nodes.length}</div>`;
+  const next=()=>{ evI++; if(evI>=E.nodes.length) evEnd(E); else evPlay(); };
+  if(n.t==="talk"){
+    $("#app").innerHTML=head+`<div style="text-align:center;font-size:80px;margin-top:6px">${n.em} <span style="font-size:60px">${petBody()}</span></div><div style="text-align:center;font-weight:700">${n.who}</div>
+     <div class="scene" style="margin:10px auto;max-width:600px" id="line">${evx(n.ja)}${hn?`<div class="hint" style="font-size:17px;font-weight:400;margin-top:8px">${evx(n.ne)}</div>`:""}</div>
+     <div style="text-align:center"><button class="btn ghost" id="again">🔊</button> <button class="btn" id="next">つぎ ▶</button></div>`;
+    $("#line").onclick=$("#again").onclick=()=>speak(evx(n.ja)); $("#next").onclick=next; setTimeout(()=>speak(evx(n.ja)),250);
+  } else {
+    evTry=0;
+    $("#app").innerHTML=head+`<div style="text-align:center;font-size:80px;margin-top:6px">🧑‍🎓 <span style="font-size:60px">${petBody()}</span></div>
+     <p style="text-align:center;font-size:18px;margin:4px">なんて いう？</p>
+     <div class="scene" style="margin:8px auto;max-width:600px;background:#fff4d6;cursor:default">${evx(n.say)}${hn?`<div class="hint" style="font-size:17px;font-weight:400;margin-top:8px">${evx(n.ne)}</div>`:""}</div>
+     <div style="text-align:center"><button class="btn ghost" id="pm">🔊 おてほん</button> <button class="btn" id="pr" style="font-size:24px">🎤 はなす</button></div>
+     <div class="msg" id="msg"></div><div id="pfb" style="text-align:center"></div>`;
+    $("#pm").onclick=()=>speak(evx(n.say));
+    const pass=(full)=>{ $("#msg").style.color=""; $("#msg").textContent=full?"つうじたよ！":"いっしょに いえたね！"; if(full){ addStar(); pet.hearts++; savePet(); }
+      pet.learned=pet.learned||{}; const k=evx(n.say), L=pet.learned[k]||{ne:evx(n.ne),n:0}; L.n+=full?1:0; pet.learned[k]=L; savePet(); setTimeout(next,1500); };
+    $("#pr").onclick=async()=>{
+      $("#msg").style.color="var(--accent)"; $("#msg").textContent="🎤 きいてるよ…";
+      const r=await listen(n.keys.map(evx));
+      if(r.na){ $("#msg").textContent=""; $("#pfb").innerHTML=`<p class="hint">おんせい にんしきが つかえません。こえに だして いってから ボタンを おしてね。</p><button class="btn" id="pok">いえた！</button>`; $("#pok").onclick=()=>pass(true); return; }
+      if(r.ok) return pass(true);
+      evTry++;
+      if(evTry>=3){ $("#msg").style.color="#c96a25"; $("#msg").textContent="いっしょに いおう！"; speak(evx(n.say)); setTimeout(()=>pass(false),2400); return; }
+      $("#msg").style.color="#c96a25"; $("#msg").innerHTML=`ん？ もういちど！<div class="hint" style="font-size:16px">${r.heard?"きこえた: "+r.heard:"きこえなかった"}</div>`;
+    };
+  }
+}
+function evEnd(E){
+  addStar(); confetti(); chime([523,659,784,1047]);
+  $("#app").innerHTML=header("evlist")+`<div style="text-align:center;margin-top:30px"><div style="font-size:90px">🎉${petBody()}</div><h2>${E.title} クリア！</h2>
+   <button class="btn" onclick="evI=0;go('event')">もういちど</button> <button class="btn ghost" onclick="go('evlist')">ほかの おでかけ</button></div>`;
 }
 
 // ===== ゲーム：ひらがな・カタカナ なぞりがき =====
