@@ -63,7 +63,7 @@
   <label><span>おこさんの なまえ<br><span class="hint">なまえで よびかけます</span></span><input id="optName" style="font-size:17px;padding:6px;width:150px" onchange="childName=this.value.trim();try{localStorage.setItem('childName',childName)}catch(e){}"></label>
   <label><span>ぼご ヒント<br><span class="hint">母語のヒントを出す</span></span><input type="checkbox" id="optHint" checked></label>
   <label><span>ヒントの ことば<br><span class="hint">母語が決まったら増やします</span></span>
-    <select id="optLang"><option value="es">español（仮）</option></select></label>
+    <select id="optLang"><option value="ne">नेपाली（仮）</option><option value="es">español（仮）</option></select></label>
   <label><span>ごほうび チケット<br><span class="hint">試作では表示のみ</span></span><input type="checkbox" id="optTicket"></label>
   <label><span>よみあげの はやさ</span><input type="range" id="optRate" min="0.5" max="1.1" step="0.1" value="0.8"></label>
   <label><span>きょうの もくひょう（⭐）</span><select id="optGoal" onchange="stats.goal=+this.value;saveStats()"><option value="3">3</option><option value="5" selected>5</option><option value="10">10</option></select></label>
@@ -87,56 +87,56 @@
 // ja=表示(かな) / h=ふりがな付き表示 / say=読み上げ / tr=母語ヒント（言語コードごと）
 const COURSES = {
   small: {title:"ちいさい こ", sub:"5さい〜しょうがく3ねん", em:"🧸", scenes:[
-    {id:"aisatsu", title:"あいさつ", tr:{es:"Saludos"}, em:"👋", items:[
-      {ja:"おはよう", tr:{es:"Buenos días"}, em:"🌅"},
-      {ja:"ありがとう", tr:{es:"Gracias"}, em:"🙏"},
-      {ja:"ごめんなさい", tr:{es:"Perdón"}, em:"🥺"},
-      {ja:"いただきます", tr:{es:"A comer (antes de comer)"}, em:"🍚"},
-      {ja:"ごちそうさま", tr:{es:"Gracias por la comida"}, em:"😋"},
+    {id:"aisatsu", title:"あいさつ", tr:{es:"Saludos",ne:"अभिवादन"}, em:"👋", items:[
+      {ja:"おはよう", tr:{es:"Buenos días",ne:"शुभ प्रभात"}, em:"🌅"},
+      {ja:"ありがとう", tr:{es:"Gracias",ne:"धन्यवाद"}, em:"🙏"},
+      {ja:"ごめんなさい", tr:{es:"Perdón",ne:"माफ गर्नुहोस्"}, em:"🥺"},
+      {ja:"いただきます", tr:{es:"A comer (antes de comer)",ne:"खाना खाने (खानुअघि)"}, em:"🍚"},
+      {ja:"ごちそうさま", tr:{es:"Gracias por la comida",ne:"खाना दिएकोमा धन्यवाद"}, em:"😋"},
     ]},
-    {id:"komatta", title:"こまったとき", tr:{es:"Cuando necesito ayuda"}, em:"🆘", items:[
-      {ja:"トイレに いきたい", tr:{es:"Quiero ir al baño"}, em:"🚽"},
-      {ja:"いたい", tr:{es:"Me duele"}, em:"🤕"},
-      {ja:"おなかが すいた", tr:{es:"Tengo hambre"}, em:"🍙"},
-      {ja:"たすけて", tr:{es:"¡Ayuda!"}, em:"🙋"},
-      {ja:"わからない", tr:{es:"No entiendo"}, em:"❓"},
+    {id:"komatta", title:"こまったとき", tr:{es:"Cuando necesito ayuda",ne:"मद्दत चाहिएको बेला"}, em:"🆘", items:[
+      {ja:"トイレに いきたい", tr:{es:"Quiero ir al baño",ne:"मलाई शौचालय जानु छ"}, em:"🚽"},
+      {ja:"いたい", tr:{es:"Me duele",ne:"दुखिरहेको छ"}, em:"🤕"},
+      {ja:"おなかが すいた", tr:{es:"Tengo hambre",ne:"मलाई भोक लाग्यो"}, em:"🍙"},
+      {ja:"たすけて", tr:{es:"¡Ayuda!",ne:"मद्दत गर्नुहोस्!"}, em:"🙋"},
+      {ja:"わからない", tr:{es:"No entiendo",ne:"मैले बुझिनँ"}, em:"❓"},
     ]},
-    {id:"mochimono", title:"がっこうの もちもの", tr:{es:"Cosas de la escuela"}, em:"🎒", items:[
-      {ja:"かばん", tr:{es:"Mochila"}, em:"🎒"},
-      {ja:"えんぴつ", tr:{es:"Lápiz"}, em:"✏️"},
-      {ja:"ノート", tr:{es:"Cuaderno"}, em:"📓"},
-      {ja:"うわばき", tr:{es:"Zapatillas de interior"}, em:"👟"},
-      {ja:"はさみ", tr:{es:"Tijeras"}, em:"✂️"},
+    {id:"mochimono", title:"がっこうの もちもの", tr:{es:"Cosas de la escuela",ne:"स्कूलका सामान"}, em:"🎒", items:[
+      {ja:"かばん", tr:{es:"Mochila",ne:"झोला"}, em:"🎒"},
+      {ja:"えんぴつ", tr:{es:"Lápiz",ne:"पेन्सिल"}, em:"✏️"},
+      {ja:"ノート", tr:{es:"Cuaderno",ne:"कापी"}, em:"📓"},
+      {ja:"うわばき", tr:{es:"Zapatillas de interior",ne:"भित्री चप्पल"}, em:"👟"},
+      {ja:"はさみ", tr:{es:"Tijeras",ne:"कैंची"}, em:"✂️"},
     ]},
-    {id:"kyushoku", title:"きゅうしょく", tr:{es:"Almuerzo escolar"}, em:"🍱", items:[
-      {ja:"ぎゅうにゅう", tr:{es:"Leche"}, em:"🥛"},
-      {ja:"ごはん", tr:{es:"Arroz"}, em:"🍚"},
-      {ja:"おはし", tr:{es:"Palillos"}, em:"🥢"},
-      {ja:"おかわり", tr:{es:"Repetir (más comida)"}, em:"🍽️"},
-      {ja:"ごちそうさま", tr:{es:"Gracias por la comida"}, em:"😋"},
+    {id:"kyushoku", title:"きゅうしょく", tr:{es:"Almuerzo escolar",ne:"स्कूलको खाजा"}, em:"🍱", items:[
+      {ja:"ぎゅうにゅう", tr:{es:"Leche",ne:"दूध"}, em:"🥛"},
+      {ja:"ごはん", tr:{es:"Arroz",ne:"भात"}, em:"🍚"},
+      {ja:"おはし", tr:{es:"Palillos",ne:"चपस्टिक"}, em:"🥢"},
+      {ja:"おかわり", tr:{es:"Repetir (más comida)",ne:"थप खाना (फेरि लिनु)"}, em:"🍽️"},
+      {ja:"ごちそうさま", tr:{es:"Gracias por la comida",ne:"खाना दिएकोमा धन्यवाद"}, em:"😋"},
     ]},
   ]},
   big: {title:"おおきい こ", sub:"しょうがく4ねん〜ちゅうがく", em:"🎓", scenes:[
-    {id:"sansuu", title:"さんすう・すうがく", tr:{es:"Matemáticas"}, em:"🔢", items:[
-      {ja:"たす", tr:{es:"Sumar"}, em:"➕"},
-      {ja:"ひく", tr:{es:"Restar"}, em:"➖"},
-      {ja:"かける", tr:{es:"Multiplicar"}, em:"✖️"},
-      {ja:"わる", tr:{es:"Dividir"}, em:"➗"},
-      {ja:"こたえ", h:"<ruby>答<rt>こた</rt></ruby>え", say:"こたえ", tr:{es:"Respuesta"}, em:"✅"},
+    {id:"sansuu", title:"さんすう・すうがく", tr:{es:"Matemáticas",ne:"गणित"}, em:"🔢", items:[
+      {ja:"たす", tr:{es:"Sumar",ne:"जोड्नु"}, em:"➕"},
+      {ja:"ひく", tr:{es:"Restar",ne:"घटाउनु"}, em:"➖"},
+      {ja:"かける", tr:{es:"Multiplicar",ne:"गुणन गर्नु"}, em:"✖️"},
+      {ja:"わる", tr:{es:"Dividir",ne:"भाग गर्नु"}, em:"➗"},
+      {ja:"こたえ", h:"<ruby>答<rt>こた</rt></ruby>え", say:"こたえ", tr:{es:"Respuesta",ne:"उत्तर"}, em:"✅"},
     ]},
-    {id:"jugyou", title:"じゅぎょうの ことば", tr:{es:"Palabras de clase"}, em:"📚", items:[
-      {ja:"きょうかしょ", h:"<ruby>教科書<rt>きょうかしょ</rt></ruby>", say:"きょうかしょ", tr:{es:"Libro de texto"}, em:"📘"},
-      {ja:"こくばん", h:"<ruby>黒板<rt>こくばん</rt></ruby>", say:"こくばん", tr:{es:"Pizarra"}, em:"🧑‍🏫"},
-      {ja:"せんせい", h:"<ruby>先生<rt>せんせい</rt></ruby>", say:"せんせい", tr:{es:"Profesor/a"}, em:"👩‍🏫"},
-      {ja:"しつもん", h:"<ruby>質問<rt>しつもん</rt></ruby>", say:"しつもん", tr:{es:"Pregunta"}, em:"🙋"},
-      {ja:"はっぴょう", h:"<ruby>発表<rt>はっぴょう</rt></ruby>", say:"はっぴょう", tr:{es:"Presentación"}, em:"🎤"},
+    {id:"jugyou", title:"じゅぎょうの ことば", tr:{es:"Palabras de clase",ne:"कक्षाका शब्दहरू"}, em:"📚", items:[
+      {ja:"きょうかしょ", h:"<ruby>教科書<rt>きょうかしょ</rt></ruby>", say:"きょうかしょ", tr:{es:"Libro de texto",ne:"पाठ्यपुस्तक"}, em:"📘"},
+      {ja:"こくばん", h:"<ruby>黒板<rt>こくばん</rt></ruby>", say:"こくばん", tr:{es:"Pizarra",ne:"ब्ल्याकबोर्ड"}, em:"🧑‍🏫"},
+      {ja:"せんせい", h:"<ruby>先生<rt>せんせい</rt></ruby>", say:"せんせい", tr:{es:"Profesor/a",ne:"शिक्षक/शिक्षिका"}, em:"👩‍🏫"},
+      {ja:"しつもん", h:"<ruby>質問<rt>しつもん</rt></ruby>", say:"しつもん", tr:{es:"Pregunta",ne:"प्रश्न"}, em:"🙋"},
+      {ja:"はっぴょう", h:"<ruby>発表<rt>はっぴょう</rt></ruby>", say:"はっぴょう", tr:{es:"Presentación",ne:"प्रस्तुति"}, em:"🎤"},
     ]},
-    {id:"otayori", title:"がっこうの おたより", tr:{es:"Avisos de la escuela"}, em:"📄", items:[
-      {ja:"しゅくだい", h:"<ruby>宿題<rt>しゅくだい</rt></ruby>", say:"しゅくだい", tr:{es:"Tarea"}, em:"📝"},
-      {ja:"ていしゅつ", h:"<ruby>提出<rt>ていしゅつ</rt></ruby>", say:"ていしゅつ", tr:{es:"Entregar"}, em:"📤"},
-      {ja:"えんそく", h:"<ruby>遠足<rt>えんそく</rt></ruby>", say:"えんそく", tr:{es:"Excursión"}, em:"🥾"},
-      {ja:"けっせき", h:"<ruby>欠席<rt>けっせき</rt></ruby>", say:"けっせき", tr:{es:"Ausencia"}, em:"🤒"},
-      {ja:"もちもの", h:"<ruby>持<rt>も</rt></ruby>ち<ruby>物<rt>もの</rt></ruby>", say:"もちもの", tr:{es:"Qué llevar"}, em:"🎒"},
+    {id:"otayori", title:"がっこうの おたより", tr:{es:"Avisos de la escuela",ne:"स्कूलको सूचना"}, em:"📄", items:[
+      {ja:"しゅくだい", h:"<ruby>宿題<rt>しゅくだい</rt></ruby>", say:"しゅくだい", tr:{es:"Tarea",ne:"गृहकार्य"}, em:"📝"},
+      {ja:"ていしゅつ", h:"<ruby>提出<rt>ていしゅつ</rt></ruby>", say:"ていしゅつ", tr:{es:"Entregar",ne:"बुझाउनु"}, em:"📤"},
+      {ja:"えんそく", h:"<ruby>遠足<rt>えんそく</rt></ruby>", say:"えんそく", tr:{es:"Excursión",ne:"शैक्षिक भ्रमण"}, em:"🥾"},
+      {ja:"けっせき", h:"<ruby>欠席<rt>けっせき</rt></ruby>", say:"けっせき", tr:{es:"Ausencia",ne:"अनुपस्थिति"}, em:"🤒"},
+      {ja:"もちもの", h:"<ruby>持<rt>も</rt></ruby>ち<ruby>物<rt>もの</rt></ruby>", say:"もちもの", tr:{es:"Qué llevar",ne:"के ल्याउने"}, em:"🎒"},
     ]},
   ]},
 };
@@ -382,12 +382,12 @@ function manekko(){
 }
 
 // ===== にほんの ぎょうじ（ぶんか）=====
-const GYOJI = {id:"gyoji", title:"にほんの ぎょうじ", tr:{es:"Fiestas de Japón"}, em:"🎍", items:[
-  {ja:"おしょうがつ", tr:{es:"Año Nuevo"}, em:"🎍"},
-  {ja:"せつぶん", tr:{es:"Setsubun (se lanzan frijoles)"}, em:"👹"},
-  {ja:"ひなまつり", tr:{es:"Fiesta de las niñas (3 de marzo)"}, em:"🎎"},
-  {ja:"たなばた", tr:{es:"Tanabata (fiesta de las estrellas)"}, em:"🎋"},
-  {ja:"おまつり", tr:{es:"Festival"}, em:"🏮"},
+const GYOJI = {id:"gyoji", title:"にほんの ぎょうじ", tr:{es:"Fiestas de Japón",ne:"जापानका चाडपर्व"}, em:"🎍", items:[
+  {ja:"おしょうがつ", tr:{es:"Año Nuevo",ne:"नयाँ वर्ष"}, em:"🎍"},
+  {ja:"せつぶん", tr:{es:"Setsubun (se lanzan frijoles)",ne:"सेत्सुबुन (बियाँ छर्ने चाड)"}, em:"👹"},
+  {ja:"ひなまつり", tr:{es:"Fiesta de las niñas (3 de marzo)",ne:"केटीहरूको चाड (मार्च ३)"}, em:"🎎"},
+  {ja:"たなばた", tr:{es:"Tanabata (fiesta de las estrellas)",ne:"तानाबाता (ताराको चाड)"}, em:"🎋"},
+  {ja:"おまつり", tr:{es:"Festival",ne:"चाड"}, em:"🏮"},
 ]};
 COURSES.small.scenes.push(GYOJI);
 COURSES.big.scenes.push(GYOJI);
@@ -461,7 +461,7 @@ const r = (k,y)=>`<ruby>${k}<rt>${y}</rt></ruby>`;
 const MISSIONS = [
   {text:`あしたは ${r('遠足','えんそく')}です。${r('お弁当','おべんとう')}と ${r('水筒','すいとう')}を もってきてください。ゲームは もってきては いけません。`,
    say:"あしたは えんそくです。おべんとうと すいとうを もってきてください。ゲームは もってきては いけません。",
-   tr:{es:"Mañana es la excursión. Traigan almuerzo y cantimplora. No traigan videojuegos."},
+   tr:{es:"Mañana es la excursión. Traigan almuerzo y cantimplora. No traigan videojuegos.",ne:"भोलि शैक्षिक भ्रमण हो। खाजा र पानीको बोतल ल्याउनुहोस्। भिडियो गेम नल्याउनुहोस्।"},
    q:"もっていって いい ものは どれ？",
    choices:[
      {em:"🍱",t:"おべんとう",ok:1},
@@ -470,7 +470,7 @@ const MISSIONS = [
      {em:"🛏️",t:"ふとん",fun:"えんそくで ねるの？😴"}]},
   {text:`${r('宿題','しゅくだい')}は ${r('金曜日','きんようび')}に ${r('提出','ていしゅつ')}します。`,
    say:"しゅくだいは きんようびに ていしゅつします。",
-   tr:{es:"La tarea se entrega el viernes."},
+   tr:{es:"La tarea se entrega el viernes.",ne:"गृहकार्य शुक्रबार बुझाउनुहोस्।"},
    q:"しゅくだいを だすのは いつ？",
    choices:[
      {em:"📅",t:"げつようび",fun:"もういちど よんでみよう！"},
@@ -479,7 +479,7 @@ const MISSIONS = [
      {em:"📅",t:"すいようび",fun:"もういちど よんでみよう！"}]},
   {text:`おなかが ${r('痛','いた')}い ときは、${r('朝','あさ')} 8${r('時','じ')}までに ${r('学校','がっこう')}に ${r('電話','でんわ')}してください。`,
    say:"おなかが いたい ときは、あさ はちじまでに がっこうに でんわしてください。",
-   tr:{es:"Si te duele el estómago, llama a la escuela antes de las 8 de la mañana."},
+   tr:{es:"Si te duele el estómago, llama a la escuela antes de las 8 de la mañana.",ne:"पेट दुखेमा बिहान ८ बजेअघि स्कूलमा फोन गर्नुहोस्।"},
    q:"がっこうに なにを する？",
    choices:[
      {em:"📞",t:"でんわ",ok:1},
@@ -488,7 +488,7 @@ const MISSIONS = [
      {em:"🤐",t:"なにも しない",fun:"がっこうが しんぱい するよ！"}]},
   {text:`${r('明日','あした')}の ${r('給食','きゅうしょく')}は カレーです。エプロンを もってきてください。`,
    say:"あしたの きゅうしょくは カレーです。エプロンを もってきてください。",
-   tr:{es:"El almuerzo de mañana es curry. Traigan un delantal."},
+   tr:{es:"El almuerzo de mañana es curry. Traigan un delantal.",ne:"भोलिको खाजा करी हो। एप्रोन ल्याउनुहोस्।"},
    q:"あしたの きゅうしょくは なに？",
    choices:[
      {em:"🍛",t:"カレー",ok:1},
@@ -529,12 +529,12 @@ function otayori(){
 
 // ===== ゲーム：きゅうしょく とうばん（先生の指示を聞いて、おぼんに のせる）=====
 const FOODS = [
-  {n:"ぎゅうにゅう", em:"🥛", tr:{es:"Leche"}},
-  {n:"ごはん", em:"🍚", tr:{es:"Arroz"}},
-  {n:"おはし", em:"🥢", tr:{es:"Palillos"}},
-  {n:"みそしる", em:"🍲", tr:{es:"Sopa de miso"}},
-  {n:"サラダ", em:"🥗", tr:{es:"Ensalada"}},
-  {n:"くだもの", em:"🍎", tr:{es:"Fruta"}},
+  {n:"ぎゅうにゅう", em:"🥛", tr:{es:"Leche",ne:"दूध"}},
+  {n:"ごはん", em:"🍚", tr:{es:"Arroz",ne:"भात"}},
+  {n:"おはし", em:"🥢", tr:{es:"Palillos",ne:"चपस्टिक"}},
+  {n:"みそしる", em:"🍲", tr:{es:"Sopa de miso",ne:"मिसो सुप"}},
+  {n:"サラダ", em:"🥗", tr:{es:"Ensalada",ne:"सलाद"}},
+  {n:"くだもの", em:"🍎", tr:{es:"Fruta",ne:"फलफूल"}},
 ];
 function kyushoku(){
   const order = shuffle(FOODS).slice(0,3);
