@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ff8a3d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<title>にほんご あそび（試作）</title>
+<style>
+  :root{--bg:#fff7e6;--ink:#3a2e22;--accent:#ff8a3d;--ok:#34b36b;--card:#ffffff;--soft:#ffe3bd}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif}
+  #app{max-width:900px;margin:0 auto;padding:16px;min-height:100%}
+  header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  h1{font-size:clamp(20px,4vw,30px);margin:0}
+  .stars{font-size:22px;font-weight:700}
+  .btn{border:0;border-radius:24px;padding:14px 22px;font-size:20px;font-weight:700;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 4px 0 #c96a25}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #c96a25}
+  .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 3px 0 #e0cfae}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px}
+  .scene{background:var(--card);border-radius:28px;padding:24px;text-align:center;font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 5px 0 var(--soft)}
+  .scene .big{font-size:64px;display:block;margin-bottom:8px}
+  .scene small{display:block;font-size:14px;color:#8a7a66;margin-top:6px;font-weight:400}
+  .course{background:var(--card);border-radius:32px;padding:30px;text-align:center;font-size:28px;font-weight:700;cursor:pointer;box-shadow:0 6px 0 var(--soft)}
+  .course .big{font-size:80px;display:block}
+  .course small{display:block;font-size:15px;color:#8a7a66;margin-top:8px;font-weight:400}
+  .card{background:var(--card);border-radius:28px;padding:18px;text-align:center;cursor:pointer;box-shadow:0 5px 0 var(--soft);user-select:none}
+  .card .em{font-size:72px;line-height:1.1}
+  .big-course .card .em{font-size:52px}
+  .card .ja{font-size:28px;font-weight:700;margin-top:6px}
+  .card .es{font-size:16px;color:#7a6a56;margin-top:4px;min-height:22px}
+  rt{font-size:.45em;font-weight:400}
+  .card.good{outline:6px solid var(--ok)}
+  .card.bad{animation:shake .3s}
+  @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .q{text-align:center;margin:18px 0}
+  .msg{text-align:center;font-size:30px;font-weight:700;min-height:44px;color:var(--ok)}
+  .bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .panel{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px}
+  .panel.on{display:flex}
+  .panel .box{background:#fff;border-radius:24px;padding:22px;max-width:420px;width:100%;font-size:17px}
+  .panel label{display:flex;justify-content:space-between;align-items:center;margin:14px 0;gap:12px}
+  .panel input[type=checkbox]{width:28px;height:28px}
+  .panel select{font-size:17px;padding:6px}
+  .hint{font-size:13px;color:#8a7a66}
+  .tag{display:inline-block;background:var(--soft);border-radius:12px;padding:2px 10px;font-size:13px;margin-left:6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="panel" id="panel"><div class="box">
+  <h2 style="margin-top:0">おうちのひと へ</h2>
+  <label><span>ぼご ヒント<br><span class="hint">母語のヒントを出す</span></span><input type="checkbox" id="optHint" checked></label>
+  <label><span>ヒントの ことば<br><span class="hint">母語が決まったら増やします</span></span>
+    <select id="optLang"><option value="es">español（仮）</option></select></label>
+  <label><span>ごほうび チケット<br><span class="hint">試作では表示のみ</span></span><input type="checkbox" id="optTicket"></label>
+  <label><span>よみあげの はやさ</span><input type="range" id="optRate" min="0.5" max="1.1" step="0.1" value="0.8"></label>
+  <p class="hint">なれたら ヒントを オフに していきます。</p>
+  <hr>
+  <b>はげましの こえ</b> <span class="hint">（おうちのひとの こえを ろくおん。なければ サンプルの こえ）</span>
+  <div id="voiceList"></div>
+  <button class="btn ghost" id="recBtn" style="padding:8px 16px;font-size:16px" onclick="toggleRec()">🎙️ ろくおんする</button>
+  <span class="hint" id="recMsg"></span>
+  <hr>
+  <b>みぢかな ひと</b> <span class="hint">（しゃしんは この たんまつの なかだけ。ネットには おくりません）</span>
+  <div id="peopleList"></div>
+  <input id="pName" placeholder="なまえ（ママ、ともだち の なまえ など）" style="width:100%;font-size:17px;padding:6px;margin:6px 0">
+  <input id="pFile" type="file" accept="image/*" style="margin:6px 0">
+  <button class="btn ghost" style="padding:8px 16px;font-size:16px" onclick="addPerson()">ついか</button>
+  <div style="margin-top:14px"><button class="btn" onclick="closePanel()">とじる</button></div>
+</div></div>
+
+<script>
+// ===== 内容データ（母語・ペルソナ確定後はここだけ差し替える）=====
+// ja=表示(かな) / h=ふりがな付き表示 / say=読み上げ / tr=母語ヒント（言語コードごと）
+const COURSES = {
+  small: {title:"ちいさい こ", sub:"5さい〜しょうがく3ねん", em:"🧸", scenes:[
+    {id:"aisatsu", title:"あいさつ", tr:{es:"Saludos"}, em:"👋", items:[
+      {ja:"おはよう", tr:{es:"Buenos días"}, em:"🌅"},
+      {ja:"ありがとう", tr:{es:"Gracias"}, em:"🙏"},
+      {ja:"ごめんなさい", tr:{es:"Perdón"}, em:"🥺"},
+      {ja:"いただきます", tr:{es:"A comer (antes de comer)"}, em:"🍚"},
+      {ja:"ごちそうさま", tr:{es:"Gracias por la comida"}, em:"😋"},
+    ]},
+    {id:"komatta", title:"こまったとき", tr:{es:"Cuando necesito ayuda"}, em:"🆘", items:[
+      {ja:"トイレに いきたい", tr:{es:"Quiero ir al baño"}, em:"🚽"},
+      {ja:"いたい", tr:{es:"Me duele"}, em:"🤕"},
+      {ja:"おなかが すいた", tr:{es:"Tengo hambre"}, em:"🍙"},
+      {ja:"たすけて", tr:{es:"¡Ayuda!"}, em:"🙋"},
+      {ja:"わからない", tr:{es:"No entiendo"}, em:"❓"},
+    ]},
+    {id:"mochimono", title:"がっこうの もちもの", tr:{es:"Cosas de la escuela"}, em:"🎒", items:[
+      {ja:"かばん", tr:{es:"Mochila"}, em:"🎒"},
+      {ja:"えんぴつ", tr:{es:"Lápiz"}, em:"✏️"},
+      {ja:"ノート", tr:{es:"Cuaderno"}, em:"📓"},
+      {ja:"うわばき", tr:{es:"Zapatillas de interior"}, em:"👟"},
+      {ja:"はさみ", tr:{es:"Tijeras"}, em:"✂️"},
+    ]},
+    {id:"kyushoku", title:"きゅうしょく", tr:{es:"Almuerzo escolar"}, em:"🍱", items:[
+      {ja:"ぎゅうにゅう", tr:{es:"Leche"}, em:"🥛"},
+      {ja:"ごはん", tr:{es:"Arroz"}, em:"🍚"},
+      {ja:"おはし", tr:{es:"Palillos"}, em:"🥢"},
+      {ja:"おかわり", tr:{es:"Repetir (más comida)"}, em:"🍽️"},
+      {ja:"ごちそうさま", tr:{es:"Gracias por la comida"}, em:"😋"},
+    ]},
+  ]},
+  big: {title:"おおきい こ", sub:"しょうがく4ねん〜ちゅうがく", em:"🎓", scenes:[
+    {id:"sansuu", title:"さんすう・すうがく", tr:{es:"Matemáticas"}, em:"🔢", items:[
+      {ja:"たす", tr:{es:"Sumar"}, em:"➕"},
+      {ja:"ひく", tr:{es:"Restar"}, em:"➖"},
+      {ja:"かける", tr:{es:"Multiplicar"}, em:"✖️"},
+      {ja:"わる", tr:{es:"Dividir"}, em:"➗"},
+      {ja:"こたえ", h:"<ruby>答<rt>こた</rt></ruby>え", say:"こたえ", tr:{es:"Respuesta"}, em:"✅"},
+    ]},
+    {id:"jugyou", title:"じゅぎょうの ことば", tr:{es:"Palabras de clase"}, em:"📚", items:[
+      {ja:"きょうかしょ", h:"<ruby>教科書<rt>きょうかしょ</rt></ruby>", say:"きょうかしょ", tr:{es:"Libro de texto"}, em:"📘"},
+      {ja:"こくばん", h:"<ruby>黒板<rt>こくばん</rt></ruby>", say:"こくばん", tr:{es:"Pizarra"}, em:"🧑‍🏫"},
+      {ja:"せんせい", h:"<ruby>先生<rt>せんせい</rt></ruby>", say:"せんせい", tr:{es:"Profesor/a"}, em:"👩‍🏫"},
+      {ja:"しつもん", h:"<ruby>質問<rt>しつもん</rt></ruby>", say:"しつもん", tr:{es:"Pregunta"}, em:"🙋"},
+      {ja:"はっぴょう", h:"<ruby>発表<rt>はっぴょう</rt></ruby>", say:"はっぴょう", tr:{es:"Presentación"}, em:"🎤"},
+    ]},
+    {id:"otayori", title:"がっこうの おたより", tr:{es:"Avisos de la escuela"}, em:"📄", items:[
+      {ja:"しゅくだい", h:"<ruby>宿題<rt>しゅくだい</rt></ruby>", say:"しゅくだい", tr:{es:"Tarea"}, em:"📝"},
+      {ja:"ていしゅつ", h:"<ruby>提出<rt>ていしゅつ</rt></ruby>", say:"ていしゅつ", tr:{es:"Entregar"}, em:"📤"},
+      {ja:"えんそく", h:"<ruby>遠足<rt>えんそく</rt></ruby>", say:"えんそく", tr:{es:"Excursión"}, em:"🥾"},
+      {ja:"けっせき", h:"<ruby>欠席<rt>けっせき</rt></ruby>", say:"けっせき", tr:{es:"Ausencia"}, em:"🤒"},
+      {ja:"もちもの", h:"<ruby>持<rt>も</rt></ruby>ち<ruby>物<rt>もの</rt></ruby>", say:"もちもの", tr:{es:"Qué llevar"}, em:"🎒"},
+    ]},
+  ]},
+};
+
+// ===== 状態 =====
+let stars = 0, course = null, view = "home";
+try{ stars = +localStorage.getItem("stars")||0 }catch(e){}
+const $ = s=>document.querySelector(s);
+const opt = ()=>({hint:$("#optHint").checked, lang:$("#optLang").value, ticket:$("#optTicket").checked, rate:+$("#optRate").value});
+const hint = o=>{const p=opt(); return p.hint && o.tr && o.tr[p.lang] ? o.tr[p.lang] : ""};
+const disp = it=>it.h||it.ja;
+const say = it=>it.say||it.ja;
+
+function speak(t){
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang="ja-JP"; u.rate=opt().rate;
+    const v = speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("ja"));
+    if(v) u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function addStar(){
+  stars++; try{localStorage.setItem("stars",stars)}catch(e){}
+  const s=$(".stars"); if(s) s.textContent="⭐ "+stars;
+  setTimeout(cheer,1300);
+}
+
+// ===== はげましの こえ（ろくおん → この たんまつの IndexedDB に ほぞん）=====
+let voices=[], rec=null, recChunks=[], lastCheer=0, recTimer=null;
+const SAMPLE_CHEERS=["がんばれー！","すごいね！","できたね！","いいぞー！"];
+function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open("nihongo",1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("voices",{keyPath:"id"});
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function loadVoices(){
+  try{ const db=await idb();
+    voices = await new Promise((res,rej)=>{ const q=db.transaction("voices").objectStore("voices").getAll(); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); });
+  }catch(e){ voices=[]; }
+}
+async function putVoice(blob){
+  const db=await idb();
+  await new Promise((res,rej)=>{ const t=db.transaction("voices","readwrite"); t.objectStore("voices").put({id:Date.now(),blob}); t.oncomplete=res; t.onerror=()=>rej(t.error); });
+}
+async function delVoice(id){
+  try{ const db=await idb();
+    await new Promise((res,rej)=>{ const t=db.transaction("voices","readwrite"); t.objectStore("voices").delete(id); t.oncomplete=res; t.onerror=()=>rej(t.error); });
+  }catch(e){}
+  await loadVoices(); renderVoiceList();
+}
+function playVoice(v){ try{ const a=new Audio(URL.createObjectURL(v.blob)); a.play().catch(()=>{}); }catch(e){} }
+function cheer(){
+  const now=Date.now(); if(now-lastCheer<2000) return; lastCheer=now;
+  if(voices.length) playVoice(voices[Math.floor(Math.random()*voices.length)]);
+  else speak(SAMPLE_CHEERS[Math.floor(Math.random()*SAMPLE_CHEERS.length)]);
+}
+function renderVoiceList(){
+  const el=$("#voiceList"); if(!el) return;
+  el.innerHTML = voices.length ? voices.map((v,i)=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><button onclick="playVoice(voices[${i}])">▶</button><span style="flex:1">こえ ${i+1}</span><button onclick="delVoice(${v.id})">✕</button></div>`).join("") : `<div class="hint">まだ ありません（サンプルの こえが でます）</div>`;
+}
+async function toggleRec(){
+  const btn=$("#recBtn"), msg=$("#recMsg");
+  if(rec && rec.state==="recording"){ rec.stop(); return; }
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    rec=new MediaRecorder(s); recChunks=[];
+    rec.ondataavailable=e=>recChunks.push(e.data);
+    rec.onstop=async()=>{
+      clearTimeout(recTimer); s.getTracks().forEach(t=>t.stop());
+      btn.textContent="🎙️ ろくおんする"; msg.textContent="";
+      try{ await putVoice(new Blob(recChunks,{type:rec.mimeType||"audio/webm"})); await loadVoices(); renderVoiceList(); }catch(e){ msg.textContent="ほぞんできませんでした"; }
+    };
+    rec.start(); btn.textContent="⏹️ とめる"; msg.textContent="はなしてね（8びょうまで）";
+    recTimer=setTimeout(()=>{ if(rec && rec.state==="recording") rec.stop(); },8000);
+  }catch(e){ msg.textContent="マイクが つかえません（https で ひらいてね）"; }
+}
+function shuffle(a){return a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1])}
+
+// ===== 画面 =====
+function header(backTo){
+  return `<header>
+    ${backTo?`<button class="btn ghost" onclick="go('${backTo}')">← もどる</button>`:`<h1>にほんご あそび <span class="tag">試作</span></h1>`}
+    <span class="stars">⭐ ${stars}</span>
+    <button class="btn ghost" onclick="openPanel()" aria-label="おうちのひと">⚙️</button>
+  </header>`;
+}
+function go(v){
+  view=v;
+  if(v==="home") course=null;
+  else if(v.startsWith("course:")) course=v.slice(7);
+  render();
+}
+function render(){
+  const app=$("#app");
+  if(view==="home"){
+    app.innerHTML = header(null) + `<p style="text-align:center;font-size:20px;margin-top:20px">どっちかな？</p><div class="grid">` +
+      Object.entries(COURSES).map(([k,c])=>`<div class="course" onclick="go('course:${k}')"><span class="big">${c.em}</span>${c.title}<small>${c.sub}</small></div>`).join("") + `</div>`;
+  } else if(view.startsWith("course:")){
+    const c=COURSES[course];
+    app.innerHTML = header("home") + `<div class="grid">` +
+      c.scenes.map(s=>`<div class="scene" onclick="go('scene:${s.id}')"><span class="big">${s.em}</span>${s.title}${hint(s)?`<small>${hint(s)}</small>`:""}</div>`).join("") +
+      (course==="small"?`<div class="scene" style="background:#e8f7ec" onclick="go('game:kyushoku')"><span class="big">🎮</span>きゅうしょく とうばん<small>ゲーム</small></div>`:`<div class="scene" style="background:#e8f7ec" onclick="go('game:otayori')"><span class="big">🕵️</span>おたより ミッション<small>ゲーム</small></div>`) +
+      `<div class="scene" style="background:#fdeef4" onclick="go('game:ageyou')"><span class="big">🎁</span>あげよう<small>ゲーム（しゃしん）</small></div></div>`;
+  } else if(view.startsWith("scene:")){
+    const s = findScene(view.slice(6));
+    app.innerHTML = header("course:"+course) + `<h1 style="margin-top:14px">${s.em} ${s.title}</h1>
+      <div class="bar"><button class="btn" onclick="go('quiz:${s.id}')">🎧 きいて えらぶ</button></div>
+      <div class="grid ${course==='big'?'big-course':''}">`+ s.items.map((it,i)=>`<div class="card" onclick="tapCard(${i},'${s.id}')"><div class="em">${it.em}</div><div class="ja">${disp(it)}</div><div class="es">${hint(it)}</div></div>`).join("") + `</div>
+      <p class="hint" style="text-align:center">カードを タッチすると こえが でるよ</p>`;
+  } else if(view.startsWith("quiz:")){
+    quiz(view.slice(5));
+  } else if(view==="game:kyushoku"){
+    kyushoku();
+  } else if(view==="game:otayori"){
+    otayori();
+  } else if(view==="game:ageyou"){
+    ageyou();
+  }
+}
+
+// ===== みぢかな ひと（しゃしんは この たんまつの なかだけ。ネットには おくらない）=====
+let people = [{id:1,name:"ママ",em:"👩"},{id:2,name:"パパ",em:"👨"}];
+try{ const s=localStorage.getItem("people"); if(s) people=JSON.parse(s); }catch(e){}
+function savePeople(){ try{ localStorage.setItem("people",JSON.stringify(people)); }catch(e){} }
+function avatar(p,s){ return p.photo?`<img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover">`:`<span style="font-size:${s*0.8}px">${p.em||"🙂"}</span>`; }
+function renderPeopleList(){
+  $("#peopleList").innerHTML = people.map(p=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">${avatar(p,40)}<span style="flex:1">${p.name}</span><button onclick="delPerson(${p.id})">✕</button></div>`).join("");
+}
+function addPerson(){
+  const name=$("#pName").value.trim(); if(!name) return;
+  const f=$("#pFile").files[0];
+  const done=photo=>{ people.push({id:Date.now(),name,photo}); savePeople(); $("#pName").value=""; $("#pFile").value=""; renderPeopleList(); };
+  if(!f){ done(null); return; }
+  const rd=new FileReader();
+  rd.onload=()=>{ const img=new Image(); img.onload=()=>{
+      const c=document.createElement("canvas"); c.width=c.height=480;
+      const s=Math.min(img.width,img.height);
+      c.getContext("2d").drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,480,480);
+      done(c.toDataURL("image/jpeg",0.8)); };
+    img.src=rd.result; };
+  rd.readAsDataURL(f);
+}
+function delPerson(id){ people=people.filter(p=>p.id!==id); savePeople(); renderPeopleList(); }
+
+// ===== ゲーム：あげよう（「ままに きょうかしょを あげよう」）=====
+const GIFTS=[{n:"きょうかしょ",em:"📘"},{n:"えんぴつ",em:"✏️"},{n:"ノート",em:"📓"},{n:"おべんとう",em:"🍱"},{n:"ぎゅうにゅう",em:"🥛"},{n:"はさみ",em:"✂️"}];
+function ageyou(){
+  if(!people.length){ $("#app").innerHTML=header("course:"+course)+`<p style="text-align:center;font-size:20px;margin-top:30px">⚙️ から ひとを ふやしてね</p>`; return; }
+  const p = people[Math.floor(Math.random()*people.length)];
+  const g = GIFTS[Math.floor(Math.random()*GIFTS.length)];
+  const items = shuffle([g,...shuffle(GIFTS.filter(x=>x!==g)).slice(0,2)]);
+  const text = p.name+"に "+g.n+"を あげよう";
+  let selected = null;
+  $("#app").innerHTML = header("course:"+course) +
+    `<h1 style="margin-top:14px">🎁 あげよう</h1>
+     <div style="text-align:center;font-size:28px;font-weight:700;margin:12px 0">${text}</div>
+     <div class="bar"><button class="btn ghost" id="again">🔊 もういちど</button></div>
+     <div class="msg" id="msg"></div>
+     <div class="grid" id="items">`+items.map((x,i)=>`<div class="card" data-n="${x.n}"><div class="em">${x.em}</div><div class="ja">${x.n}</div></div>`).join("")+`</div>
+     <p style="text-align:center;margin:18px 0 0;font-size:18px">⬇️ だれに？</p>
+     <div class="grid" id="people">`+people.map(q=>`<div class="card" data-id="${q.id}"><div style="height:190px;display:flex;align-items:center;justify-content:center">${avatar(q,180)}</div><div class="ja">${q.name}</div></div>`).join("")+`</div>`;
+  const say1 = ()=>speak(text.replace("あげよう","あげてください"));
+  $("#again").onclick = say1;
+  setTimeout(say1, 300);
+  document.querySelectorAll("#items .card").forEach(el=>{
+    el.onclick=()=>{
+      document.querySelectorAll("#items .card").forEach(x=>x.style.outline="");
+      selected=el.dataset.n; el.style.outline="6px solid var(--accent)"; speak(selected);
+    };
+  });
+  document.querySelectorAll("#people .card").forEach(el=>{
+    el.onclick=()=>{
+      const ok = selected===g.n && +el.dataset.id===p.id;
+      if(ok){
+        el.classList.add("good"); $("#msg").style.color=""; $("#msg").textContent=p.name+"「ありがとう！」🎉";
+        speak(p.name+"、ありがとう！"); addStar(); setTimeout(ageyou, 2200);
+      } else {
+        el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
+        $("#msg").style.color="#c96a25"; $("#msg").textContent = selected? "あれ？ もういちど きいてみよう" : "さきに ものを えらんでね"; say1();
+      }
+    };
+  });
+}
+
+// ===== ゲーム：おたより ミッション（おたよりを よんで、こたえる）=====
+const r = (k,y)=>`<ruby>${k}<rt>${y}</rt></ruby>`;
+const MISSIONS = [
+  {text:`あしたは ${r('遠足','えんそく')}です。${r('お弁当','おべんとう')}と ${r('水筒','すいとう')}を もってきてください。ゲームは もってきては いけません。`,
+   say:"あしたは えんそくです。おべんとうと すいとうを もってきてください。ゲームは もってきては いけません。",
+   tr:{es:"Mañana es la excursión. Traigan almuerzo y cantimplora. No traigan videojuegos."},
+   q:"もっていって いい ものは どれ？",
+   choices:[
+     {em:"🍱",t:"おべんとう",ok:1},
+     {em:"🎮",t:"ゲーム",fun:"おたよりに「いけません」って かいてあるよ！"},
+     {em:"🐘",t:"ぞう",fun:"ぞうは バスに のれないよ！😂"},
+     {em:"🛏️",t:"ふとん",fun:"えんそくで ねるの？😴"}]},
+  {text:`${r('宿題','しゅくだい')}は ${r('金曜日','きんようび')}に ${r('提出','ていしゅつ')}します。`,
+   say:"しゅくだいは きんようびに ていしゅつします。",
+   tr:{es:"La tarea se entrega el viernes."},
+   q:"しゅくだいを だすのは いつ？",
+   choices:[
+     {em:"📅",t:"げつようび",fun:"もういちど よんでみよう！"},
+     {em:"📅",t:"きんようび",ok:1},
+     {em:"🛌",t:"にちようび",fun:"にちようびは がっこうが おやすみだよ😴"},
+     {em:"📅",t:"すいようび",fun:"もういちど よんでみよう！"}]},
+  {text:`おなかが ${r('痛','いた')}い ときは、${r('朝','あさ')} 8${r('時','じ')}までに ${r('学校','がっこう')}に ${r('電話','でんわ')}してください。`,
+   say:"おなかが いたい ときは、あさ はちじまでに がっこうに でんわしてください。",
+   tr:{es:"Si te duele el estómago, llama a la escuela antes de las 8 de la mañana."},
+   q:"がっこうに なにを する？",
+   choices:[
+     {em:"📞",t:"でんわ",ok:1},
+     {em:"✉️",t:"てがみ",fun:"てがみは つくのが おそいよ！😂"},
+     {em:"🕊️",t:"はとに たのむ",fun:"はとは まよっちゃうかも…🕊️"},
+     {em:"🤐",t:"なにも しない",fun:"がっこうが しんぱい するよ！"}]},
+  {text:`${r('明日','あした')}の ${r('給食','きゅうしょく')}は カレーです。エプロンを もってきてください。`,
+   say:"あしたの きゅうしょくは カレーです。エプロンを もってきてください。",
+   tr:{es:"El almuerzo de mañana es curry. Traigan un delantal."},
+   q:"あしたの きゅうしょくは なに？",
+   choices:[
+     {em:"🍛",t:"カレー",ok:1},
+     {em:"🍣",t:"おすし",fun:"もういちど よんでみよう！"},
+     {em:"🍕",t:"ピザ",fun:"ピザは おたよりに ないよ！"},
+     {em:"🍜",t:"ラーメン",fun:"ラーメンも ないよ！😂"}]},
+];
+let missionOrder = [], missionIdx = 0;
+function otayori(){
+  if(!missionOrder.length || missionIdx>=missionOrder.length){ missionOrder = shuffle(MISSIONS); missionIdx = 0; }
+  const m = missionOrder[missionIdx];
+  const h = hint(m);
+  $("#app").innerHTML = header("course:big") +
+    `<h1 style="margin-top:14px">🕵️ おたより ミッション</h1>
+     <div style="background:#fffdf5;border:3px dashed #d9c9a3;border-radius:20px;padding:20px;font-size:26px;line-height:2.2;margin:14px 0">
+       📄 ${m.text}${h?`<div class="hint" style="margin-top:6px;line-height:1.4">${h}</div>`:""}
+     </div>
+     <div class="bar"><button class="btn ghost" id="read">🔊 よんでもらう</button></div>
+     <div class="q" style="font-size:24px;font-weight:700">${m.q}</div>
+     <div class="msg" id="msg"></div>
+     <div class="grid big-course" id="choices">` +
+    shuffle(m.choices).map((c,i)=>`<div class="card" data-i="${m.choices.indexOf(c)}"><div class="em">${c.em}</div><div class="ja">${c.t}</div></div>`).join("") + `</div>`;
+  $("#read").onclick = ()=>speak(m.say);
+  document.querySelectorAll("#choices .card").forEach(el=>{
+    el.onclick = ()=>{
+      const c = m.choices[+el.dataset.i];
+      if(c.ok){
+        el.classList.add("good"); $("#msg").style.color=""; $("#msg").textContent="せいかい！ ミッション クリア！🎉";
+        speak("せいかい！"); addStar(); missionIdx++;
+        setTimeout(otayori, 2200);
+      } else {
+        el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
+        $("#msg").style.color="#c96a25"; $("#msg").textContent = c.fun || "もういちど！";
+      }
+    };
+  });
+}
+
+// ===== ゲーム：きゅうしょく とうばん（先生の指示を聞いて、おぼんに のせる）=====
+const FOODS = [
+  {n:"ぎゅうにゅう", em:"🥛", tr:{es:"Leche"}},
+  {n:"ごはん", em:"🍚", tr:{es:"Arroz"}},
+  {n:"おはし", em:"🥢", tr:{es:"Palillos"}},
+  {n:"みそしる", em:"🍲", tr:{es:"Sopa de miso"}},
+  {n:"サラダ", em:"🥗", tr:{es:"Ensalada"}},
+  {n:"くだもの", em:"🍎", tr:{es:"Fruta"}},
+];
+function kyushoku(){
+  const order = shuffle(FOODS).slice(0,3);
+  const tray = [];
+  let step = 0;
+  const cmd = f => f.n + "を おぼんに のせてください";
+  function draw(){
+    const target = order[step];
+    $("#app").innerHTML = header("course:small") +
+      `<h1 style="margin-top:14px">🍱 きゅうしょく とうばん</h1>
+       <div class="q"><button class="btn" id="again">👩‍🏫 🔊 せんせいの ことば</button></div>
+       <div class="msg" id="msg"></div>
+       <div id="tray" style="text-align:center;font-size:56px;min-height:90px;background:#fff;border-radius:24px;padding:10px;margin:10px 0;box-shadow:0 5px 0 var(--soft)">🍽️ ${tray.map(t=>t.em).join(" ")}</div>
+       <div class="grid" id="choices">` +
+      shuffle(FOODS).map(f=>`<div class="card" data-n="${f.n}"><div class="em">${f.em}</div><div class="es">${hint(f)}</div></div>`).join("") + `</div>`;
+    $("#again").onclick = ()=>speak(cmd(target));
+    setTimeout(()=>speak(cmd(target)), 300);
+    document.querySelectorAll("#choices .card").forEach(el=>{
+      el.onclick = ()=>{
+        if(el.dataset.n===target.n){
+          tray.push(target); step++;
+          if(step>=order.length){
+            $("#tray").textContent = "🍽️ " + tray.map(t=>t.em).join(" ");
+            $("#msg").textContent="できた！ いただきます！🎉";
+            speak("できた！ いただきます！"); addStar(); addStar();
+            setTimeout(kyushoku, 3500);
+          } else { speak("そう！"); setTimeout(draw, 700); }
+        } else {
+          el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
+          speak(cmd(target));
+        }
+      };
+    });
+  }
+  draw();
+}
+function findScene(id){ return COURSES[course].scenes.find(x=>x.id===id) }
+function tapCard(i,sid){ speak(say(findScene(sid).items[i])); }
+
+function quiz(sid){
+  const s = findScene(sid);
+  const answer = s.items[Math.floor(Math.random()*s.items.length)];
+  const others = shuffle(s.items.filter(x=>x!==answer)).slice(0,2);
+  const choices = shuffle([answer,...others]);
+  const big = course==="big";
+  $("#app").innerHTML = header("scene:"+sid) + `<div class="q"><button class="btn" id="again">🔊 もういちど きく</button></div>
+    <div class="msg" id="msg"></div>
+    <div class="grid ${big?'big-course':''}" id="choices">` + choices.map(c=>`<div class="card" data-ok="${c===answer?1:0}"><div class="em">${c.em}</div>${big?`<div class="ja">${disp(c)}</div>`:""}<div class="es">${hint(c)}</div></div>`).join("") + `</div>`;
+  $("#again").onclick=()=>speak(say(answer));
+  setTimeout(()=>speak(say(answer)),300);
+  document.querySelectorAll("#choices .card").forEach(el=>{
+    el.onclick=()=>{
+      if(el.dataset.ok==="1"){
+        el.classList.add("good"); $("#msg").textContent="すごい！"; speak("すごい！"+say(answer)); addStar();
+        setTimeout(()=>quiz(sid),1800);
+      }else{
+        el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
+        $("#msg").style.color="#c96a25"; $("#msg").textContent="もういちど！"; setTimeout(()=>{$("#msg").style.color="";},600);
+        speak(say(answer));
+      }
+    };
+  });
+}
+
+function openPanel(){renderPeopleList();renderVoiceList();$("#panel").classList.add("on")}
+function closePanel(){$("#panel").classList.remove("on"); render()}
+try{ speechSynthesis.getVoices(); }catch(e){}
+loadVoices();
+render();
+try{ if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{}); }catch(e){}
+</script>
+</body>
+</html>
