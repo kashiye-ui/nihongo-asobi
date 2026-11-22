@@ -44,6 +44,15 @@
   .panel input[type=checkbox]{width:28px;height:28px}
   .panel select{font-size:17px;padding:6px}
   .hint{font-size:13px;color:#8a7a66}
+  .status{display:flex;gap:16px;align-items:center;background:#fff;border-radius:24px;padding:14px 18px;margin-top:14px;box-shadow:0 5px 0 var(--soft)}
+  .status .lv{display:flex;gap:10px;align-items:center}
+  .status .goal{flex:1;font-weight:700}
+  .barwrap{height:16px;background:#f0e6d2;border-radius:10px;overflow:hidden;margin-top:6px}
+  .barfill{height:100%;background:linear-gradient(90deg,#ffb347,#ff8a3d);transition:width .4s}
+  .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#3a2e22;color:#fff;padding:14px 22px;border-radius:20px;font-size:22px;font-weight:700;z-index:99;text-align:center;animation:pop .3s}
+  @keyframes pop{from{transform:translateX(-50%) scale(.6);opacity:0}}
+  .conf{position:fixed;top:-40px;font-size:32px;z-index:98;animation:fall 2.2s linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
   .tag{display:inline-block;background:var(--soft);border-radius:12px;padding:2px 10px;font-size:13px;margin-left:6px}
 </style>
 </head>
@@ -56,6 +65,7 @@
     <select id="optLang"><option value="es">español（仮）</option></select></label>
   <label><span>ごほうび チケット<br><span class="hint">試作では表示のみ</span></span><input type="checkbox" id="optTicket"></label>
   <label><span>よみあげの はやさ</span><input type="range" id="optRate" min="0.5" max="1.1" step="0.1" value="0.8"></label>
+  <label><span>きょうの もくひょう（⭐）</span><select id="optGoal" onchange="stats.goal=+this.value;saveStats()"><option value="3">3</option><option value="5" selected>5</option><option value="10">10</option></select></label>
   <p class="hint">なれたら ヒントを オフに していきます。</p>
   <hr>
   <b>はげましの こえ</b> <span class="hint">（おうちのひとの こえを ろくおん。なければ サンプルの こえ）</span>
@@ -149,9 +159,56 @@ function speak(t){
     speechSynthesis.speak(u);
   }catch(e){}
 }
+// ===== ゲームせい：れんぞくにっすう・きょうの もくひょう・レベル・バッジ =====
+// 方針：まちがえても ばつは なし。おやすみ1にち までは れんぞく キープ。もくひょうを こえたら おしまいで OK。
+let stats={streak:0,last:"",today:0,todayDate:"",goal:5,badges:[]};
+try{ const s=localStorage.getItem("stats"); if(s) stats=Object.assign(stats,JSON.parse(s)); }catch(e){}
+function saveStats(){ try{ localStorage.setItem("stats",JSON.stringify(stats)); }catch(e){} }
+function todayStr(){ return new Date().toLocaleDateString("sv-SE"); }
+function rollover(){ const t=todayStr(); if(stats.todayDate!==t){ stats.todayDate=t; stats.today=0; } }
+rollover();
+let combo=0, lastStarAt=0;
+const LEVELS=[["🥚","たまご"],["🐣","ひよこ"],["🐥","ことり"],["🐤","げんき ことり"],["🦆","あひる"],["🦢","はくちょう"],["🦜","おしゃべり おうむ"],["🦅","わし"],["🐉","ドラゴン"],["🌟","スター"]];
+function levelOf(n){ const i=Math.min(Math.floor(n/15),LEVELS.length-1); return {n:i,em:LEVELS[i][0],name:LEVELS[i][1],next:(i+1)*15}; }
+const BADGES=[
+  {id:"first",em:"🌱",t:"はじめの いっぽ",c:()=>stars>=1},
+  {id:"goal",em:"🎯",t:"きょうの もくひょう",c:()=>stats.today>=stats.goal},
+  {id:"s3",em:"🔥",t:"3にち れんぞく",c:()=>stats.streak>=3},
+  {id:"s7",em:"🏆",t:"7にち れんぞく",c:()=>stats.streak>=7},
+  {id:"st50",em:"⭐",t:"⭐ 50こ",c:()=>stars>=50},
+  {id:"st100",em:"🌟",t:"⭐ 100こ",c:()=>stars>=100},
+];
+function checkBadges(){ for(const b of BADGES){ if(!stats.badges.includes(b.id) && b.c()){ stats.badges.push(b.id); saveStats(); return b; } } return null; }
+function starsText(){ return "🔥 "+stats.streak+" ⭐ "+stars; }
+function toast(html){ const d=document.createElement("div"); d.className="toast"; d.innerHTML=html; document.body.appendChild(d); setTimeout(()=>d.remove(),2400); }
+function confetti(){ const E=["🎉","⭐","✨","🎊","🌟"]; for(let i=0;i<28;i++){ const s=document.createElement("span"); s.className="conf"; s.textContent=E[i%E.length]; s.style.left=(Math.random()*95)+"vw"; s.style.animationDelay=(Math.random()*0.8)+"s"; document.body.appendChild(s); setTimeout(()=>s.remove(),3200); } }
+function chime(f){ try{ const ac=new (window.AudioContext||window.webkitAudioContext)(); (f||[660,880]).forEach((hz,i)=>{ const o=ac.createOscillator(),g=ac.createGain(); o.type="sine"; o.frequency.value=hz; const t0=ac.currentTime+i*0.12; g.gain.setValueAtTime(0.15,t0); g.gain.exponentialRampToValueAtTime(0.001,t0+0.25); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+0.3); }); }catch(e){} }
+function statusCard(){
+  rollover(); const lv=levelOf(stars); const pct=Math.min(100,Math.round(stats.today/stats.goal*100));
+  return `<div class="status"><div class="lv"><span style="font-size:44px">${lv.em}</span><div><b>${lv.name}</b><div class="hint">⭐ ${stars} / ${lv.next}</div></div></div>
+    <div class="goal"><div>🎯 きょうの もくひょう ${Math.min(stats.today,stats.goal)}/${stats.goal}</div><div class="barwrap"><div class="barfill" style="width:${pct}%"></div></div>${stats.today>=stats.goal?'<div class="hint">たっせい！ きょうは もう おわりでも OK 🌙</div>':''}</div>
+    <button class="btn ghost" onclick="go('badges')">🏅</button></div>`;
+}
+function badgesView(){
+  $("#app").innerHTML = header("home")+`<h1 style="margin-top:14px">🏅 バッジ</h1><div class="grid">`+BADGES.map(b=>{const on=stats.badges.includes(b.id);return `<div class="card" style="${on?'':'filter:grayscale(1);opacity:.45'}"><div class="em">${b.em}</div><div class="ja" style="font-size:20px">${b.t}</div></div>`}).join("")+`</div>`;
+}
 function addStar(){
   stars++; try{localStorage.setItem("stars",stars)}catch(e){}
-  const s=$(".stars"); if(s) s.textContent="⭐ "+stars;
+  rollover(); stats.today++;
+  const t=todayStr(); let goalHit=false;
+  if(stats.today===stats.goal){
+    goalHit=true;
+    const d=stats.last?Math.round((Date.parse(t+"T00:00:00")-Date.parse(stats.last+"T00:00:00"))/86400000):99;
+    stats.streak=(d===1||d===2)?stats.streak+1:1; stats.last=t;
+  }
+  saveStats();
+  const now=Date.now(); combo=(now-lastStarAt<25000)?combo+1:1; lastStarAt=now;
+  const s=$(".stars"); if(s) s.textContent=starsText();
+  chime();
+  if(goalHit){ chime([523,659,784,1047]); confetti(); toast("🎯 きょうの もくひょう たっせい！<br>🔥 "+stats.streak+"にち れんぞく"); }
+  else if(combo===3||combo===5||combo===10){ toast("🔥 れんぞく せいかい ×"+combo); }
+  const nb=checkBadges(); if(nb) setTimeout(()=>toast(nb.em+" バッジ「"+nb.t+"」"),goalHit?2800:800);
+  const lv=levelOf(stars); if(stars>1 && levelOf(stars-1).n!==lv.n) setTimeout(()=>toast("🎉 レベルアップ！ "+lv.em+" "+lv.name),1800);
   setTimeout(cheer,1300);
 }
 
@@ -208,7 +265,7 @@ function shuffle(a){return a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).ma
 function header(backTo){
   return `<header>
     ${backTo?`<button class="btn ghost" onclick="go('${backTo}')">← もどる</button>`:`<h1>にほんご あそび <span class="tag">試作</span></h1>`}
-    <span class="stars">⭐ ${stars}</span>
+    <span class="stars">${starsText()}</span>
     <button class="btn ghost" onclick="openPanel()" aria-label="おうちのひと">⚙️</button>
   </header>`;
 }
@@ -221,7 +278,7 @@ function go(v){
 function render(){
   const app=$("#app");
   if(view==="home"){
-    app.innerHTML = header(null) + `<p style="text-align:center;font-size:20px;margin-top:20px">どっちかな？</p><div class="grid">` +
+    app.innerHTML = header(null) + statusCard() + `<p style="text-align:center;font-size:20px;margin-top:20px">どっちかな？</p><div class="grid">` +
       Object.entries(COURSES).map(([k,c])=>`<div class="course" onclick="go('course:${k}')"><span class="big">${c.em}</span>${c.title}<small>${c.sub}</small></div>`).join("") + `</div>`;
   } else if(view.startsWith("course:")){
     const c=COURSES[course];
@@ -246,6 +303,8 @@ function render(){
     ageyou();
   } else if(view==="game:manekko"){
     manekko();
+  } else if(view==="badges"){
+    badgesView();
   }
 }
 
@@ -505,7 +564,7 @@ function quiz(sid){
   });
 }
 
-function openPanel(){renderPeopleList();renderVoiceList();$("#panel").classList.add("on")}
+function openPanel(){renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#panel").classList.add("on")}
 function closePanel(){$("#panel").classList.remove("on"); render()}
 try{ speechSynthesis.getVoices(); }catch(e){}
 loadVoices();
