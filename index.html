@@ -314,7 +314,7 @@ function render(){
   const app=$("#app"); document.body.classList.toggle("teen",course==="big");
   if(view==="home"){
     app.innerHTML = header(null) + statusCard() +
-      `<div style="text-align:center;margin:16px 0 4px"><button class="btn" style="font-size:24px" onclick="ohanashi()">🗨️ おはなし</button><div id="bubble" style="margin-top:10px;font-size:22px;min-height:30px"></div></div>` + `<p style="text-align:center;font-size:20px;margin-top:20px">どっちかな？</p><div class="grid">` +
+      `<div style="text-align:center;margin:16px 0 4px"><button class="btn" style="font-size:24px" onclick="ohanashi()">🗨️ おはなし</button> <button class="btn" style="font-size:24px;background:#34b36b;box-shadow:0 4px 0 #23804c" onclick="go('pet')">🐶 おせわ</button><div id="bubble" style="margin-top:10px;font-size:22px;min-height:30px"></div></div>` + `<p style="text-align:center;font-size:20px;margin-top:20px">どっちかな？</p><div class="grid">` +
       Object.entries(COURSES).map(([k,c])=>`<div class="course" onclick="go('course:${k}')"><span class="big">${c.em}</span>${c.title}<small>${c.sub}</small></div>`).join("") + `</div>`;
   } else if(view.startsWith("course:")){
     const c=COURSES[course];
@@ -337,6 +337,8 @@ function render(){
     otayori();
   } else if(view==="game:ageyou"){
     ageyou();
+  } else if(view==="pet"){
+    petHome();
   } else if(view.startsWith("story:")){
     storyPlay(view.slice(6));
   } else if(view==="game:nazori"){
@@ -419,6 +421,92 @@ function storyEnd(S){
   addStar(); confetti(); chime([523,659,784,1047]);
   $("#app").innerHTML=header("course:"+course)+`<div style="text-align:center;margin-top:30px"><div style="font-size:90px">🎉</div><h2>${S.title} クリア！</h2>
     <button class="btn" onclick="storyI=0;go('story:${S.id}')">もういちど</button> <button class="btn ghost" onclick="go('course:${course}')">ほかの ものがたり</button></div>`;
+}
+
+
+// ===== おせわゲーム：ペットに はなしかけて おせわ（おんせい にんしき）=====
+// 「つうじた＝OK」。ブラウザの おんせい にんしき(ja-JP)を つかう。ききとれない ときは やさしく もういちど。
+let pet={name:"コロ",hearts:0,mood:60,t:Date.now()};
+try{ const p=JSON.parse(localStorage.getItem("pet")||"null"); if(p) pet=p; }catch(e){}
+function savePet(){ try{ localStorage.setItem("pet",JSON.stringify(pet)); }catch(e){} }
+function petMood(){ const m=pet.mood-Math.floor((Date.now()-pet.t)/(20*60*1000)); return Math.max(30,Math.min(100,m)); }
+function petBody(){ return pet.hearts<20?"🐶":pet.hearts<60?"🐕":"🦮"; }
+function petFace(m){ return m>=70?"😄":m>=45?"🙂":"🥺"; }
+function k2h(s){ return s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[\s、。！？!?,.・ー]/g,""); }
+function listen(keys){
+  return new Promise(res=>{
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){ res({na:true}); return; }
+    let got=false; const r=new SR(); r.lang="ja-JP"; r.maxAlternatives=5; r.interimResults=false;
+    r.onresult=e=>{ got=true; const alts=Array.from(e.results[0]).map(a=>a.transcript);
+      const ok=alts.some(a=>keys.some(k=>k2h(a).includes(k2h(k)))); res({ok,heard:alts[0]}); };
+    r.onerror=e=>{ res({ok:false,err:e.error,na:e.error==="not-allowed"||e.error==="service-not-allowed"||e.error==="language-not-supported"}); };
+    r.onend=()=>{ if(!got) res({ok:false,heard:""}); };
+    try{ r.start(); setTimeout(()=>{try{r.stop()}catch(e){}},6000); }catch(e){ res({na:true}); }
+  });
+}
+function petActs(){
+  const g=greetCtx(), G={"greet-morning":["おはよう","おはよう！","शुभ प्रभात",["おはよう"]],"greet-noon":["こんにちは","こんにちは！","नमस्ते",["こんにちは"]],"greet-evening":["こんばんは","こんばんは！","शुभ सन्ध्या",["こんばんは"]]}[g];
+  return {
+   greet:{em:"👋",label:"あいさつ",v:[{cue:G[1],cueNe:G[2],say:G[0]+"。",sayNe:G[2],keys:G[3]}]},
+   gohan:{em:"🍖",label:"ごはん",v:[
+     {cue:"おなかが すいたよ〜",cueNe:"मलाई भोक लाग्यो~",say:"ごはんだよ。どうぞ。",sayNe:"खाना तयार छ। लेऊ।",keys:["ごはん","ご飯","どうぞ"]},
+     {cue:"おいしそう！",cueNe:"मीठो देखिन्छ!",say:"たくさん たべてね。",sayNe:"धेरै खाऊ है।",keys:["たべて","食べて","たくさん"]}]},
+   sanpo:{em:"🚶",label:"さんぽ",v:[
+     {cue:"さんぽに いきたいな〜",cueNe:"घुम्न जान मन छ~",say:"いっしょに いこう。",sayNe:"सँगै जाऔं।",keys:["いこう","行こう","いっしょ","一緒"]},
+     {cue:"きょうは いい てんきだね！",cueNe:"आज मौसम राम्रो छ!",say:"そうだね。きもちいいね。",sayNe:"हो नि। मजा आयो।",keys:["そうだね","きもちいい","気持ちいい","そうだ"]}]},
+   nenne:{em:"🌙",label:"ねんね",v:[
+     {cue:"ねむいよ〜",cueNe:"निद्रा लाग्यो~",say:"おやすみなさい。",sayNe:"शुभ रात्री।",keys:["おやすみ","お休み"]},
+     {cue:"ふあ〜…",cueNe:"आआ~ (हाइ)",say:"もう ねようね。",sayNe:"अब सुतौँ है।",keys:["ねよう","寝よう","もう"]}]},
+   nade:{em:"🤗",label:"なでなで",v:[
+     {cue:"なでて〜",cueNe:"मलाई सुम्सुम्याऊ~",say:"いいこ、いいこ。",sayNe:"राम्रो बच्चा।",keys:["いいこ","いい子","良い子","いい"]},
+     {cue:"うれしいな！",cueNe:"कति खुसी!",say:"だいすきだよ。",sayNe:"मलाई तिमी धेरै मन पर्छ।",keys:["だいすき","大好き","すき","好き"]}]}
+  };
+}
+let petAct=null, petTry=0, petV=null;
+function petHome(){
+  const m=petMood(), hn=opt().hint;
+  const hello=m<45?"さびしいよ〜":m<70?"あそぼう！":"げんきだよ！";
+  $("#app").innerHTML=header("home")+`<div style="text-align:center;margin-top:8px">
+    <div style="font-size:110px;line-height:1.1">${petBody()}<span style="font-size:50px">${petFace(m)}</span></div>
+    <div><input id="petName" value="${pet.name}" style="font-size:22px;text-align:center;width:150px;border:0;border-bottom:2px solid var(--accent);background:transparent" onchange="pet.name=this.value.trim()||'コロ';savePet()"></div>
+    <div style="margin:8px">❤️ ${pet.hearts} <span style="display:inline-block;width:140px;height:12px;background:#eee;border-radius:6px;vertical-align:middle"><span style="display:block;height:100%;width:${m}%;background:var(--ok);border-radius:6px"></span></span></div>
+    <div class="scene" style="max-width:420px;margin:8px auto;cursor:default" id="pbub">🗨️ ${hello}</div>
+    <p style="font-size:18px">なにを する？</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">`+
+    Object.entries(petActs()).map(([k,a])=>`<button class="btn" style="font-size:22px" onclick="petAsk('${k}')">${a.em} ${a.label}</button>`).join("")+`</div></div>`;
+  speak(hello);
+}
+function petAsk(k){
+  const a=petActs()[k]; petAct=k; petTry=0; petV=a.v[Math.floor(Math.random()*a.v.length)];
+  const hn=opt().hint, v=petV;
+  $("#app").innerHTML=header("home")+`<div style="text-align:center;margin-top:8px">
+    <div style="font-size:100px">${petBody()}</div>
+    <div class="scene" style="max-width:480px;margin:8px auto;cursor:default">🗨️ ${v.cue}${hn?`<div class="hint" style="font-size:16px;font-weight:400">${v.cueNe}</div>`:""}</div>
+    <p style="font-size:18px;margin:14px 0 4px">${pet.name}に いってみよう！</p>
+    <div class="scene" style="max-width:480px;margin:6px auto;background:#fff4d6;cursor:default">${v.say}${hn?`<div class="hint" style="font-size:16px;font-weight:400">${v.sayNe}</div>`:""}</div>
+    <div><button class="btn ghost" id="pm">🔊 おてほん</button> <button class="btn" id="pr" style="font-size:24px">🎤 はなす</button></div>
+    <div class="msg" id="msg"></div><div id="pfb"></div></div>`;
+  $("#pm").onclick=()=>speak(v.say);
+  $("#pr").onclick=petSpeak;
+  setTimeout(()=>speak(v.cue),250);
+}
+function petPass(full){
+  pet.mood=Math.min(100,petMood()+(full?15:6)); pet.t=Date.now(); if(full) pet.hearts++; savePet();
+  $("#msg").style.color=""; $("#msg").textContent=full?"つうじたよ！ 😄":"いっしょに いえたね！";
+  if(full) addStar();
+  speak((full?"ありがとう、":"いっしょに がんばったね、")+(childName||"")+"！");
+  setTimeout(petHome,2200);
+}
+async function petSpeak(){
+  const v=petV; $("#msg").style.color="var(--accent)"; $("#msg").textContent="🎤 きいてるよ…";
+  const r=await listen(v.keys);
+  if(r.na){ $("#msg").textContent=""; $("#pfb").innerHTML=`<p class="hint">この たんまつでは おんせい にんしきが つかえません。こえに だして いってから ボタンを おしてね。</p><button class="btn" id="pok">いえた！</button>`; $("#pok").onclick=()=>petPass(true); return; }
+  if(r.ok) return petPass(true);
+  petTry++;
+  if(petTry>=3){ $("#msg").style.color="#c96a25"; $("#msg").textContent="いっしょに いおう！"; await new Promise(res=>{ const u=speak(v.say); setTimeout(res,2200); }); return petPass(false); }
+  $("#msg").style.color="#c96a25"; $("#msg").innerHTML=`${petFace(40)} ん？ もういちど！<div class="hint" style="font-size:16px">${r.heard?"きこえた: "+r.heard:"きこえなかった"}</div>`;
+  speak("ん？ もういちど ゆっくり いってみて。");
 }
 
 // ===== ゲーム：ひらがな・カタカナ なぞりがき =====
