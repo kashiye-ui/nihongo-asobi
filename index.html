@@ -321,7 +321,7 @@ function render(){
     app.innerHTML = header("home") + `<div class="grid">` +
       c.scenes.map(s=>`<div class="scene" onclick="go('scene:${s.id}')"><span class="big">${s.em}</span>${s.title}${hint(s)?`<small>${hint(s)}</small>`:""}</div>`).join("") +
       (course==="small"?`<div class="scene" style="background:#e8f7ec" onclick="go('game:kyushoku')"><span class="big">🎮</span>きゅうしょく とうばん<small>ゲーム</small></div>`:`<div class="scene" style="background:#e8f7ec" onclick="go('game:otayori')"><span class="big">🕵️</span>おたより ミッション<small>ゲーム</small></div>`) +
-      `<div class="scene" style="background:#fff4d6" onclick="go('game:nazori')"><span class="big">✍️</span>ひらがな・カタカナ<small>なぞりがき</small></div><div class="scene" style="background:#fdeef4" onclick="go('game:ageyou')"><span class="big">🎁</span>あげよう<small>ゲーム（しゃしん）</small></div>
+      STORIES.map(s=>`<div class="scene" style="background:#e9f0ff" onclick="storyI=0;go('story:${s.id}')"><span class="big">${s.em}</span>📖 ${s.title}<small>${hint({tr:{ne:s.ne}})||'ものがたり'}</small></div>`).join("") + `<div class="scene" style="background:#fff4d6" onclick="go('game:nazori')"><span class="big">✍️</span>ひらがな・カタカナ<small>なぞりがき</small></div><div class="scene" style="background:#fdeef4" onclick="go('game:ageyou')"><span class="big">🎁</span>あげよう<small>ゲーム（しゃしん）</small></div>
        <div class="scene" style="background:#eef3fd" onclick="go('game:manekko')"><span class="big">🎤</span>まねっこ<small>ゲーム（じぶんの こえ）</small></div></div>`;
   } else if(view.startsWith("scene:")){
     const s = findScene(view.slice(6));
@@ -337,6 +337,8 @@ function render(){
     otayori();
   } else if(view==="game:ageyou"){
     ageyou();
+  } else if(view.startsWith("story:")){
+    storyPlay(view.slice(6));
   } else if(view==="game:nazori"){
     nazori();
   } else if(view==="game:manekko"){
@@ -346,6 +348,78 @@ function render(){
   }
 }
 
+
+
+// ===== ものがたり：はなしの なかで ことばを まなぶ =====
+// T=はなす(だれ,え,にほんご,ネパールご,[ことば])  Q=えらぶ(といかけ,ネパールご,[[にほんご,ネパールご,ただしい?,りゆう]])
+const T=(who,em,ja,ne,words)=>({t:"talk",who,em,ja,ne,words:words||[]});
+const Q=(ja,ne,ch)=>({t:"ask",ja,ne,ch:ch.map(c=>({ja:c[0],ne:c[1],ok:!!c[2],why:c[3]||""}))});
+const W=(ja,ne)=>({ja,ne});
+const STORIES=[
+ {id:"hajimete",title:"はじめての がっこう",ne:"पहिलो दिन स्कूलमा",em:"🏫",nodes:[
+  T("せんせい","👩‍🏫","おはよう、{name}！ きょうから この クラスの ともだちだよ。","शुभ प्रभात, {name}! आजदेखि तिमी यो कक्षाको साथी हौ।",[W("ともだち","साथी"),W("クラス","कक्षा")]),
+  Q("せんせいに あいさつを しよう。","शिक्षकलाई अभिवादन गरौं।",[["おはようございます。","शुभ प्रभात।",1],["ありがとうございました。","",0,"“धन्यवाद” भन्ने अर्थ हो, बिहानको अभिवादन होइन।"],["さようなら。","",0,"यो बिदाइको शब्द हो।"]]),
+  T("せんせい","👩‍🏫","じゃあ、みんなに じこしょうかいを おねがいね。","अब सबैलाई आफ्नो परिचय दिनुहोस्।",[W("じこしょうかい","आफ्नो परिचय")]),
+  Q("なんて いう？","के भन्ने?",[["{name}です。よろしく おねがいします。","म {name} हुँ। कृपया राम्रो व्यवहार गर्नुहोला।",1],["{name}です。さようなら。","",0,"परिचयमा “さようなら” (बिदाइ) भनिँदैन।"],["{name}です。いただきます。","",0,"“いただきます” खाना खानुअघि भनिन्छ।"]]),
+  T("ともだち","🧒","よろしくね！ わからない ことが あったら きいてね。","स्वागत छ! नबुझेको कुरा भए सोध्नू है।",[W("わからない","बुझिनँ / थाहा छैन"),W("きく","सोध्नु / सुन्नु")]),
+  Q("トイレに いきたい とき、せんせいに なんて いう？","शौचालय जानु परेमा शिक्षकलाई के भन्ने?",[["トイレに いっても いいですか。","शौचालय जाँदा हुन्छ?",1],["ごちそうさまでした。","",0,"यो खाना सकिएपछि भनिने शब्द हो।"],["いただきます。","",0,"यो खाना खानुअघि भनिने शब्द हो।"]]),
+  T("せんせい","👩‍🏫","いいよ。いって らっしゃい。","हुन्छ। जाऊ।",[W("いってらっしゃい","गएर आऊ")]),
+  T("ともだち","🧒","きょうの きゅうしょくは カレーだよ！ たのしみだね。","आजको खाजा करी हो! पर्खाइ छ है।",[W("きゅうしょく","स्कूलको खाजा"),W("たのしみ","उत्साहित / पर्खाइ")]),
+  Q("たべる まえに なんて いう？","खानुअघि के भन्ने?",[["いただきます。","खाना खाने (खानुअघि)",1],["ごちそうさま。","",0,"यो खाना सकिएपछि भन्ने शब्द हो।"],["いってきます。","",0,"यो घरबाट निस्कँदा भनिन्छ।"]]),
+  T("せんせい","👩‍🏫","よく できました！ はじめての がっこう、がんばったね。","राम्रो गर्‍यौ! पहिलो स्कूल दिन मेहनत गर्‍यौ।",[])]},
+ {id:"wakaranai",title:"わからない とき",ne:"नबुझेको बेला",em:"❓",nodes:[
+  T("せんせい","👩‍🏫","きょうは さんすうの じゅぎょうです。ノートを だして ください。","आज गणितको कक्षा हो। कापी निकाल्नुहोस्।",[W("じゅぎょう","कक्षा / पाठ"),W("だす","निकाल्नु")]),
+  Q("せんせいの ことばが わからない。なんて いう？","शिक्षकको कुरा बुझिएन। के भन्ने?",[["もういちど おねがいします。","फेरि भन्नुहोस्, कृपया।",1],["だいじょうぶです。","",0,"“ठीक छ” भन्ने अर्थ हो, नबुझेको जनाउँदैन।"],["さようなら。","",0,"यो बिदाइको शब्द हो।"]]),
+  T("せんせい","👩‍🏫","はい。もういちど いいます。２たす３は？","हुन्छ। फेरि भन्छु। २ जोड ३ कति?",[W("たす","जोड्नु")]),
+  Q("２ たす ３ は？","२ + ३ = ?",[["ご","पाँच (५)",1],["よん","",0,"“よん” ४ हो।"],["ろく","",0,"“ろく” ६ हो।"]]),
+  T("せんせい","👩‍🏫","せいかい！ こたえは ごです。","सही! उत्तर पाँच हो।",[W("せいかい","सही"),W("こたえ","उत्तर")]),
+  T("ともだち","🧒","しゅくだいは ぜんぶ やった？ あした ていしゅつだよ。","गृहकार्य सबै गर्‍यौ? भोलि बुझाउनुपर्छ।",[W("しゅくだい","गृहकार्य"),W("ていしゅつ","बुझाउनु")]),
+  Q("しゅくだいが おわって いない。せんせいに なんて いう？","गृहकार्य सकिएको छैन। शिक्षकलाई के भन्ने?",[["すみません、まだ できて いません。","माफ गर्नुहोस्, अझै सकेको छैन।",1],["ごちそうさまでした。","",0,"यो खाना सकिएपछि भनिने शब्द हो।"],["おはようございます。","",0,"यो बिहानको अभिवादन हो।"]]),
+  T("せんせい","👩‍🏫","わかりました。あしたまで まって いますよ。","बुझें। भोलिसम्म पर्खन्छु।",[W("まつ","पर्खनु")])]},
+ {id:"onaka",title:"おなかが いたい",ne:"पेट दुख्यो",em:"🤒",nodes:[
+  T("おかあさん","👩","{name}、おなかが いたいの？ ねつは ある？","{name}, पेट दुखेको हो? ज्वरो छ?",[W("おなか","पेट"),W("ねつ","ज्वरो")]),
+  Q("おかあさんに こたえよう。","आमालाई जवाफ दिऔं।",[["おなかが いたいです。ねつは ありません。","पेट दुखेको छ। ज्वरो छैन।",1],["おなかが すきました。","",0,"यसको अर्थ भोक लाग्यो, दुखेको होइन।"],["あたまが いたいです。","",0,"यसको अर्थ टाउको दुख्यो।"]]),
+  T("おかあさん","👩","じゃあ、がっこうに でんわを するよ。","त्यसो भए स्कूलमा फोन गर्छु।",[W("でんわ","फोन")]),
+  Q("がっこうの せんせいに いう ことば。","स्कूलका शिक्षकलाई भन्ने कुरा।",[["きょうは やすみます。","आज बिदा लिन्छु।",1],["きょうは たべます。","",0,"यसको अर्थ आज खान्छु।"],["きょうは いきます。","",0,"यसको अर्थ आज जान्छु — तर तिमी बिरामी छौ।"]]),
+  T("おいしゃさん","🧑‍⚕️","どこが いたいですか。","कहाँ दुखेको छ?",[W("どこ","कहाँ")]),
+  Q("いたい ところを おしえよう。","दुखेको ठाउँ देखाऔं।",[["ここが いたいです。","यहाँ दुखेको छ।",1],["ここが おいしいです。","",0,"यसको अर्थ यो ठाउँ मीठो छ।"],["ここが ありがとう。","",0,"वाक्य मिलेन।"]]),
+  T("おいしゃさん","🧑‍⚕️","くすりを だしますね。のんで ゆっくり やすんで ください。","औषधि दिन्छु। खाएर आराम गर्नुहोस्।",[W("くすり","औषधि"),W("のむ","खानु (औषधि/पेय)"),W("やすむ","आराम गर्नु")]),
+  T("おかあさん","👩","よく いえたね。すぐ げんきに なるよ。","राम्ररी भन्न सक्यौ। छिट्टै निको हुन्छ।",[W("げんき","स्वस्थ / ठीक")])]}
+];
+let storyI=0;
+function nm(s){ return childName? s.split("{name}").join(childName) : s.split("{name}").join(""); }
+function storyPlay(id){
+  const S=STORIES.find(s=>s.id===id), n=S.nodes[storyI], hn=opt().hint;
+  const bar=`<div style="text-align:center;font-size:14px;color:#888">${storyI+1} / ${S.nodes.length}</div>`;
+  if(n.t==="talk"){
+    $("#app").innerHTML=header("course:"+course)+`<h2 style="text-align:center;margin:8px 0">${S.em} ${S.title}</h2>${bar}
+     <div style="text-align:center;font-size:90px;margin-top:8px">${n.em}</div>
+     <div style="text-align:center;font-weight:700">${n.who}</div>
+     <div class="scene" style="margin:10px auto;max-width:640px;cursor:pointer" id="line">${nm(n.ja)}${hn?`<div class="hint" style="font-size:17px;font-weight:400;margin-top:8px">${nm(n.ne)}</div>`:""}</div>
+     <div style="text-align:center">${n.words.map((w,i)=>`<button class="btn ghost" style="font-size:16px;margin:3px" data-w="${i}">🔤 ${w.ja}${hn?" = "+w.ne:""}</button>`).join("")}</div>
+     <div style="text-align:center;margin-top:14px"><button class="btn ghost" id="again">🔊</button> <button class="btn" id="next">つぎ ▶</button></div>`;
+    $("#line").onclick=$("#again").onclick=()=>speak(nm(n.ja));
+    document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>speak(n.words[b.dataset.w].ja));
+    $("#next").onclick=()=>{ storyI++; if(storyI>=S.nodes.length) storyEnd(S); else storyPlay(id); };
+    setTimeout(()=>speak(nm(n.ja)),250);
+  } else {
+    $("#app").innerHTML=header("course:"+course)+`<h2 style="text-align:center;margin:8px 0">${S.em} ${S.title}</h2>${bar}
+     <div class="scene" style="margin:14px auto;max-width:640px;background:#fff4d6;cursor:default">🧑‍🎓 ${nm(n.ja)}${hn?`<div class="hint" style="font-size:17px;font-weight:400;margin-top:8px">${nm(n.ne)}</div>`:""}</div>
+     <div class="msg" id="msg"></div><div id="choices" style="max-width:640px;margin:0 auto">`+
+     shuffle(n.ch).map((c,i)=>`<div class="scene" style="margin:10px 0;cursor:pointer" data-i="${n.ch.indexOf(c)}">${nm(c.ja)}${hn&&c.ne?`<div class="hint" style="font-size:16px;font-weight:400;margin-top:6px">${nm(c.ne)}</div>`:""}</div>`).join("")+`</div>`;
+    setTimeout(()=>speak(nm(n.ja)),250);
+    document.querySelectorAll("#choices .scene").forEach(el=>{ el.onclick=()=>{
+      const c=n.ch[el.dataset.i]; speak(nm(c.ja));
+      if(c.ok){ el.classList.add("good"); $("#msg").textContent="すごい！"; addStar(); setTimeout(()=>{ storyI++; if(storyI>=S.nodes.length) storyEnd(S); else storyPlay(id); },1600); }
+      else { $("#msg").style.color="#c96a25"; $("#msg").innerHTML="もういちど！"+(hn&&c.why?`<div class="hint" style="font-size:16px">${c.why}</div>`:""); }
+    };});
+  }
+}
+function storyEnd(S){
+  addStar(); confetti(); chime([523,659,784,1047]);
+  $("#app").innerHTML=header("course:"+course)+`<div style="text-align:center;margin-top:30px"><div style="font-size:90px">🎉</div><h2>${S.title} クリア！</h2>
+    <button class="btn" onclick="storyI=0;go('story:${S.id}')">もういちど</button> <button class="btn ghost" onclick="go('course:${course}')">ほかの ものがたり</button></div>`;
+}
 
 // ===== ゲーム：ひらがな・カタカナ なぞりがき =====
 const HIRA="あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん";
