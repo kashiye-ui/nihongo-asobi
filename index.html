@@ -327,7 +327,7 @@ function render(){
     const s = findScene(view.slice(6));
     app.innerHTML = header("course:"+course) + `<h1 style="margin-top:14px">${s.em} ${s.title}</h1>
       <div class="bar"><button class="btn" onclick="go('quiz:${s.id}')">🎧 きいて えらぶ</button></div>
-      <div class="grid ${course==='big'?'big-course':''}">`+ s.items.map((it,i)=>`<div class="card" onclick="tapCard(${i},'${s.id}')"><div class="em">${it.em}</div><div class="ja">${disp(it)}</div><div class="es">${hint(it)}</div></div>`).join("") + `</div>
+      <div class="grid ${course==='big'?'big-course':''}">`+ s.items.map((it,i)=>`<div class="card" onclick="tapCard(${i},'${s.id}')"><div class="em">${it.em}</div><div class="ja">${disp(it)}</div><div class="es" onclick="event.stopPropagation();speakHint(this.textContent)">${hint(it)}</div></div>`).join("") + `</div>
       <p class="hint" style="text-align:center">カードを タッチすると こえが でるよ</p>`;
   } else if(view.startsWith("quiz:")){
     quiz(view.slice(5));
@@ -429,6 +429,44 @@ const GYOJI = {id:"gyoji", title:"にほんの ぎょうじ", tr:{es:"Fiestas de
 ]};
 COURSES.small.scenes.push(GYOJI);
 COURSES.big.scenes.push(GYOJI);
+COURSES.big.scenes.splice(4,0,...[
+{id:"kanji1",title:"かんじ：かず",tr:{ne:"कान्जी: अङ्क"},em:"🔟",items:[
+      {ja:"いち",h:"<ruby>一<rt>いち</rt></ruby>",say:"いち",tr:{ne:"एक (१)"},em:"1️⃣"},
+      {ja:"に",h:"<ruby>二<rt>に</rt></ruby>",say:"に",tr:{ne:"दुई (२)"},em:"2️⃣"},
+      {ja:"さん",h:"<ruby>三<rt>さん</rt></ruby>",say:"さん",tr:{ne:"तीन (३)"},em:"3️⃣"},
+      {ja:"よん",h:"<ruby>四<rt>よん</rt></ruby>",say:"よん",tr:{ne:"चार (४)"},em:"4️⃣"},
+      {ja:"ご",h:"<ruby>五<rt>ご</rt></ruby>",say:"ご",tr:{ne:"पाँच (५)"},em:"5️⃣"},
+      {ja:"ろく",h:"<ruby>六<rt>ろく</rt></ruby>",say:"ろく",tr:{ne:"छ (६)"},em:"6️⃣"},
+      {ja:"なな",h:"<ruby>七<rt>なな</rt></ruby>",say:"なな",tr:{ne:"सात (७)"},em:"7️⃣"},
+      {ja:"はち",h:"<ruby>八<rt>はち</rt></ruby>",say:"はち",tr:{ne:"आठ (८)"},em:"8️⃣"},
+      {ja:"きゅう",h:"<ruby>九<rt>きゅう</rt></ruby>",say:"きゅう",tr:{ne:"नौ (९)"},em:"9️⃣"},
+      {ja:"じゅう",h:"<ruby>十<rt>じゅう</rt></ruby>",say:"じゅう",tr:{ne:"दश (१०)"},em:"🔟"},
+    ]},
+{id:"kanji2",title:"かんじ：しぜん",tr:{ne:"कान्जी: प्रकृति"},em:"🏞️",items:[
+      {ja:"にち",h:"<ruby>日<rt>にち</rt></ruby>",say:"にち",tr:{ne:"दिन / सूर्य (にちようび)"},em:"☀️"},
+      {ja:"つき",h:"<ruby>月<rt>つき</rt></ruby>",say:"つき",tr:{ne:"चन्द्रमा / महिना"},em:"🌙"},
+      {ja:"ひ",h:"<ruby>火<rt>ひ</rt></ruby>",say:"ひ",tr:{ne:"आगो"},em:"🔥"},
+      {ja:"みず",h:"<ruby>水<rt>みず</rt></ruby>",say:"みず",tr:{ne:"पानी"},em:"💧"},
+      {ja:"き",h:"<ruby>木<rt>き</rt></ruby>",say:"き",tr:{ne:"रूख"},em:"🌳"},
+      {ja:"やま",h:"<ruby>山<rt>やま</rt></ruby>",say:"やま",tr:{ne:"पहाड"},em:"⛰️"},
+      {ja:"かわ",h:"<ruby>川<rt>かわ</rt></ruby>",say:"かわ",tr:{ne:"खोला / नदी"},em:"🏞️"},
+      {ja:"そら",h:"<ruby>空<rt>そら</rt></ruby>",say:"そら",tr:{ne:"आकाश"},em:"☁️"},
+      {ja:"はな",h:"<ruby>花<rt>はな</rt></ruby>",say:"はな",tr:{ne:"फूल"},em:"🌸"},
+      {ja:"あめ",h:"<ruby>雨<rt>あめ</rt></ruby>",say:"あめ",tr:{ne:"पानी (वर्षा)"},em:"🌧️"},
+    ]},
+{id:"kanji3",title:"かんじ：がっこう",tr:{ne:"कान्जी: स्कूल"},em:"🏫",items:[
+      {ja:"がっこう",h:"<ruby>学<rt>がっ</rt></ruby><ruby>校<rt>こう</rt></ruby>",say:"がっこう",tr:{ne:"स्कूल"},em:"🏫"},
+      {ja:"ともだち",h:"<ruby>友<rt>とも</rt></ruby>だち",say:"ともだち",tr:{ne:"साथी"},em:"🧑‍🤝‍🧑"},
+      {ja:"ほん",h:"<ruby>本<rt>ほん</rt></ruby>",say:"ほん",tr:{ne:"किताब"},em:"📖"},
+      {ja:"こくご",h:"<ruby>国語<rt>こくご</rt></ruby>",say:"こくご",tr:{ne:"जापानी भाषा (विषय)"},em:"📕"},
+      {ja:"さんすう",h:"<ruby>算数<rt>さんすう</rt></ruby>",say:"さんすう",tr:{ne:"गणित"},em:"🔢"},
+      {ja:"やすみ",h:"<ruby>休<rt>やす</rt></ruby>み",say:"やすみ",tr:{ne:"बिदा"},em:"🛌"},
+      {ja:"たべる",h:"<ruby>食<rt>た</rt></ruby>べる",say:"たべる",tr:{ne:"खानु"},em:"🍽️"},
+      {ja:"みる",h:"<ruby>見<rt>み</rt></ruby>る",say:"みる",tr:{ne:"हेर्नु"},em:"👀"},
+      {ja:"いく",h:"<ruby>行<rt>い</rt></ruby>く",say:"いく",tr:{ne:"जानु"},em:"🚶"},
+      {ja:"おおきい",h:"<ruby>大<rt>おお</rt></ruby>きい",say:"おおきい",tr:{ne:"ठूलो"},em:"🐘"},
+    ]}
+]);
 COURSES.big.scenes.unshift(...[
 {id:"rika",title:"りか",tr:{ne:"विज्ञान"},em:"🔬",items:[
       {ja:"じっけん",h:"<ruby>実験<rt>じっけん</rt></ruby>",say:"じっけん",tr:{ne:"प्रयोग"},em:"🧪"},
@@ -645,6 +683,12 @@ function kyushoku(){
   draw();
 }
 function findScene(id){ return COURSES[course].scenes.find(x=>x.id===id) }
+function speakHint(t){
+  if(!t) return; const L={ne:"ne-NP",es:"es-ES"}[opt().lang]||"ne-NP";
+  try{ const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.replace("_","-").toLowerCase().startsWith(L.slice(0,2)));
+    if(!v){ toast("この たんまつに この ことばの こえが ありません"); return; }
+    speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang=L; u.voice=v; speechSynthesis.speak(u); }catch(e){}
+}
 function tapCard(i,sid){ speak(say(findScene(sid).items[i])); }
 
 function quiz(sid){
