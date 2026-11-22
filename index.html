@@ -17,6 +17,7 @@
   .stars{font-size:22px;font-weight:700}
   .btn{border:0;border-radius:24px;padding:14px 22px;font-size:20px;font-weight:700;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 4px 0 #c96a25}
   .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #c96a25}
+  body.teen{--bg:#eef3fb;--soft:#cfdcf0;--accent:#3b82c4} .teen .btn{box-shadow:0 4px 0 #285f93} .teen .btn.ghost{box-shadow:0 3px 0 #b9c8e0}
   .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 3px 0 #e0cfae}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px}
   .scene{background:var(--card);border-radius:28px;padding:24px;text-align:center;font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 5px 0 var(--soft)}
@@ -310,7 +311,7 @@ function go(v){
   render();
 }
 function render(){
-  const app=$("#app");
+  const app=$("#app"); document.body.classList.toggle("teen",course==="big");
   if(view==="home"){
     app.innerHTML = header(null) + statusCard() +
       `<div style="text-align:center;margin:16px 0 4px"><button class="btn" style="font-size:24px" onclick="ohanashi()">🗨️ おはなし</button><div id="bubble" style="margin-top:10px;font-size:22px;min-height:30px"></div></div>` + `<p style="text-align:center;font-size:20px;margin-top:20px">どっちかな？</p><div class="grid">` +
@@ -320,7 +321,7 @@ function render(){
     app.innerHTML = header("home") + `<div class="grid">` +
       c.scenes.map(s=>`<div class="scene" onclick="go('scene:${s.id}')"><span class="big">${s.em}</span>${s.title}${hint(s)?`<small>${hint(s)}</small>`:""}</div>`).join("") +
       (course==="small"?`<div class="scene" style="background:#e8f7ec" onclick="go('game:kyushoku')"><span class="big">🎮</span>きゅうしょく とうばん<small>ゲーム</small></div>`:`<div class="scene" style="background:#e8f7ec" onclick="go('game:otayori')"><span class="big">🕵️</span>おたより ミッション<small>ゲーム</small></div>`) +
-      `<div class="scene" style="background:#fdeef4" onclick="go('game:ageyou')"><span class="big">🎁</span>あげよう<small>ゲーム（しゃしん）</small></div>
+      `<div class="scene" style="background:#fff4d6" onclick="go('game:nazori')"><span class="big">✍️</span>ひらがな・カタカナ<small>なぞりがき</small></div><div class="scene" style="background:#fdeef4" onclick="go('game:ageyou')"><span class="big">🎁</span>あげよう<small>ゲーム（しゃしん）</small></div>
        <div class="scene" style="background:#eef3fd" onclick="go('game:manekko')"><span class="big">🎤</span>まねっこ<small>ゲーム（じぶんの こえ）</small></div></div>`;
   } else if(view.startsWith("scene:")){
     const s = findScene(view.slice(6));
@@ -336,11 +337,48 @@ function render(){
     otayori();
   } else if(view==="game:ageyou"){
     ageyou();
+  } else if(view==="game:nazori"){
+    nazori();
   } else if(view==="game:manekko"){
     manekko();
   } else if(view==="badges"){
     badgesView();
   }
+}
+
+
+// ===== ゲーム：ひらがな・カタカナ なぞりがき =====
+const HIRA="あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん";
+let kanaMode="hira", kanaSel="あ";
+function toKana(c){ return kanaMode==="kata" ? String.fromCharCode(c.charCodeAt(0)+0x60) : c; }
+function nazori(){
+  const chars=Array.from(HIRA);
+  $("#app").innerHTML = header("course:"+course) + `<div style="text-align:center;margin:10px 0">
+    <button class="btn ${kanaMode==='hira'?'':'ghost'}" onclick="kanaMode='hira';nazori()">ひらがな</button>
+    <button class="btn ${kanaMode==='kata'?'':'ghost'}" onclick="kanaMode='kata';nazori()">カタカナ</button></div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px">`+
+    chars.map(c=>`<button class="btn ${toKana(c)===toKana(kanaSel)?'':'ghost'}" style="font-size:22px;padding:8px 12px" onclick="kanaSel='${c}';nazori()">${toKana(c)}</button>`).join("")+`</div>
+    <div style="position:relative;width:min(80vw,320px);height:min(80vw,320px);margin:0 auto;background:#fff;border-radius:24px;box-shadow:0 5px 0 var(--soft)">
+      <canvas id="cg" width="640" height="640" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+      <canvas id="cd" width="640" height="640" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas></div>
+    <div style="text-align:center;margin-top:12px"><button class="btn ghost" id="nz-say">🔊</button> <button class="btn ghost" id="nz-clr">けす</button> <button class="btn" id="nz-ok">できた！</button></div>
+    <div class="msg" id="msg"></div>`;
+  const ch=toKana(kanaSel);
+  const g=$("#cg").getContext("2d"); g.font="500px 'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif"; g.textAlign="center"; g.textBaseline="middle"; g.fillStyle="#e6e0d6"; g.fillText(ch,320,350);
+  const cv=$("#cd"), d=cv.getContext("2d"); d.lineWidth=26; d.lineCap="round"; d.lineJoin="round"; d.strokeStyle="#3a2e22";
+  let down=false, ink=0;
+  const pt=e=>{const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*640/r.width,(e.clientY-r.top)*640/r.height]};
+  cv.onpointerdown=e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=pt(e);d.beginPath();d.moveTo(x,y);d.lineTo(x+0.1,y);d.stroke();ink++};
+  cv.onpointermove=e=>{if(!down)return;const [x,y]=pt(e);d.lineTo(x,y);d.stroke();ink++};
+  cv.onpointerup=cv.onpointercancel=()=>{down=false};
+  $("#nz-clr").onclick=()=>{d.clearRect(0,0,640,640);ink=0};
+  $("#nz-say").onclick=()=>speak(ch);
+  $("#nz-ok").onclick=()=>{
+    if(ink<8){ $("#msg").textContent="なぞって みよう！"; return; }
+    $("#msg").textContent="じょうず！"; addStar();
+    const i=(Array.from(HIRA).indexOf(kanaSel)+1)%HIRA.length; setTimeout(()=>{kanaSel=Array.from(HIRA)[i];nazori()},1500);
+  };
+  speak(ch);
 }
 
 // ===== ゲーム：まねっこ（おてほんを きいて、じぶんの こえで いう → きいて くらべる）=====
@@ -391,6 +429,41 @@ const GYOJI = {id:"gyoji", title:"にほんの ぎょうじ", tr:{es:"Fiestas de
 ]};
 COURSES.small.scenes.push(GYOJI);
 COURSES.big.scenes.push(GYOJI);
+COURSES.big.scenes.unshift(...[
+{id:"rika",title:"りか",tr:{ne:"विज्ञान"},em:"🔬",items:[
+      {ja:"じっけん",h:"<ruby>実験<rt>じっけん</rt></ruby>",say:"じっけん",tr:{ne:"प्रयोग"},em:"🧪"},
+      {ja:"たいよう",h:"<ruby>太陽<rt>たいよう</rt></ruby>",say:"たいよう",tr:{ne:"सूर्य"},em:"☀️"},
+      {ja:"みず",h:"<ruby>水<rt>みず</rt></ruby>",say:"みず",tr:{ne:"पानी"},em:"💧"},
+      {ja:"しょくぶつ",h:"<ruby>植物<rt>しょくぶつ</rt></ruby>",say:"しょくぶつ",tr:{ne:"बिरुवा"},em:"🌱"},
+      {ja:"どうぶつ",h:"<ruby>動物<rt>どうぶつ</rt></ruby>",say:"どうぶつ",tr:{ne:"जनावर"},em:"🐶"},
+      {ja:"てんき",h:"<ruby>天気<rt>てんき</rt></ruby>",say:"てんき",tr:{ne:"मौसम"},em:"⛅"},
+    ]},
+{id:"shakai",title:"しゃかい",tr:{ne:"सामाजिक अध्ययन"},em:"🗾",items:[
+      {ja:"ちず",h:"<ruby>地図<rt>ちず</rt></ruby>",say:"ちず",tr:{ne:"नक्सा"},em:"🗺️"},
+      {ja:"くに",h:"<ruby>国<rt>くに</rt></ruby>",say:"くに",tr:{ne:"देश"},em:"🌏"},
+      {ja:"まち",h:"<ruby>町<rt>まち</rt></ruby>",say:"まち",tr:{ne:"शहर / टोल"},em:"🏘️"},
+      {ja:"れきし",h:"<ruby>歴史<rt>れきし</rt></ruby>",say:"れきし",tr:{ne:"इतिहास"},em:"📜"},
+      {ja:"しごと",h:"<ruby>仕事<rt>しごと</rt></ruby>",say:"しごと",tr:{ne:"काम / पेसा"},em:"👷"},
+      {ja:"やくしょ",h:"<ruby>役所<rt>やくしょ</rt></ruby>",say:"やくしょ",tr:{ne:"नगरपालिका कार्यालय"},em:"🏢"},
+    ]},
+{id:"karada",title:"からだ・びょういん",tr:{ne:"शरीर र अस्पताल"},em:"🏥",items:[
+      {ja:"あたま",h:"<ruby>頭<rt>あたま</rt></ruby>",say:"あたま",tr:{ne:"टाउको"},em:"🧠"},
+      {ja:"おなか",tr:{ne:"पेट"},em:"🤢"},
+      {ja:"のど",tr:{ne:"घाँटी"},em:"🗣️"},
+      {ja:"ねつ",h:"<ruby>熱<rt>ねつ</rt></ruby>",say:"ねつ",tr:{ne:"ज्वरो"},em:"🌡️"},
+      {ja:"くすり",h:"<ruby>薬<rt>くすり</rt></ruby>",say:"くすり",tr:{ne:"औषधि"},em:"💊"},
+      {ja:"びょういん",h:"<ruby>病院<rt>びょういん</rt></ruby>",say:"びょういん",tr:{ne:"अस्पताल"},em:"🏥"},
+    ]},
+{id:"kazu",title:"かず・ようび",tr:{ne:"अङ्क र बारहरू"},em:"📅",items:[
+      {ja:"きょう",h:"<ruby>今日<rt>きょう</rt></ruby>",say:"きょう",tr:{ne:"आज"},em:"📆"},
+      {ja:"あした",tr:{ne:"भोलि"},em:"🌄"},
+      {ja:"きのう",h:"<ruby>昨日<rt>きのう</rt></ruby>",say:"きのう",tr:{ne:"हिजो"},em:"🌙"},
+      {ja:"げつようび",h:"<ruby>月曜日<rt>げつようび</rt></ruby>",say:"げつようび",tr:{ne:"सोमबार"},em:"🌝"},
+      {ja:"にちようび",h:"<ruby>日曜日<rt>にちようび</rt></ruby>",say:"にちようび",tr:{ne:"आइतबार"},em:"🌞"},
+      {ja:"なんじ",h:"<ruby>何時<rt>なんじ</rt></ruby>",say:"なんじ",tr:{ne:"कति बजे"},em:"🕐"},
+    ]}
+]);
+
 
 // ===== みぢかな ひと（しゃしんは この たんまつの なかだけ。ネットには おくらない）=====
 let people = [{id:1,name:"ママ",em:"👩"},{id:2,name:"パパ",em:"👨"}];
