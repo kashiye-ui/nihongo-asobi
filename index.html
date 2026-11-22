@@ -60,6 +60,7 @@
 <div id="app"></div>
 <div class="panel" id="panel"><div class="box">
   <h2 style="margin-top:0">おうちのひと へ</h2>
+  <label><span>おこさんの なまえ<br><span class="hint">なまえで よびかけます</span></span><input id="optName" style="font-size:17px;padding:6px;width:150px" onchange="childName=this.value.trim();try{localStorage.setItem('childName',childName)}catch(e){}"></label>
   <label><span>ぼご ヒント<br><span class="hint">母語のヒントを出す</span></span><input type="checkbox" id="optHint" checked></label>
   <label><span>ヒントの ことば<br><span class="hint">母語が決まったら増やします</span></span>
     <select id="optLang"><option value="es">español（仮）</option></select></label>
@@ -209,7 +210,8 @@ function addStar(){
   else if(combo===3||combo===5||combo===10){ toast("🔥 れんぞく せいかい ×"+combo); }
   const nb=checkBadges(); if(nb) setTimeout(()=>toast(nb.em+" バッジ「"+nb.t+"」"),goalHit?2800:800);
   const lv=levelOf(stars); if(stars>1 && levelOf(stars-1).n!==lv.n) setTimeout(()=>toast("🎉 レベルアップ！ "+lv.em+" "+lv.name),1800);
-  setTimeout(cheer,1300);
+  if(goalHit){ setTimeout(()=>{ const p=pickPhrase("end"); if(p) playPhrase(p); },3200); }
+  else setTimeout(cheer,1300);
 }
 
 // ===== はげましの こえ（ろくおん → この たんまつの IndexedDB に ほぞん）=====
@@ -236,8 +238,40 @@ async function delVoice(id){
 function playVoice(v){ try{ const a=new Audio(URL.createObjectURL(v.blob)); a.play().catch(()=>{}); }catch(e){} }
 function cheer(){
   const now=Date.now(); if(now-lastCheer<2000) return; lastCheer=now;
-  if(voices.length) playVoice(voices[Math.floor(Math.random()*voices.length)]);
+  const p=pickPhrase("praise");
+  if(voices.length && (!p || Math.random()<0.5)) playVoice(voices[Math.floor(Math.random()*voices.length)]);
+  else if(p) playPhrase(p);
   else speak(SAMPLE_CHEERS[Math.floor(Math.random()*SAMPLE_CHEERS.length)]);
+}
+
+// ===== 日本語の シャワー =====
+// 名前よびかけ・あいさつ・きせつ・はげまし。Google Cloud の こうひんしつ おんせい(audio/*.mp3)を さいせい。
+// ファイルが まだ ない とき は、たんまつの こえで だいよう。
+let PHRASES=[], childName="";
+try{ childName=localStorage.getItem("childName")||""; }catch(e){}
+try{ fetch("phrases.json").then(r=>r.json()).then(j=>{PHRASES=j}).catch(()=>{}); }catch(e){}
+function nameSlug(n){ return Array.from(n).map(c=>c.codePointAt(0).toString(16)).join("-"); }
+function phraseText(p){ return childName ? p.ja.split("{name}").join(childName) : p.ja.split("{name}、").join("").split("、{name}").join("").split("{name}").join(""); }
+function phraseTr(p){ const t=p.tr&&p.tr[opt().lang]; if(!t) return ""; return childName ? t.split("{name}").join(childName) : t.split(", {name}").join("").split("{name}, ").join("").split("{name}").join(""); }
+function clipUrl(p){ return childName ? "audio/names/"+nameSlug(childName)+"/"+p.id+".mp3" : "audio/"+p.id+".mp3"; }
+function playPhrase(p){
+  return new Promise(res=>{
+    let done=false, failed=false;
+    const fin=()=>{ if(!done){ done=true; res(); } };
+    const fb=()=>{ if(failed||done) return; failed=true;
+      try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(phraseText(p)); u.lang="ja-JP"; u.rate=opt().rate; u.onend=fin; u.onerror=fin; speechSynthesis.speak(u); }catch(e){ fin(); } };
+    try{ const a=new Audio(clipUrl(p)); a.onended=fin; a.onerror=fb; a.play().catch(fb); }catch(e){ fb(); }
+  });
+}
+function pickPhrase(ctx){ const l=PHRASES.filter(p=>p.ctx===ctx); return l.length?l[Math.floor(Math.random()*l.length)]:null; }
+function seasonCtx(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?"season-spring":m>=6&&m<=8?"season-summer":m>=9&&m<=11?"season-autumn":"season-winter"; }
+function greetCtx(){ const h=new Date().getHours(); return h>=5&&h<10?"greet-morning":h>=10&&h<17?"greet-noon":"greet-evening"; }
+async function ohanashi(){
+  const seq=[pickPhrase(greetCtx()), pickPhrase(seasonCtx()), pickPhrase(Math.random()<0.5?"praise":"cheer")].filter(Boolean);
+  for(const p of seq){
+    const b=$("#bubble"); if(b){ const tr=opt().hint?phraseTr(p):""; b.innerHTML="🗨️ "+phraseText(p)+(tr?`<div class="hint">${tr}</div>`:""); }
+    await playPhrase(p); await new Promise(r=>setTimeout(r,300));
+  }
 }
 function renderVoiceList(){
   const el=$("#voiceList"); if(!el) return;
@@ -278,7 +312,8 @@ function go(v){
 function render(){
   const app=$("#app");
   if(view==="home"){
-    app.innerHTML = header(null) + statusCard() + `<p style="text-align:center;font-size:20px;margin-top:20px">どっちかな？</p><div class="grid">` +
+    app.innerHTML = header(null) + statusCard() +
+      `<div style="text-align:center;margin:16px 0 4px"><button class="btn" style="font-size:24px" onclick="ohanashi()">🗨️ おはなし</button><div id="bubble" style="margin-top:10px;font-size:22px;min-height:30px"></div></div>` + `<p style="text-align:center;font-size:20px;margin-top:20px">どっちかな？</p><div class="grid">` +
       Object.entries(COURSES).map(([k,c])=>`<div class="course" onclick="go('course:${k}')"><span class="big">${c.em}</span>${c.title}<small>${c.sub}</small></div>`).join("") + `</div>`;
   } else if(view.startsWith("course:")){
     const c=COURSES[course];
@@ -564,7 +599,7 @@ function quiz(sid){
   });
 }
 
-function openPanel(){renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#panel").classList.add("on")}
+function openPanel(){renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
 function closePanel(){$("#panel").classList.remove("on"); render()}
 try{ speechSynthesis.getVoices(); }catch(e){}
 loadVoices();

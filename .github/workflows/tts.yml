@@ -1,0 +1,30 @@
+name: 音声を作る
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "既存の音声も作り直す（1 = はい）"
+        required: false
+        default: ""
+  push:
+    paths:
+      - phrases.json
+      - names.txt
+permissions:
+  contents: write
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 音声を作る
+        env:
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          FORCE: ${{ github.event.inputs.force }}
+        run: python3 scripts/gen_tts.py
+      - name: 変更をコミット
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add audio || true
+          git diff --cached --quiet || (git commit -m "音声を更新" && git push)

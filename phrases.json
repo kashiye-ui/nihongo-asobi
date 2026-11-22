@@ -1,0 +1,21 @@
+[
+  {"id":"greet_morning_1","ctx":"greet-morning","ja":"おはよう、{name}！ きょうも げんきかな？","tr":{"es":"¡Buenos días, {name}! ¿Estás bien hoy?"}},
+  {"id":"greet_morning_2","ctx":"greet-morning","ja":"{name}、おはよう！ よく ねられた？","tr":{"es":"{name}, ¡buenos días! ¿Dormiste bien?"}},
+  {"id":"greet_noon_1","ctx":"greet-noon","ja":"こんにちは、{name}！","tr":{"es":"¡Hola, {name}!"}},
+  {"id":"greet_noon_2","ctx":"greet-noon","ja":"{name}、こんにちは！ おひるごはんは たべた？","tr":{"es":"{name}, ¡hola! ¿Ya almorzaste?"}},
+  {"id":"greet_evening_1","ctx":"greet-evening","ja":"こんばんは、{name}！ きょうも いちにち おつかれさま。","tr":{"es":"¡Buenas noches, {name}! Gracias por el esfuerzo de hoy."}},
+  {"id":"season_spring_1","ctx":"season-spring","ja":"{name}、はるに なって、あたたかく なってきたね。","tr":{"es":"{name}, ya es primavera y hace más calor."}},
+  {"id":"season_summer_1","ctx":"season-summer","ja":"{name}、きょうは あつく なってきたね。みずを のもうね。","tr":{"es":"{name}, hoy empieza a hacer calor. Vamos a tomar agua."}},
+  {"id":"season_autumn_1","ctx":"season-autumn","ja":"{name}、すずしく なってきたね。もう あきだね。","tr":{"es":"{name}, ya refresca. Ya es otoño."}},
+  {"id":"season_winter_1","ctx":"season-winter","ja":"{name}、きょうは さむいね。あったかく して いてね。","tr":{"es":"{name}, hoy hace frío. Abrígate bien."}},
+  {"id":"praise_1","ctx":"praise","ja":"{name}、よく できたね！","tr":{"es":"{name}, ¡lo hiciste muy bien!"}},
+  {"id":"praise_2","ctx":"praise","ja":"{name}、すごいね！","tr":{"es":"{name}, ¡increíble!"}},
+  {"id":"praise_3","ctx":"praise","ja":"{name}、じょうずだね！ えらいね！","tr":{"es":"{name}, ¡qué bien! ¡Muy bien hecho!"}},
+  {"id":"praise_4","ctx":"praise","ja":"やったね、{name}！ がんばったね！","tr":{"es":"¡Lo lograste, {name}! ¡Te esforzaste!"}},
+  {"id":"empathy_1","ctx":"empathy","ja":"{name}、だいじょうぶ？","tr":{"es":"{name}, ¿estás bien?"}},
+  {"id":"empathy_2","ctx":"empathy","ja":"{name}、むずかしかったね。だいじょうぶ、もういちど やってみよう。","tr":{"es":"{name}, fue difícil. No pasa nada, intentemos otra vez."}},
+  {"id":"empathy_3","ctx":"empathy","ja":"{name}、つかれたかな？ ちょっと やすもうか。","tr":{"es":"{name}, ¿estás cansado/a? Descansemos un poco."}},
+  {"id":"cheer_1","ctx":"cheer","ja":"{name}、がんばれー！","tr":{"es":"{name}, ¡ánimo!"}},
+  {"id":"cheer_2","ctx":"cheer","ja":"{name}、いっしょに やろう！","tr":{"es":"{name}, ¡hagámoslo juntos!"}},
+  {"id":"end_1","ctx":"end","ja":"{name}、きょうは よく がんばったね。また あしたね！","tr":{"es":"{name}, hoy te esforzaste mucho. ¡Hasta mañana!"}}
+]
