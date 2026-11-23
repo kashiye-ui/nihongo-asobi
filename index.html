@@ -172,6 +172,7 @@
   <label><span>ヒントの ことば<br><span class="hint">母語が決まったら増やします</span></span>
     <select id="optLang"><option value="ne">नेपाली（仮）</option><option value="es">español（仮）</option></select></label>
   <label><span>ごほうび チケット<br><span class="hint">試作では表示のみ</span></span><input type="checkbox" id="optTicket"></label>
+  <label><span>「つうじたか」の きびしさ</span><select id="optStrict" onchange="try{localStorage.setItem('strict',this.value)}catch(e){}"><option value="easy">やさしい</option><option value="normal">ふつう</option><option value="hard">きびしい</option></select></label>
   <label><span>よみあげの はやさ</span><input type="range" id="optRate" min="0.5" max="1.1" step="0.1" value="0.8"></label>
   <label><span>きょうの もくひょう（⭐）</span><select id="optGoal" onchange="stats.goal=+this.value;saveStats()"><option value="3">3</option><option value="5" selected>5</option><option value="10">10</option></select></label>
   <p class="hint">なれたら ヒントを オフに していきます。</p>
@@ -726,13 +727,17 @@ function homeView(){
     </div></div>`;
 }
 function k2h(s){ return s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[\s、。！？!?,.・ー]/g,""); }
-function listen(keys){
+function sim(a,b){ if(!a||!b) return 0; const m=a.length,n=b.length, d=Array.from({length:m+1},(_,i)=>[i].concat(Array(n).fill(0))); for(let j=1;j<=n;j++) d[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1)); return 1-d[m][n]/Math.max(m,n); }
+function strictMode(){ try{ return localStorage.getItem("strict")||"easy"; }catch(e){ return "easy"; } }
+function listen(keys,full){
   return new Promise(res=>{
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR){ res({na:true}); return; }
     let got=false; const r=new SR(); r.lang="ja-JP"; r.maxAlternatives=5; r.interimResults=false;
     r.onresult=e=>{ got=true; const alts=Array.from(e.results[0]).map(a=>a.transcript);
-      const ok=alts.some(a=>keys.some(k=>k2h(a).includes(k2h(k)))); res({ok,heard:alts[0]}); };
+      const mode=strictMode(), th={normal:0.6,hard:0.85}[mode];
+      const ok = (th && full) ? alts.some(a=>sim(k2h(a),k2h(full))>=th) : alts.some(a=>keys.some(k=>k2h(a).includes(k2h(k)))); res({ok,heard:alts[0]}); };
     r.onerror=e=>{ res({ok:false,err:e.error,na:e.error==="not-allowed"||e.error==="service-not-allowed"||e.error==="language-not-supported"}); };
     r.onend=()=>{ if(!got) res({ok:false,heard:""}); };
     try{ r.start(); setTimeout(()=>{try{r.stop()}catch(e){}},6000); }catch(e){ res({na:true}); }
@@ -817,7 +822,7 @@ function petPass(full){
 }
 async function petSpeak(){
   const v=petV; $("#msg").style.color="var(--accent)"; $("#msg").textContent="🎤 きいてるよ…";
-  const r=await listen(v.keys);
+  const r=await listen(v.keys,v.say);
   if(r.na){ $("#msg").textContent=""; $("#pfb").innerHTML=`<p class="hint">この たんまつでは おんせい にんしきが つかえません。こえに だして いってから ボタンを おしてね。</p><button class="btn" id="pok">いえた！</button>`; $("#pok").onclick=()=>petPass(true); return; }
   if(r.ok) return petPass(true);
   petTry++;
@@ -904,7 +909,7 @@ function evPlay(){
       pet.learned=pet.learned||{}; const k=evx(n.say), L=pet.learned[k]||{ne:evx(n.ne),n:0}; L.n+=full?1:0; pet.learned[k]=L; savePet(); setTimeout(next,1500); };
     $("#pr").onclick=async()=>{
       $("#msg").style.color="var(--accent)"; $("#msg").textContent="🎤 きいてるよ…";
-      const r=await listen(n.keys.map(evx));
+      const r=await listen(n.keys.map(evx),evx(n.say));
       if(r.na){ $("#msg").textContent=""; $("#pfb").innerHTML=`<p class="hint">おんせい にんしきが つかえません。こえに だして いってから ボタンを おしてね。</p><button class="btn" id="pok">いえた！</button>`; $("#pok").onclick=()=>pass(true); return; }
       if(r.ok) return pass(true);
       evTry++;
@@ -1344,7 +1349,7 @@ function updateNameHint(){ const e=document.getElementById("nameHint"); if(!e) r
   e.textContent = !childName ? "" : CLIPS.size ? (CLIPS.has(K("p","@"+childName)) ? "✔ こえで よべます" : "× この なまえの こえは まだ ありません（なまえなしで はなします）") : "";
 }
 try{ fetch("names.txt").then(r=>r.text()).then(t=>{ const dl=document.getElementById("nameList"); if(dl) dl.innerHTML=t.split("\n").filter(l=>l.trim()&&!l.startsWith("#")).map(l=>`<option value="${l.trim()}">`).join(""); }).catch(()=>{}); }catch(e){}
-function openPanel(){setTimeout(updateNameHint,50);$("#optCourse").value=courseSel;renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
+function openPanel(){ try{ $("#optStrict").value=strictMode(); }catch(e){}setTimeout(updateNameHint,50);$("#optCourse").value=courseSel;renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
 function closePanel(){$("#panel").classList.remove("on"); render()}
 try{ speechSynthesis.getVoices(); }catch(e){}
 loadVoices();
