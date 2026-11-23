@@ -1283,11 +1283,11 @@ function quiz(sid){
   const s = findScene(sid), N=5;
   if(qs.n>=N){ return lessonClear(s); }
   const answer = s.items[Math.floor(Math.random()*s.items.length)];
-  const others = shuffle(s.items.filter(x=>x!==answer)).slice(0,2);
-  const choices = shuffle([answer,...others]);
   const big = course==="big";
   const exs = exOf(answer), cloze = exs.length && qs.n%2===1;
   const sent = cloze ? exs[Math.floor(Math.random()*exs.length)] : null;
+  const others = shuffle(s.items.filter(x=>x!==answer && !(sent&&sent[0].includes(x.ja)))).slice(0,2);
+  const choices = shuffle([answer,...others]);
   const sayQ = ()=>speak(cloze?sent[0]:say(answer));
   const lang=opt().lang, trS = cloze&&opt().hint&&lang==="ne"?sent[1]:"";
   $("#app").innerHTML = lessonHead("scene:"+sid, qs.n/N*100) + banner(sid) + `<div class="qtitle">${s.em} ${s.title}　${cloze?"ぶんを きいて えらぼう":"きいて えらぼう"}</div>`
