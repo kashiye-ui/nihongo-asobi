@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """サンプルの かぞく イラストを Gemini の がぞうモデル(Nano Banana)で つくる。
-env: GOOGLE_TTS_API_KEY(= Gemini もつかえる キー), IMG_MODEL, FORCE"""
+env: GEMINI_API_KEY, IMG_MODEL, FORCE"""
 import os, sys, json, base64, time, urllib.request, urllib.error
-KEY = os.environ.get("GOOGLE_TTS_API_KEY", "")
+KEY = os.environ.get("GEMINI_API_KEY", "")
 MODEL = os.environ.get("IMG_MODEL") or "gemini-2.5-flash-image"
 FORCE = os.environ.get("FORCE") == "1"
 STYLE = ("Warm, friendly children's-book illustration, soft watercolor and gouache texture, gentle rounded shapes, "

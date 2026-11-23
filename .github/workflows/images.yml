@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: イラストを作る
         env:
-          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           FORCE: ${{ github.event.inputs.force }}
           IMG_MODEL: ${{ github.event.inputs.model }}
         run: python3 scripts/gen_images.py
