@@ -9,6 +9,7 @@ on:
   push:
     paths:
       - phrases.json
+      - speech.json
       - names.txt
 permissions:
   contents: write
@@ -21,6 +22,8 @@ jobs:
         env:
           GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
           FORCE: ${{ github.event.inputs.force }}
+          CHILD_NAMES: ${{ vars.CHILD_NAMES }}
+          VOICEMAP: ${{ vars.VOICEMAP }}
         run: python3 scripts/gen_tts.py
       - name: 変更をコミット
         run: |

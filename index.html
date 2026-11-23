@@ -249,15 +249,35 @@ const hint = o=>{const p=opt(); return p.hint && o.tr && o.tr[p.lang] ? o.tr[p.l
 const disp = it=>it.h||it.ja;
 const say = it=>it.say||it.ja;
 
-function speak(t){
-  try{
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang="ja-JP"; u.rate=opt().rate;
-    const v = speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("ja"));
-    if(v) u.voice=v;
-    speechSynthesis.speak(u);
-  }catch(e){}
+// ===== こうひんしつ おんせい：まえもって つくった mp3 を さいせい（ないときだけ たんまつの こえ）=====
+function K(v,t){ const str=v+"|"+t; let h1=0xdeadbeef,h2=0x41c6ce57; for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); }
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909); h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(16).padStart(14,"0"); }
+let CLIPS=new Set(), curAudio=null;
+try{ fetch("audio/manifest.json").then(r=>r.json()).then(j=>{CLIPS=new Set(j)}).catch(()=>{}); }catch(e){}
+function stopAudio(){ try{ if(curAudio){ curAudio.onended=null; curAudio.pause(); curAudio=null; } speechSynthesis.cancel(); }catch(e){} }
+function ttsFallback(t,res){
+  try{ const u=new SpeechSynthesisUtterance(t); u.lang="ja-JP"; u.rate=opt().rate; u.onend=res; u.onerror=res;
+    const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("ja")); if(v) u.voice=v; speechSynthesis.speak(u); }catch(e){ res(); }
+}
+function speak(t,v){
+  v=v||"n"; stopAudio();
+  return new Promise(res=>{
+    const key=K(v,t);
+    if(CLIPS.has(key)){
+      let fell=false; const fb=()=>{ if(fell) return; fell=true; ttsFallback(t,res); };
+      try{ const a=new Audio("audio/s/"+key+".mp3"); curAudio=a; a.playbackRate=Math.max(.7,Math.min(1.25,opt().rate/.8)); a.onended=()=>res(); a.onerror=fb; a.play().catch(fb); }catch(e){ fb(); }
+    } else ttsFallback(t,res);
+  });
+}
+async function speakSeq(list,v){ for(const t of list) await speak(t,v); }
+const VOICE_OF={"せんせい":"t","ほけんの せんせい":"t","ともだち":"f","おかあさん":"m","おいしゃさん":"dr","きゅうしょくとうばん":"c"};
+const vOf=w=>VOICE_OF[w]||"n";
+// テンプレ({name})を よみあげ。なまえの おんせいが なければ なまえなしで よむ
+function spk(tpl,v,fn){
+  fn=fn||nm; let t=fn(tpl);
+  if(childName && CLIPS.size && !CLIPS.has(K(v,t))){ const keep=childName; childName=""; const t2=fn(tpl); childName=keep; if(CLIPS.has(K(v,t2))) t=t2; }
+  return speak(t,v);
 }
 // ===== ゲームせい：れんぞくにっすう・きょうの もくひょう・レベル・バッジ =====
 // 方針：まちがえても ばつは なし。おやすみ1にち までは れんぞく キープ。もくひょうを こえたら おしまいで OK。
@@ -531,19 +551,19 @@ function storyPlay(id){
      <div class="say" id="line">${nm(n.ja)}${hn?`<span class="hint">${nm(n.ne)}</span>`:""}</div></div>
      <div class="chips">${n.words.map((w,i)=>`<button class="chip" data-w="${i}">🔤 ${w.ja}${hn?" = "+w.ne:""}</button>`).join("")}</div>
      <div class="bar"><button class="btn ghost" id="again">🔊 もういちど</button><button class="btn" id="next">つぎ ▶</button></div>`;
-    $("#line").onclick=$("#again").onclick=()=>speak(nm(n.ja));
+    $("#line").onclick=$("#again").onclick=()=>spk(n.ja,vOf(n.who));
     document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>speak(n.words[b.dataset.w].ja));
     $("#next").onclick=nextNode;
-    setTimeout(()=>speak(nm(n.ja)),250);
+    setTimeout(()=>spk(n.ja,vOf(n.who)),250);
   } else {
     $("#app").innerHTML=head+`<div class="dlg"><div><div class="av">🧑‍🎓</div><div class="who">じぶん</div></div>
      <div class="say" style="background:#fff4d6;cursor:default">${nm(n.ja)}${hn?`<span class="hint">${nm(n.ne)}</span>`:""}</div></div>
      <div id="choices">`+
      shuffle(n.ch).map(c=>`<div class="choice" data-i="${n.ch.indexOf(c)}">${nm(c.ja)}${hn&&c.ne?`<span class="hint">${nm(c.ne)}</span>`:""}</div>`).join("")+`</div>`;
-    setTimeout(()=>speak(nm(n.ja)),250);
+    setTimeout(()=>spk(n.ja,"n"),250);
     let lock=false;
     document.querySelectorAll("#choices .choice").forEach(el=>{ el.onclick=()=>{
-      if(lock) return; const c=n.ch[el.dataset.i]; speak(nm(c.ja));
+      if(lock) return; const c=n.ch[el.dataset.i]; spk(c.ja,"n");
       if(c.ok){ lock=true; el.classList.add("good"); addStar(); sheet(true,"せいかい！ ✨",nm(c.ja),"つぎへ ▶",nextNode); }
       else { sheet(false,"おしい！",hn&&c.why?c.why:"もういちど かんがえよう","もういちど",null); }
     };});
@@ -697,7 +717,7 @@ function petHome(){
     <p style="font-size:18px">なにを する？</p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">`+
     Object.entries(petActs()).map(([k,a])=>`<button class="btn" style="font-size:22px" onclick="petAsk('${k}')">${a.em} ${a.label}</button>`).join("")+`</div></div>`;
-  speak(hello);
+  speak(hello,"p");
 }
 function petAsk(k){
   const a=petActs()[k]; petAct=k; petTry=0; petV=a.v[Math.floor(Math.random()*a.v.length)];
@@ -711,7 +731,7 @@ function petAsk(k){
     <div class="msg" id="msg"></div><div id="pfb"></div></div>`;
   $("#pm").onclick=()=>speak(v.say);
   $("#pr").onclick=petSpeak;
-  setTimeout(()=>speak(v.cue),250);
+  setTimeout(()=>speak(v.cue,"p"),250);
 }
 function petPass(full){
   pet.mood=Math.min(100,petMood()+(full?15:6)); pet.t=Date.now(); if(full) pet.hearts++;
@@ -721,7 +741,7 @@ function petPass(full){
   savePet();
   $("#msg").style.color=""; $("#msg").textContent=full?"つうじたよ！ 😄":"いっしょに いえたね！";
   if(full) addStar();
-  speak((full?"ありがとう、":"いっしょに がんばったね、")+(childName||"")+"！");
+  spk(full?"ありがとう、{name}！":"いっしょに がんばったね、{name}！","p");
   if(bonus) setTimeout(()=>{ toast("🎁 きょうの おせわ ぜんぶ できた！"); confetti(); addStar(); },900);
   setTimeout(petHome,2200);
 }
@@ -801,7 +821,7 @@ function evPlay(){
     $("#app").innerHTML=head+`<div style="text-align:center;font-size:80px;margin-top:6px">${n.em} <span style="font-size:60px">${petBody()}</span></div><div style="text-align:center;font-weight:700">${n.who}</div>
      <div class="scene" style="margin:10px auto;max-width:600px" id="line">${evx(n.ja)}${hn?`<div class="hint" style="font-size:17px;font-weight:400;margin-top:8px">${evx(n.ne)}</div>`:""}</div>
      <div style="text-align:center"><button class="btn ghost" id="again">🔊</button> <button class="btn" id="next">つぎ ▶</button></div>`;
-    $("#line").onclick=$("#again").onclick=()=>speak(evx(n.ja)); $("#next").onclick=next; setTimeout(()=>speak(evx(n.ja)),250);
+    $("#line").onclick=$("#again").onclick=()=>spk(n.ja,vOf(n.who),evx); $("#next").onclick=next; setTimeout(()=>spk(n.ja,vOf(n.who),evx),250);
   } else {
     evTry=0;
     $("#app").innerHTML=head+`<div style="text-align:center;font-size:80px;margin-top:6px">🧑‍🎓 <span style="font-size:60px">${petBody()}</span></div>
@@ -809,7 +829,7 @@ function evPlay(){
      <div class="scene" style="margin:8px auto;max-width:600px;background:#fff4d6;cursor:default">${evx(n.say)}${hn?`<div class="hint" style="font-size:17px;font-weight:400;margin-top:8px">${evx(n.ne)}</div>`:""}</div>
      <div style="text-align:center"><button class="btn ghost" id="pm">🔊 おてほん</button> <button class="btn" id="pr" style="font-size:24px">🎤 はなす</button></div>
      <div class="msg" id="msg"></div><div id="pfb" style="text-align:center"></div>`;
-    $("#pm").onclick=()=>speak(evx(n.say));
+    $("#pm").onclick=()=>spk(n.say,"n",evx);
     const pass=(full)=>{ $("#msg").style.color=""; $("#msg").textContent=full?"つうじたよ！":"いっしょに いえたね！"; if(full){ addStar(); pet.hearts++; savePet(); }
       pet.learned=pet.learned||{}; const k=evx(n.say), L=pet.learned[k]||{ne:evx(n.ne),n:0}; L.n+=full?1:0; pet.learned[k]=L; savePet(); setTimeout(next,1500); };
     $("#pr").onclick=async()=>{
@@ -818,7 +838,7 @@ function evPlay(){
       if(r.na){ $("#msg").textContent=""; $("#pfb").innerHTML=`<p class="hint">おんせい にんしきが つかえません。こえに だして いってから ボタンを おしてね。</p><button class="btn" id="pok">いえた！</button>`; $("#pok").onclick=()=>pass(true); return; }
       if(r.ok) return pass(true);
       evTry++;
-      if(evTry>=3){ $("#msg").style.color="#c96a25"; $("#msg").textContent="いっしょに いおう！"; speak(evx(n.say)); setTimeout(()=>pass(false),2400); return; }
+      if(evTry>=3){ $("#msg").style.color="#c96a25"; $("#msg").textContent="いっしょに いおう！"; spk(n.say,"n",evx); setTimeout(()=>pass(false),2400); return; }
       $("#msg").style.color="#c96a25"; $("#msg").innerHTML=`ん？ もういちど！<div class="hint" style="font-size:16px">${r.heard?"きこえた: "+r.heard:"きこえなかった"}</div>`;
     };
   }
@@ -1040,7 +1060,7 @@ function ageyou(){
       const ok = selected===g.n && +el.dataset.id===p.id;
       if(ok){
         el.classList.add("good"); $("#msg").style.color=""; $("#msg").textContent=p.name+"「ありがとう！」🎉";
-        speak(p.name+"、ありがとう！"); addStar(); setTimeout(ageyou, 2200);
+        speak(p.name+"、ありがとう！","p"); addStar(); setTimeout(ageyou, 2200);
       } else {
         el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
         $("#msg").style.color="#c96a25"; $("#msg").textContent = selected? "あれ？ もういちど きいてみよう" : "さきに ものを えらんでね"; say1();
@@ -1142,8 +1162,8 @@ function kyushoku(){
        <div id="tray" style="text-align:center;font-size:56px;min-height:90px;background:#fff;border-radius:24px;padding:10px;margin:10px 0;box-shadow:0 5px 0 var(--soft)">🍽️ ${tray.map(t=>t.em).join(" ")}</div>
        <div class="grid" id="choices">` +
       shuffle(FOODS).map(f=>`<div class="card" data-n="${f.n}"><div class="em">${f.em}</div><div class="es">${hint(f)}</div></div>`).join("") + `</div>`;
-    $("#again").onclick = ()=>speak(cmd(target));
-    setTimeout(()=>speak(cmd(target)), 300);
+    $("#again").onclick = ()=>speak(cmd(target),"c");
+    setTimeout(()=>speak(cmd(target),"c"), 300);
     document.querySelectorAll("#choices .card").forEach(el=>{
       el.onclick = ()=>{
         if(el.dataset.n===target.n){
@@ -1156,7 +1176,7 @@ function kyushoku(){
           } else { speak("そう！"); setTimeout(draw, 700); }
         } else {
           el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
-          speak(cmd(target));
+          speak(cmd(target),"c");
         }
       };
     });
@@ -1193,7 +1213,7 @@ function quiz(sid){
       if(el.dataset.ok==="1"){
         lock=true; el.classList.add("good"); qs.n++; addStar();
         document.querySelector(".pbar i").style.width=(qs.n/N*100)+"%";
-        speak("すごい！"+say(answer));
+        speakSeq(["すごい！",say(answer)]);
         sheet(true,"せいかい！ ✨",`${answer.em} ${disp(answer)}${hint(answer)?"　"+hint(answer):""}`,"つぎへ ▶",()=>quiz(sid));
       }else{
         el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
@@ -1210,6 +1230,23 @@ function lessonClear(s){
   speak("クリア！ すごい！");
 }
 
+
+// 【かいはつようの】しゃべる ぶんしょうを ぜんぶ あつめる（audio を つくるときに つかう）
+function collectSpeech(){
+  const out=[], add=(v,t)=>{ if(t) out.push({v,t}); }, pn=x=>x.split("{pet}").join("コロ");
+  for(const c of Object.values(COURSES)) for(const sc of c.scenes) for(const it of sc.items) add("n",say(it));
+  for(const S of STORIES) for(const n of S.nodes){ if(n.t==="talk"){ add(vOf(n.who),n.ja); n.words.forEach(w=>add("n",w.ja)); } else { add("n",n.ja); n.ch.forEach(c=>add("n",c.ja)); } }
+  for(const E of EVENTS) for(const n of E.nodes){ if(n.t==="talk") add(vOf(n.who),pn(n.ja)); else add("n",pn(n.say)); }
+  const g0=greetCtx; ["greet-morning","greet-noon","greet-evening"].forEach(ctx=>{ greetCtx=()=>ctx; Object.values(petActs()).forEach(a=>a.v.forEach(v=>{ add("p",v.cue); add("n",v.say); })); }); greetCtx=g0;
+  ["さびしいよ〜","あそぼう！","げんきだよ！","さびしいよ〜。あそぼう！","ありがとう！ だいすき！","きょうも いっしょに やろう！","ありがとう、{name}！","いっしょに がんばったね、{name}！","ママ、ありがとう！","パパ、ありがとう！"].forEach(t=>add("p",t));
+  for(let i=1;i<=20;i++) add("p","あと "+i+" こ！ がんばろう！");
+  ["すごい！","そう！","せいかい！","クリア！ すごい！","できた！ いただきます！","ん？ もういちど ゆっくり いってみて。"].concat(SAMPLE_CHEERS).forEach(t=>add("n",t));
+  MISSIONS.forEach(m=>add("n",m.say));
+  FOODS.forEach(f=>add("c",f.n+"を おぼんに のせてください"));
+  GIFTS.forEach(g=>{ add("n",g.n); ["ママ","パパ"].forEach(p=>add("n",p+"に "+g.n+"を あげてください")); });
+  Array.from(HIRA).forEach(c=>{ add("n",c); add("n",String.fromCharCode(c.charCodeAt(0)+0x60)); });
+  const seen=new Set(); return out.filter(x=>{ const k=x.v+"|"+x.t; if(seen.has(k)) return false; seen.add(k); return true; });
+}
 function openPanel(){$("#optCourse").value=courseSel;renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
 function closePanel(){$("#panel").classList.remove("on"); render()}
 try{ speechSynthesis.getVoices(); }catch(e){}
