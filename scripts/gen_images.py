@@ -17,9 +17,9 @@ PEOPLE = {
 }
 NOAR = False
 def gen(prompt, ref=None, rmime=None, ar=None):
+    global NOAR
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
     body = json.dumps({"contents": [{"parts": ([{"inline_data": {"mime_type": rmime, "data": ref}}] if ref else []) + [{"text": prompt}]}], "generationConfig": dict({"responseModalities": ["IMAGE"]}, **({"imageConfig": {"aspectRatio": ar}} if ar and not NOAR else {}))}).encode()
-    global NOAR
     err = None
     for a in range(5):
         try:
