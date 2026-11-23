@@ -46,13 +46,23 @@ def synth(text, voice=None, with_rate=True):
     req = urllib.request.Request(
         "https://texttospeech.googleapis.com/v1/text:synthesize?key=" + KEY,
         data=body, headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            return base64.b64decode(json.load(r)["audioContent"])
-    except urllib.error.HTTPError as e:
-        if e.code == 400 and with_rate:   # 話す速さに未対応の声ならスピード指定なしで再試行
-            return synth(text, voice, False)
-        raise SystemExit("TTS error %s: %s" % (e.code, e.read().decode()[:300]))
+    import time
+    err = None
+    for attempt in range(6):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return base64.b64decode(json.load(r)["audioContent"])
+        except urllib.error.HTTPError as e:
+            err = e
+            if e.code in (429, 500, 502, 503, 504) and attempt < 5:
+                time.sleep(2 + attempt * 3); continue
+            break
+        except Exception:                      # 通信の一時エラーは待って再試行
+            if attempt < 5: time.sleep(2 + attempt * 3); continue
+            raise
+    if err is not None and err.code == 400 and with_rate:   # 話す速さに未対応の声ならスピード指定なしで再試行
+        return synth(text, voice, False)
+    raise SystemExit("TTS error %s: %s" % (err.code, err.read().decode()[:300]))
 
 def main():
     phrases = json.load(open(os.path.join(ROOT, "phrases.json"), encoding="utf-8"))
@@ -61,23 +71,38 @@ def main():
     if os.path.exists(p):
         names = [l.strip() for l in open(p, encoding="utf-8") if l.strip() and not l.startswith("#")]
     jobs = []
-    for ph in phrases:
-        jobs.append((os.path.join(ROOT, "audio", ph["id"] + ".mp3"), text_for(ph, "")))
-        for n in names:
-            jobs.append((os.path.join(ROOT, "audio", "names", slug(n), ph["id"] + ".mp3"), text_for(ph, n)))
     names += [n.strip() for n in (os.environ.get("CHILD_NAMES") or "").split(",") if n.strip()]
     names = sorted(set(names))
     speech = []
     sp = os.path.join(ROOT, "speech.json")
+    entries = []
     if os.path.exists(sp):
-        for e in json.load(open(sp, encoding="utf-8")):
-            v, t = e["v"], e["t"]
-            if "{name}" in t:
-                variants = [strip_name(t)] + [t.replace("{name}", n) for n in names]
-            else:
-                variants = [t]
-            for tt in variants:
-                speech.append((os.path.join(ROOT, "audio", "s", K(v, tt) + ".mp3"), tt, vname(v)))
+        entries += [(e["v"], e["t"]) for e in json.load(open(sp, encoding="utf-8"))]
+    entries += [("p", ph["ja"]) for ph in phrases]          # あいさつ・はげましも 同じ声（p）で
+    seen = set()
+    def add(v, t, strip=False):
+        if strip: t = t.strip()
+        if not t: return
+        k = K(v, t)
+        if k in seen: return
+        seen.add(k)
+        speech.append((os.path.join(ROOT, "audio", "s", k + ".mp3"), t, vname(v)))
+    name_voices = set()
+    for v, t in entries:
+        if "{name}" in t:
+            name_voices.add(v)
+            add(v, strip_name(t))                           # 名前なし版
+            parts = t.split("{name}")
+            if len(parts) == 2:                             # 名前入りは「前」「名前」「後」を つなげる
+                add(v, parts[0], True); add(v, parts[1].lstrip("、"), True)
+        else:
+            add(v, t)
+    for v in sorted(name_voices):
+        for n in names:
+            k = K(v, "@" + n)
+            if k in seen: continue
+            seen.add(k)
+            speech.append((os.path.join(ROOT, "audio", "s", k + ".mp3"), n, vname(v)))
     jobs2 = [(f, t, None) for f, t in jobs] + speech
     todo = [(f, t, vo) for f, t, vo in jobs2 if FORCE or not os.path.exists(f)]
     chars = sum(len(t) for _, t, _ in todo)

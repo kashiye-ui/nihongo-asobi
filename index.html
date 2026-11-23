@@ -158,7 +158,7 @@
 <div id="app"></div>
 <div class="panel" id="panel"><div class="box">
   <h2 style="margin-top:0">おうちのひと へ</h2>
-  <label><span>おこさんの なまえ<br><span class="hint">なまえで よびかけます</span></span><input id="optName" style="font-size:17px;padding:6px;width:150px" onchange="childName=this.value.trim();try{localStorage.setItem('childName',childName)}catch(e){}"></label>
+  <label><span>おこさんの なまえ<br><span class="hint">なまえで よびかけます</span><br><span class="hint" id="nameHint"></span></span><input id="optName" list="nameList" style="font-size:17px;padding:6px;width:150px" onchange="childName=this.value.trim();setTimeout(updateNameHint,0);try{localStorage.setItem('childName',childName)}catch(e){}"><datalist id="nameList"></datalist></label>
   <label><span>コース<br><span class="hint">がくねんに あわせて</span></span><select id="optCourse" onchange="setCourse(this.value)"><option value="big">小4〜中学生</option><option value="small">5さい〜小3</option></select></label>
   <label><span>ぼご ヒント<br><span class="hint">母語のヒントを出す</span></span><input type="checkbox" id="optHint" checked></label>
   <label><span>ヒントの ことば<br><span class="hint">母語が決まったら増やします</span></span>
@@ -274,8 +274,24 @@ async function speakSeq(list,v){ for(const t of list) await speak(t,v); }
 const VOICE_OF={"せんせい":"t","ほけんの せんせい":"t","ともだち":"f","おかあさん":"m","おいしゃさん":"dr","きゅうしょくとうばん":"c"};
 const vOf=w=>VOICE_OF[w]||"n";
 // テンプレ({name})を よみあげ。なまえの おんせいが なければ なまえなしで よむ
+function playKeys(keys){
+  stopAudio();
+  return new Promise(res=>{ let i=0; const rate=Math.max(.7,Math.min(1.25,opt().rate/.8));
+    const next=()=>{ if(i>=keys.length) return res(); const a=new Audio("audio/s/"+keys[i++]+".mp3"); curAudio=a; a.playbackRate=rate; a.onended=next; a.onerror=next; a.play().catch(next); };
+    next(); });
+}
 function spk(tpl,v,fn){
-  fn=fn||nm; let t=fn(tpl);
+  fn=fn||nm;
+  if(childName && CLIPS.size && tpl.includes("{name}")){
+    const pc=tpl.split("{name}");
+    if(pc.length===2){
+      const b=fn(pc[0]).trim(), a=fn(pc[1].replace(/^、/,"")).trim(), nk=K(v,"@"+childName);
+      if(CLIPS.has(nk) && (!b||CLIPS.has(K(v,b))) && (!a||CLIPS.has(K(v,a)))){
+        const ks=[]; if(b) ks.push(K(v,b)); ks.push(nk); if(a) ks.push(K(v,a)); return playKeys(ks);
+      }
+    }
+  }
+  let t=fn(tpl);
   if(childName && CLIPS.size && !CLIPS.has(K(v,t))){ const keep=childName; childName=""; const t2=fn(tpl); childName=keep; if(CLIPS.has(K(v,t2))) t=t2; }
   return speak(t,v);
 }
@@ -392,6 +408,7 @@ function phraseText(p){ return childName ? p.ja.split("{name}").join(childName) 
 function phraseTr(p){ const t=p.tr&&p.tr[opt().lang]; if(!t) return ""; return childName ? t.split("{name}").join(childName) : t.split(", {name}").join("").split("{name}, ").join("").split("{name}").join(""); }
 function clipUrl(p){ return childName ? "audio/names/"+nameSlug(childName)+"/"+p.id+".mp3" : "audio/"+p.id+".mp3"; }
 function playPhrase(p){
+  if(CLIPS.size) return spk(p.ja,"p");
   return new Promise(res=>{
     let done=false, failed=false;
     const fin=()=>{ if(!done){ done=true; res(); } };
@@ -1247,7 +1264,11 @@ function collectSpeech(){
   Array.from(HIRA).forEach(c=>{ add("n",c); add("n",String.fromCharCode(c.charCodeAt(0)+0x60)); });
   const seen=new Set(); return out.filter(x=>{ const k=x.v+"|"+x.t; if(seen.has(k)) return false; seen.add(k); return true; });
 }
-function openPanel(){$("#optCourse").value=courseSel;renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
+function updateNameHint(){ const e=document.getElementById("nameHint"); if(!e) return;
+  e.textContent = !childName ? "" : CLIPS.size ? (CLIPS.has(K("p","@"+childName)) ? "✔ こえで よべます" : "× この なまえの こえは まだ ありません（なまえなしで はなします）") : "";
+}
+try{ fetch("names.txt").then(r=>r.text()).then(t=>{ const dl=document.getElementById("nameList"); if(dl) dl.innerHTML=t.split("\n").filter(l=>l.trim()&&!l.startsWith("#")).map(l=>`<option value="${l.trim()}">`).join(""); }).catch(()=>{}); }catch(e){}
+function openPanel(){setTimeout(updateNameHint,50);$("#optCourse").value=courseSel;renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
 function closePanel(){$("#panel").classList.remove("on"); render()}
 try{ speechSynthesis.getVoices(); }catch(e){}
 loadVoices();
