@@ -115,6 +115,8 @@
   .lhead .x{border:0;background:#ffffff1c;color:#fff;width:44px;height:44px;border-radius:50%;font-size:20px;font-weight:800;cursor:pointer}
   .pbar{flex:1;height:18px;background:#ffffff24;border-radius:10px;overflow:hidden}
   .pbar i{display:block;height:100%;background:linear-gradient(90deg,#6df0b0,#3ddc97);border-radius:10px;transition:width .4s;box-shadow:inset 0 4px 0 #ffffff55}
+  .cheerbox{position:fixed;left:12px;bottom:90px;z-index:60;display:flex;gap:10px;align-items:center;background:#fff;color:#2a2547;border-radius:20px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.35);font-size:16px;max-width:80vw;transform:translateY(30px);opacity:0;transition:.3s}
+  .cheerbox.on{transform:none;opacity:1}
   .qtitle{text-align:center;font-size:22px;color:var(--mut);margin:6px 0}
   .qsent{text-align:center;font-size:26px;font-weight:800;line-height:1.5;margin:10px 8px 2px}
   .qsent .blank{display:inline-block;min-width:3em;border-bottom:4px solid #e0a82e;color:#e0a82e}
@@ -175,6 +177,7 @@
   <hr>
   <b>はげましの こえ</b> <span class="hint">（おうちのひとの こえを ろくおん。なければ サンプルの こえ）</span>
   <div id="voiceList"></div>
+  <select id="recWho" style="font-size:16px;padding:6px;margin:4px 0"></select>
   <button class="btn ghost" id="recBtn" style="padding:8px 16px;font-size:16px" onclick="toggleRec()">🎙️ ろくおんする</button>
   <span class="hint" id="recMsg"></span>
   <hr>
@@ -418,7 +421,7 @@ async function loadVoices(){
 }
 async function putVoice(blob){
   const db=await idb();
-  await new Promise((res,rej)=>{ const t=db.transaction("voices","readwrite"); t.objectStore("voices").put({id:Date.now(),blob}); t.oncomplete=res; t.onerror=()=>rej(t.error); });
+  await new Promise((res,rej)=>{ const t=db.transaction("voices","readwrite"); t.objectStore("voices").put({id:Date.now(),blob,who:(document.getElementById("recWho")||{}).value||""}); t.oncomplete=res; t.onerror=()=>rej(t.error); });
 }
 async function delVoice(id){
   try{ const db=await idb();
@@ -430,7 +433,9 @@ function playVoice(v){ try{ const a=new Audio(URL.createObjectURL(v.blob)); a.pl
 function cheer(){
   const now=Date.now(); if(now-lastCheer<2000) return; lastCheer=now;
   const p=pickPhrase("praise");
-  if(voices.length && (!p || Math.random()<0.5)) playVoice(voices[Math.floor(Math.random()*voices.length)]);
+  const cp=people.filter(x=>x.cheers&&x.cheers.length);
+  if(voices.length && Math.random()<0.4){ const v=voices[Math.floor(Math.random()*voices.length)]; const who=people.find(x=>x.id===v.who); if(who) showCheer(who,"🎙️"); playVoice(v); }
+  else if(cp.length && Math.random()<0.7){ const who=cp[Math.floor(Math.random()*cp.length)], line=who.cheers[Math.floor(Math.random()*who.cheers.length)]; showCheer(who,line); speak(line,who.v||"n"); }
   else if(p) playPhrase(p);
   else speak(SAMPLE_CHEERS[Math.floor(Math.random()*SAMPLE_CHEERS.length)]);
 }
@@ -467,7 +472,7 @@ async function ohanashi(){
 }
 function renderVoiceList(){
   const el=$("#voiceList"); if(!el) return;
-  el.innerHTML = voices.length ? voices.map((v,i)=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><button onclick="playVoice(voices[${i}])">▶</button><span style="flex:1">こえ ${i+1}</span><button onclick="delVoice(${v.id})">✕</button></div>`).join("") : `<div class="hint">まだ ありません（サンプルの こえが でます）</div>`;
+  el.innerHTML = voices.length ? voices.map((v,i)=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><button onclick="playVoice(voices[${i}])">▶</button><span style="flex:1">${(people.find(q=>q.id===v.who)||{}).name||"こえ "+(i+1)}</span><button onclick="delVoice(${v.id})">✕</button></div>`).join("") : `<div class="hint">まだ ありません（サンプルの こえが でます）</div>`;
 }
 async function toggleRec(){
   const btn=$("#recBtn"), msg=$("#recMsg");
@@ -1061,11 +1066,26 @@ COURSES.big.scenes.unshift(...[
 
 
 // ===== みぢかな ひと（しゃしんは この たんまつの なかだけ。ネットには おくらない）=====
-let people = [{id:1,name:"ママ",em:"👩"},{id:2,name:"パパ",em:"👨"}];
-try{ const s=localStorage.getItem("people"); if(s) people=JSON.parse(s); }catch(e){}
-function savePeople(){ try{ localStorage.setItem("people",JSON.stringify(people)); }catch(e){} }
-function avatar(p,s){ return p.photo?`<img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover">`:`<span style="font-size:${s*0.8}px">${p.em||"🙂"}</span>`; }
+const SAMPLE_PEOPLE=[
+ {id:"s-mama",name:"ママ",em:"👩",photo:"portraits/mama.png",v:"m",cheers:["がんばってるね！ ママ、うれしいよ。","すごい！ よく できたね！"]},
+ {id:"s-papa",name:"パパ",em:"👨",photo:"portraits/papa.png",v:"dr",cheers:["いいぞ！ その ちょうし！","がんばれ！ パパが おうえん してるよ。"]},
+ {id:"s-onii",name:"おにいちゃん",em:"👦",photo:"portraits/onii.png",v:"f",cheers:["やるじゃん！ すごいよ！","いいね！ つぎも いけるよ！"]},
+ {id:"s-onee",name:"おねえちゃん",em:"👧",photo:"portraits/onee.png",v:"p",cheers:["えらい！ ばっちりだよ！","がんばってね！ おうえん してる！"]},
+ {id:"s-obaa",name:"おばあちゃん",em:"👵",photo:"portraits/obaa.png",v:"t",cheers:["よく できたねえ。 えらいねえ。","あせらなくて いいよ。 ゆっくり ね。"]},
+];
+let people = SAMPLE_PEOPLE.map(x=>({...x}));
+try{ const s=localStorage.getItem("people2"); if(s) people=JSON.parse(s); }catch(e){}
+function savePeople(){ try{ localStorage.setItem("people2",JSON.stringify(people)); }catch(e){} }
+function avatar(p,s){ return p.photo?`<img src="${p.photo}" alt="${p.name}" onerror="this.outerHTML='<span style=&quot;font-size:${s*0.8}px&quot;>${p.em||"🙂"}</span>'" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;background:#f7f4ec">`:`<span style="font-size:${s*0.8}px">${p.em||"🙂"}</span>`; }
+function showCheer(p,line){
+  document.querySelectorAll(".cheerbox").forEach(e=>e.remove());
+  const d=document.createElement("div"); d.className="cheerbox";
+  d.innerHTML=`${avatar(p,64)}<div><b>${p.name}</b><br>${line||""}</div>`;
+  document.body.appendChild(d); setTimeout(()=>d.classList.add("on"),20);
+  setTimeout(()=>{ d.classList.remove("on"); setTimeout(()=>d.remove(),400); },3200);
+}
 function renderPeopleList(){
+  const rw=document.getElementById("recWho"); if(rw){ const cur=rw.value; rw.innerHTML='<option value="">だれの こえ？</option>'+people.map(q=>`<option value="${q.id}">${q.name}</option>`).join(""); rw.value=cur; }
   $("#peopleList").innerHTML = people.map(p=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">${avatar(p,40)}<span style="flex:1">${p.name}</span><button onclick="delPerson(${p.id})">✕</button></div>`).join("");
 }
 function addPerson(){
@@ -1115,7 +1135,7 @@ function ageyou(){
       const ok = selected===g.n && +el.dataset.id===p.id;
       if(ok){
         el.classList.add("good"); $("#msg").style.color=""; $("#msg").textContent=p.name+"「ありがとう！」🎉";
-        speak(p.name+"、ありがとう！","p"); addStar(); setTimeout(ageyou, 2200);
+        showCheer(p,"ありがとう！"); speak(p.name+"、ありがとう！",p.v||"p"); addStar(); setTimeout(ageyou, 2200);
       } else {
         el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
         $("#msg").style.color="#c96a25"; $("#msg").textContent = selected? "あれ？ もういちど きいてみよう" : "さきに ものを えらんでね"; say1();
@@ -1305,7 +1325,8 @@ function collectSpeech(){
   ["すごい！","そう！","せいかい！","クリア！ すごい！","できた！ いただきます！","ん？ もういちど ゆっくり いってみて。"].concat(SAMPLE_CHEERS).forEach(t=>add("n",t));
   MISSIONS.forEach(m=>add("n",m.say));
   FOODS.forEach(f=>add("c",f.n+"を おぼんに のせてください"));
-  GIFTS.forEach(g=>{ add("n",g.n); ["ママ","パパ"].forEach(p=>add("n",p+"に "+g.n+"を あげてください")); });
+  GIFTS.forEach(g=>{ add("n",g.n); SAMPLE_PEOPLE.forEach(p=>add("n",p.name+"に "+g.n+"を あげてください")); });
+  SAMPLE_PEOPLE.forEach(p=>{ p.cheers.forEach(t=>add(p.v,t)); add(p.v,p.name+"、ありがとう！"); });
   Array.from(HIRA).forEach(c=>{ add("n",c); add("n",String.fromCharCode(c.charCodeAt(0)+0x60)); });
   const seen=new Set(); return out.filter(x=>{ const k=x.v+"|"+x.t; if(seen.has(k)) return false; seen.add(k); return true; });
 }

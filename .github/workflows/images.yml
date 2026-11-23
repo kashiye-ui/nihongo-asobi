@@ -1,0 +1,32 @@
+name: イラストを作る
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "作り直す（1 = はい）"
+        required: false
+        default: ""
+      model:
+        description: "モデル名（空 = gemini-2.5-flash-image）"
+        required: false
+        default: ""
+permissions:
+  contents: write
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: イラストを作る
+        env:
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          FORCE: ${{ github.event.inputs.force }}
+          IMG_MODEL: ${{ github.event.inputs.model }}
+        run: python3 scripts/gen_images.py
+      - name: 変更をコミット
+        if: always()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add portraits || true
+          git diff --cached --quiet || (git commit -m "イラストを更新" && git pull --rebase -q && git push)
