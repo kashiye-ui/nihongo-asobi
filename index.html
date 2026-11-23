@@ -1067,11 +1067,11 @@ COURSES.big.scenes.unshift(...[
 
 // ===== みぢかな ひと（しゃしんは この たんまつの なかだけ。ネットには おくらない）=====
 const SAMPLE_PEOPLE=[
- {id:"s-mama",name:"ママ",em:"👩",photo:"portraits/mama.png",v:"m",cheers:["がんばってるね！ ママ、うれしいよ。","すごい！ よく できたね！"]},
- {id:"s-papa",name:"パパ",em:"👨",photo:"portraits/papa.png",v:"dr",cheers:["いいぞ！ その ちょうし！","がんばれ！ パパが おうえん してるよ。"]},
- {id:"s-onii",name:"おにいちゃん",em:"👦",photo:"portraits/onii.png",v:"f",cheers:["やるじゃん！ すごいよ！","いいね！ つぎも いけるよ！"]},
- {id:"s-onee",name:"おねえちゃん",em:"👧",photo:"portraits/onee.png",v:"p",cheers:["えらい！ ばっちりだよ！","がんばってね！ おうえん してる！"]},
- {id:"s-obaa",name:"おばあちゃん",em:"👵",photo:"portraits/obaa.png",v:"t",cheers:["よく できたねえ。 えらいねえ。","あせらなくて いいよ。 ゆっくり ね。"]},
+ {id:"s-mama",name:"ママ",em:"👩",photo:"portraits/mama.webp",v:"m",cheers:["がんばってるね！ ママ、うれしいよ。","すごい！ よく できたね！"]},
+ {id:"s-papa",name:"パパ",em:"👨",photo:"portraits/papa.webp",v:"dr",cheers:["いいぞ！ その ちょうし！","がんばれ！ パパが おうえん してるよ。"]},
+ {id:"s-onii",name:"おにいちゃん",em:"👦",photo:"portraits/onii.webp",v:"f",cheers:["やるじゃん！ すごいよ！","いいね！ つぎも いけるよ！"]},
+ {id:"s-onee",name:"おねえちゃん",em:"👧",photo:"portraits/onee.webp",v:"p",cheers:["えらい！ ばっちりだよ！","がんばってね！ おうえん してる！"]},
+ {id:"s-obaa",name:"おばあちゃん",em:"👵",photo:"portraits/obaa.webp",v:"t",cheers:["よく できたねえ。 えらいねえ。","あせらなくて いいよ。 ゆっくり ね。"]},
 ];
 let people = SAMPLE_PEOPLE.map(x=>({...x}));
 try{ const s=localStorage.getItem("people2"); if(s) people=JSON.parse(s); }catch(e){}
