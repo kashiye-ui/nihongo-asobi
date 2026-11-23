@@ -15,9 +15,9 @@ PEOPLE = {
  "onee": "A cheerful Japanese teenage big sister around 14, hair in a ponytail with a small ribbon, bright smile.",
  "obaa": "A sweet Japanese grandmother in her late 60s, short gray hair, round glasses, knitted vest, kind wrinkled smile.",
 }
-def gen(prompt):
+def gen(prompt, ref=None, rmime=None):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
-    body = json.dumps({"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"responseModalities": ["IMAGE"]}}).encode()
+    body = json.dumps({"contents": [{"parts": ([{"inline_data": {"mime_type": rmime, "data": ref}}] if ref else []) + [{"text": prompt}]}], "generationConfig": {"responseModalities": ["IMAGE"]}}).encode()
     err = None
     for a in range(5):
         try:
@@ -35,16 +35,40 @@ def gen(prompt):
             err = str(e)
         time.sleep(3 * (a + 1))
     raise RuntimeError(err)
+PETS = {"dog":"a cute puppy (Shiba-inu-like, tan and cream fur)","cat":"a cute kitten (orange tabby with white chest)","rabbit":"a cute white bunny rabbit with soft pink inner ears","bird":"a cute round little yellow chick-like songbird","hamster":"a cute chubby golden hamster with cream belly"}
+MOODS = {"happy":"very happy: eyes closed in a big smile, open mouth, rosy cheeks, joyful","sad":"lonely and a little sad: droopy ears or feathers, big teary eyes, small frown, gentle and cute (not distressing)"}
+PSTYLE = "Warm friendly children's-book illustration, soft watercolor and gouache texture, rounded shapes, pastel palette, plain warm cream background, centered head-and-upper-body character, square, no text, no watermark. "
+def gen_edit(img_b64, prompt):
+    return gen(prompt, img_b64, "image/webp")
+def to_webp(raw, path):
+    from PIL import Image; import io
+    Image.open(io.BytesIO(raw)).convert("RGB").resize((512,512)).save(path, "WEBP", quality=85)
+def pets():
+    os.makedirs("pets", exist_ok=True); bad = 0
+    for k, d in PETS.items():
+        base = f"pets/{k}_normal.webp"
+        try:
+            if not os.path.exists(base) or FORCE:
+                raw, _ = gen(PSTYLE + d + " Calm, content, looking at the viewer with a gentle smile."); to_webp(raw, base); print("ok", base)
+            ref = base64.b64encode(open(base, "rb").read()).decode()
+            for m, md in MOODS.items():
+                path = f"pets/{k}_{m}.webp"
+                if os.path.exists(path) and not FORCE: continue
+                raw, _ = gen(PSTYLE + f"Edit this exact same character (same species, colors, style, framing) so that it looks {md}. Keep everything else identical.", ref, "image/webp"); to_webp(raw, path); print("ok", path)
+        except Exception as e:
+            bad += 1; print("NG", k, e)
+    return bad
 def main():
     if not KEY: sys.exit("no key")
     os.makedirs("portraits", exist_ok=True); bad = 0
     for k, desc in PEOPLE.items():
         path = f"portraits/{k}.png"
-        if os.path.exists(path) and not FORCE: continue
+        if (os.path.exists(path) or os.path.exists(f"portraits/{k}.webp")) and not FORCE: continue
         try:
             img, mt = gen(STYLE + desc)
             open(path, "wb").write(img); print("ok", k, len(img), mt)
         except Exception as e:
             bad += 1; print("NG", k, e)
+    bad += pets()
     sys.exit(1 if bad else 0)
 main()

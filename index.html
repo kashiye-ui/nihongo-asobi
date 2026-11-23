@@ -638,13 +638,19 @@ function storyEnd(S){
 
 // ===== おせわゲーム：ペットに はなしかけて おせわ（おんせい にんしき）=====
 // 「つうじた＝OK」。ブラウザの おんせい にんしき(ja-JP)を つかう。ききとれない ときは やさしく もういちど。
-let pet={name:"コロ",hearts:0,mood:60,t:Date.now()};
+const PETS={dog:{em:"🐶",label:"いぬ",name:"コロ"},cat:{em:"🐱",label:"ねこ",name:"ミケ"},rabbit:{em:"🐰",label:"うさぎ",name:"ミミ"},bird:{em:"🐤",label:"ことり",name:"ピヨ"},hamster:{em:"🐹",label:"ハムスター",name:"ハム"}};
+let pet={name:"コロ",species:"dog",hearts:0,mood:60,t:Date.now()};
 try{ const p=JSON.parse(localStorage.getItem("pet")||"null"); if(p) pet=p; }catch(e){}
 function savePet(){ try{ localStorage.setItem("pet",JSON.stringify(pet)); }catch(e){} }
 function petMood(){ const m=pet.mood-Math.floor((Date.now()-pet.t)/(20*60*1000)); return Math.max(30,Math.min(100,m)); }
 
 // ===== ホーム：へや（ペット）＋ がくしゅうの みち =====
 function petSVG(m,hearts,sz){
+  const sp=PETS[pet.species]?pet.species:"dog", mood=m>=70?"happy":m>=45?"normal":"sad";
+  const acc=hearts>=60?`<span style="position:absolute;left:50%;top:-6%;transform:translateX(-50%);font-size:${Math.round(sz*0.28)}px">👑</span>`:hearts>=20?`<span style="position:absolute;right:2%;bottom:6%;font-size:${Math.round(sz*0.24)}px">🧣</span>`:"";
+  return `<span class="pet" style="display:inline-block;width:${sz}px;position:relative"><img src="pets/${sp}_${mood}.webp" alt="${PETS[sp].label}" style="width:100%;aspect-ratio:1;border-radius:50%;object-fit:cover;background:#f7f4ec;display:block" onerror="this.outerHTML='<span style=&quot;font-size:${Math.round(sz*0.7)}px&quot;>${PETS[sp].em}</span>'">${acc}</span>`;
+}
+function petSVGold(m,hearts,sz){
   const happy=m>=70, mid=m>=45&&m<70;
   const eyes = happy
     ? `<path d="M74 98 q10 -14 20 0" stroke="#3a2e22" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M106 98 q10 -14 20 0" stroke="#3a2e22" stroke-width="6" fill="none" stroke-linecap="round"/>`
@@ -670,6 +676,7 @@ function petSVG(m,hearts,sz){
 }
 function petBody(sz,m){ return petSVG(m==null?petMood():m,pet.hearts,sz||90); }
 function petFace(m){ return ""; }
+function setSpecies(k){ const defs=Object.values(PETS).map(x=>x.name); if(defs.includes(pet.name)) pet.name=PETS[k].name; pet.species=k; savePet(); petHome(); speak(pet.name+"！","p"); }
 function petTap(){
   const el=document.querySelector(".stage .pet"); if(el){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
   chime([660,880]); speak(petGreet());
@@ -770,6 +777,7 @@ function petHome(){
   const hello=m<45?"さびしいよ〜":m<70?"あそぼう！":"げんきだよ！";
   $("#app").innerHTML=header("home")+`<div style="text-align:center;margin-top:8px">
     <div style="width:min(240px,60vw);margin:0 auto">${petBody(240).replace("width:240px","width:100%")}</div>
+    <div style="display:flex;gap:6px;justify-content:center;margin:6px 0">${Object.entries(PETS).map(([k,v])=>`<button onclick="setSpecies('${k}')" aria-label="${v.label}" style="font-size:26px;padding:4px 8px;border-radius:12px;border:2px solid ${k===(pet.species||"dog")?"var(--accent)":"transparent"};background:rgba(255,255,255,.12);cursor:pointer">${v.em}</button>`).join("")}</div>
     <div><input id="petName" value="${pet.name}" style="font-size:22px;text-align:center;width:150px;border:0;border-bottom:2px solid var(--accent);background:transparent;color:#fff;font-family:inherit;font-weight:800" onchange="pet.name=this.value.trim()||'コロ';savePet()"></div>
     <div style="margin:8px">❤️ ${pet.hearts} <span style="display:inline-block;width:140px;height:12px;background:#eee;border-radius:6px;vertical-align:middle"><span style="display:block;height:100%;width:${m}%;background:var(--ok);border-radius:6px"></span></span></div>
     <div class="scene" style="max-width:420px;margin:8px auto;cursor:default" id="pbub">🗨️ ${hello}</div>
@@ -1315,10 +1323,10 @@ function lessonClear(s){
 
 // 【かいはつようの】しゃべる ぶんしょうを ぜんぶ あつめる（audio を つくるときに つかう）
 function collectSpeech(){
-  const out=[], add=(v,t)=>{ if(t) out.push({v,t}); }, pn=x=>x.split("{pet}").join("コロ");
+  const out=[], add=(v,t)=>{ if(t) out.push({v,t}); }, pn=x=>x.split("{pet}").join("コロ"), pnAll=x=>x.includes("{pet}")?Object.values(PETS).map(q=>x.split("{pet}").join(q.name)):[x];
   for(const c of Object.values(COURSES)) for(const sc of c.scenes) for(const it of sc.items){ add("n",say(it)); exOf(it).forEach(e=>add("n",e[0])); }
   for(const S of STORIES) for(const n of S.nodes){ if(n.t==="talk"){ add(vOf(n.who),n.ja); n.words.forEach(w=>add("n",w.ja)); } else { add("n",n.ja); n.ch.forEach(c=>add("n",c.ja)); } }
-  for(const E of EVENTS) for(const n of E.nodes){ if(n.t==="talk") add(vOf(n.who),pn(n.ja)); else add("n",pn(n.say)); }
+  for(const E of EVENTS) for(const n of E.nodes){ if(n.t==="talk") pnAll(n.ja).forEach(t=>add(vOf(n.who),t)); else pnAll(n.say).forEach(t=>add("n",t)); }
   const g0=greetCtx; ["greet-morning","greet-noon","greet-evening"].forEach(ctx=>{ greetCtx=()=>ctx; Object.values(petActs()).forEach(a=>a.v.forEach(v=>{ add("p",v.cue); add("n",v.say); })); }); greetCtx=g0;
   ["さびしいよ〜","あそぼう！","げんきだよ！","さびしいよ〜。あそぼう！","ありがとう！ だいすき！","きょうも いっしょに やろう！","ありがとう、{name}！","いっしょに がんばったね、{name}！","ママ、ありがとう！","パパ、ありがとう！"].forEach(t=>add("p",t));
   for(let i=1;i<=20;i++) add("p","あと "+i+" こ！ がんばろう！");
