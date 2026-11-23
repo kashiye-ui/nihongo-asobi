@@ -117,6 +117,7 @@
   .pbar i{display:block;height:100%;background:linear-gradient(90deg,#6df0b0,#3ddc97);border-radius:10px;transition:width .4s;box-shadow:inset 0 4px 0 #ffffff55}
   .cheerbox{position:fixed;left:12px;bottom:90px;z-index:60;display:flex;gap:10px;align-items:center;background:#fff;color:#2a2547;border-radius:20px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.35);font-size:16px;max-width:80vw;transform:translateY(30px);opacity:0;transition:.3s}
   .cheerbox.on{transform:none;opacity:1}
+  .banner{display:block;width:100%;max-width:560px;max-height:190px;margin:6px auto;border-radius:18px;object-fit:cover;box-shadow:0 4px 14px rgba(0,0,0,.3)}
   .qtitle{text-align:center;font-size:22px;color:var(--mut);margin:6px 0}
   .qsent{text-align:center;font-size:26px;font-weight:800;line-height:1.5;margin:10px 8px 2px}
   .qsent .blank{display:inline-block;min-width:3em;border-bottom:4px solid #e0a82e;color:#e0a82e}
@@ -500,6 +501,7 @@ function header(backTo){
   </header>`;
 }
 function gameHead(em,t,back){ return header(back||"home")+`<div class="unit u-g gt"><span>${em} ${t}</span></div>`; }
+const banner=k=>`<img class="banner" src="scenes/${k}.webp" alt="" onerror="this.remove()">`;
 function lessonHead(backTo,pct){
   return `<div class="lhead"><button class="x" onclick="go('${backTo}')">✕</button><div class="pbar"><i style="width:${pct}%"></i></div><span class="stars">${starsText()}</span></div>`;
 }
@@ -604,7 +606,7 @@ let storyI=0;
 function nm(s){ return childName? s.split("{name}").join(childName) : s.split("{name}、").join("").split("、{name}").join("").split(", {name}").join("").split("{name}, ").join("").split("{name}").join(""); }
 function storyPlay(id){
   const S=STORIES.find(s=>s.id===id), n=S.nodes[storyI], hn=opt().hint;
-  const head=lessonHead("home",storyI/S.nodes.length*100);
+  const head=lessonHead("home",storyI/S.nodes.length*100)+banner("story_"+id);
   const nextNode=()=>{ storyI++; if(storyI>=S.nodes.length) storyEnd(S); else storyPlay(id); };
   if(n.t==="talk"){
     $("#app").innerHTML=head+`<div class="dlg"><div><div class="av">${n.em}</div><div class="who">${n.who}</div></div>
@@ -883,7 +885,7 @@ function evList(){
 }
 function evPlay(){
   const E=EVENTS.find(x=>x.id===evId), n=E.nodes[evI], hn=opt().hint;
-  const head=header("evlist")+`<h2 style="text-align:center;margin:8px 0">${E.em} ${E.title}</h2><div style="text-align:center;font-size:14px;color:#888">${evI+1} / ${E.nodes.length}</div>`;
+  const head=header("evlist")+`<h2 style="text-align:center;margin:8px 0">${E.em} ${E.title}</h2><div style="text-align:center;font-size:14px;color:#888">${evI+1} / ${E.nodes.length}</div>`+banner({asa:"ev_asa",asobi:"ev_asobi"}[E.id]||E.id);
   const next=()=>{ evI++; if(evI>=E.nodes.length) evEnd(E); else evPlay(); };
   if(n.t==="talk"){
     $("#app").innerHTML=head+`<div style="text-align:center;font-size:80px;margin-top:6px">${n.em} <span style="font-size:60px">${petBody()}</span></div><div style="text-align:center;font-weight:700">${n.who}</div>
@@ -1288,7 +1290,7 @@ function quiz(sid){
   const sent = cloze ? exs[Math.floor(Math.random()*exs.length)] : null;
   const sayQ = ()=>speak(cloze?sent[0]:say(answer));
   const lang=opt().lang, trS = cloze&&opt().hint&&lang==="ne"?sent[1]:"";
-  $("#app").innerHTML = lessonHead("scene:"+sid, qs.n/N*100) + `<div class="qtitle">${s.em} ${s.title}　${cloze?"ぶんを きいて えらぼう":"きいて えらぼう"}</div>`
+  $("#app").innerHTML = lessonHead("scene:"+sid, qs.n/N*100) + banner(sid) + `<div class="qtitle">${s.em} ${s.title}　${cloze?"ぶんを きいて えらぼう":"きいて えらぼう"}</div>`
     + (cloze?`<div class="qsent">${sent[0].replace(answer.ja,'<span class="blank">＿＿＿</span>')}</div>${trS?`<div class="qtr">${trS}</div>`:""}`:"")
     + `<button class="spk" id="again" aria-label="もういちど">🔊</button>
     <div class="grid ${big?'big-course':''}" id="choices">` + choices.map(c=>`<div class="card" data-ok="${c===answer?1:0}"><div class="em">${c.em}</div>${(big||cloze)?`<div class="ja">${disp(c)}</div>`:""}<div class="es">${hint(c)}</div></div>`).join("") + `</div>`;
