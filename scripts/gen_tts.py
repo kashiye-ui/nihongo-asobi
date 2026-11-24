@@ -18,7 +18,13 @@ DRY = os.environ.get("DRY") == "1"
 VOICES = {"n": "Kore", "p": "Leda", "t": "Gacrux", "f": "Puck", "m": "Sulafat", "dr": "Charon", "c": "Zephyr"}
 try: VOICES.update({k: v.split("-")[-1] for k, v in json.loads(os.environ.get("VOICEMAP") or "{}").items()})
 except Exception: pass
-def vname(v): return "ja-JP-Chirp3-HD-" + VOICES.get(v, VOICES["n"])
+# Gemini TTS（まなびチケットと同じ方式）: TTS_MODEL に モデル名 を入れると、Chirp3 HD の かわりに つかう。
+# TTS_PROMPT = 話し方の指示（ゆっくり・はっきり など）。声の名前（Zephyr など）は VOICES と同じ。
+TTS_MODEL = os.environ.get("TTS_MODEL", "").strip()
+TTS_PROMPT = os.environ.get("TTS_PROMPT", "やさしい先生が、日本語を学ぶ子どもに話すように、明るく、ゆっくり、はっきり話してください。")
+def vname(v):
+    n = VOICES.get(v, VOICES["n"])
+    return n if TTS_MODEL else "ja-JP-Chirp3-HD-" + n
 
 def K(v, t):  # index.html の K() と同じ（UTF-16 単位で計算）
     s = v + "|" + t; b = s.encode("utf-16-le"); units = struct.unpack("<%dH" % (len(b) // 2), b)
@@ -39,10 +45,14 @@ def text_for(p, name):
 
 def synth(text, voice=None, with_rate=True):
     cfg = {"audioEncoding": "MP3"}
-    if with_rate: cfg["speakingRate"] = RATE
-    body = json.dumps({"input": {"text": text},
-                       "voice": {"languageCode": "ja-JP", "name": voice or VOICE},
-                       "audioConfig": cfg}).encode()
+    if TTS_MODEL:
+        inp = {"text": text, "prompt": TTS_PROMPT}
+        vc = {"languageCode": "ja-JP", "name": voice or "Zephyr", "modelName": TTS_MODEL}
+    else:
+        if with_rate: cfg["speakingRate"] = RATE
+        inp = {"text": text}
+        vc = {"languageCode": "ja-JP", "name": voice or VOICE}
+    body = json.dumps({"input": inp, "voice": vc, "audioConfig": cfg}).encode()
     req = urllib.request.Request(
         "https://texttospeech.googleapis.com/v1/text:synthesize?key=" + KEY,
         data=body, headers={"Content-Type": "application/json"})

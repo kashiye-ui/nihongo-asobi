@@ -24,6 +24,8 @@ jobs:
           FORCE: ${{ github.event.inputs.force }}
           CHILD_NAMES: ${{ vars.CHILD_NAMES }}
           VOICEMAP: ${{ vars.VOICEMAP }}
+          TTS_MODEL: ${{ vars.TTS_MODEL }}
+          TTS_PROMPT: ${{ vars.TTS_PROMPT }}
         run: python3 scripts/gen_tts.py
       - name: 変更をコミット
         if: always()
