@@ -590,6 +590,11 @@ function sheet(ok,tt,sb,label,cb){
   if(!ok){ sfx.ng(); try{ navigator.vibrate&&navigator.vibrate(60); }catch(e){} }
   d.querySelector("button").onclick=()=>{ d.remove(); if(cb) cb(); };
 }
+function skillAll(){ try{ return JSON.parse(localStorage.getItem("skill")||"{}"); }catch(e){ return {}; } }
+function skillRec(k,ok){ const m=skillAll(), v=m[k]||{ok:0,ng:0}; if(ok) v.ok++; else v.ng++; v.t=Date.now(); m[k]=v; try{ localStorage.setItem("skill",JSON.stringify(m)); }catch(e){} }
+function weakOf(sid){ const m=skillAll(); return COURSES[courseSel].scenes.find(x=>x.id===sid).items.filter(i=>{ const v=m[`w:${sid}:${i.ja}`]; return v&&v.ng>v.ok; }); }
+function weakScenes(){ const m=skillAll(); return COURSES[courseSel].scenes.map(sc=>({id:sc.id,n:weakOf(sc.id).length})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n); }
+function masteryOf(sid){ const m=skillAll(), it=findScene(sid).items; return it.filter(i=>{ const v=m[`w:${sid}:${i.ja}`]; return v&&v.ok-v.ng>=2; }).length/it.length; }
 function isDone(k){ try{ return (JSON.parse(localStorage.getItem("done")||"[]")).includes(k); }catch(e){ return false; } }
 function doneAdd(k){ try{ const a=JSON.parse(localStorage.getItem("done")||"[]"); if(!a.includes(k)){ a.push(k); localStorage.setItem("done",JSON.stringify(a)); } }catch(e){} }
 let courseSel="big"; try{ courseSel=localStorage.getItem("courseSel")||"big"; }catch(e){}
@@ -804,7 +809,8 @@ function buildMissions(){
   const us=STORIES.filter(x=>!isDone("story:"+x.id)), st=us.length?us[0]:STORIES[d%STORIES.length];
   const games=["nazori","manekko","ageyou",courseSel==="small"?"kyushoku":"otayori"], g=games[d%games.length];
   const ak=Object.keys(petActs()), mn=Math.min(...ak.map(petLv)), cand=ak.filter(k=>petLv(k)===mn), pk=cand[d%cand.length];
-  return [{kind:"pet",ref:pk},{kind:"word",ref:w1.id},{kind:"story",ref:st.id},{kind:"word",ref:w2.id},{kind:"game",ref:g}].map(x=>({...x,done:false}));
+  const ws=weakScenes(), rv=ws.length?{kind:"review",ref:ws[0].id}:{kind:"word",ref:w2.id};
+  return [{kind:"pet",ref:pk},{kind:"word",ref:w1.id},{kind:"story",ref:st.id},rv,{kind:"game",ref:g}].map(x=>({...x,done:false}));
 }
 const GAMEINFO={nazori:["✍️","ひらがな","लेख्ने अभ्यास"],manekko:["🎤","まねっこ","नक्कल"],ageyou:["🎁","あげよう","दिउँ"],kyushoku:["🍱","きゅうしょく","स्कूल खाजा"],otayori:["🕵️","おたより","स्कूलको सूचना"]};
 function missionList(){
@@ -816,14 +822,17 @@ function todayMissions(){
   return missionList().l.map(x=>{
     if(x.kind==="pet"){ const ac=petActs()[x.ref]||petActs().greet; return {...x,em:ac.em,label:"ペットと おはなし",ne:"पाल्तुसँग कुरा",sub:ac.label+"・3かい",go:`go('pet');petAsk('${x.ref||"greet"}')`}; }
     if(x.kind==="word"){ const s=findScene(x.ref); return {...x,em:s.em,label:"ことば",ne:"शब्द",sub:s.title,go:`qs={};go('quiz:${x.ref}')`}; }
+    if(x.kind==="review"){ const s=findScene(x.ref); return {...x,em:"🔁",label:"ふくしゅう",ne:"दोहोर्याउने",sub:s.title,go:`qs={};go('quiz:${x.ref}')`}; }
     if(x.kind==="story"){ const s=STORIES.find(q=>q.id===x.ref); return {...x,em:s.em,label:"ものがたり",ne:"कथा",sub:s.title,go:`storyI=0;go('story:${x.ref}')`}; }
     const gi=GAMEINFO[x.ref]; return {...x,em:gi[0],label:"ゲーム",ne:"खेल",sub:gi[1],go:`go('game:${x.ref}')`};
   });
 }
 function missionDone(kind,ref){
-  const m=missionList(); let t=m.l.find(x=>x.kind===kind&&!x.done&&x.ref===ref)||m.l.find(x=>x.kind===kind&&!x.done); if(!t) return;
+  if(kind==='word'&&missionDone('review',ref)===true) return true;
+  const m=missionList(); let t=m.l.find(x=>x.kind===kind&&!x.done&&x.ref===ref)||(kind==='review'?null:m.l.find(x=>x.kind===kind&&!x.done)); if(!t) return false;
   t.done=true; try{ localStorage.setItem("mis",JSON.stringify(m)); }catch(e){}
   if(m.l.every(x=>x.done)) setTimeout(()=>{ toast("🏆 きょうの ミッション ぜんぶ クリア！"); confetti(); chime([523,659,784,1047]); },900);
+  return true;
 }
 function wordsLearned(){ return COURSES[courseSel].scenes.filter(x=>isDone("scene:"+x.id)).reduce((a,x)=>a+x.items.length,0); }
 function titleView(){
@@ -1385,7 +1394,7 @@ function ageyou(){
         el.classList.add("good"); $("#msg").style.color=""; $("#msg").textContent=p.name+"「ありがとう！」🎉";
         showCheer(p,"ありがとう！"); speak(p.name+"、ありがとう！",p.v||"p"); addStar(); setTimeout(ageyou, 2200);
       } else {
-        el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
+        el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400); if(!missed){ missed=true; skillRec(`w:${sid}:${answer.ja}`,false); }
         $("#msg").style.color="#c96a25"; $("#msg").textContent = selected? "あれ？ もういちど きいてみよう" : "さきに ものを えらんでね"; say1();
       }
     };
@@ -1520,9 +1529,11 @@ function quiz(sid){
   if(qs.sid!==sid) qs={sid,n:0};
   const s = findScene(sid), N=5;
   if(qs.n>=N){ return lessonClear(s); }
-  const answer = s.items[Math.floor(Math.random()*s.items.length)];
+  const SK=skillAll(), wk=i=>{ const v=SK[`w:${sid}:${i.ja}`]; return v?(v.ng>v.ok?4:v.ok-v.ng>=2?0.5:1):1.5; };
+  let pick=Math.random()*s.items.reduce((a,i)=>a+wk(i),0), answer=s.items[0]; for(const i of s.items){ pick-=wk(i); if(pick<=0){ answer=i; break; } }
+  const mst=masteryOf(sid);
   const big = course==="big";
-  const exs = exOf(answer), cloze = exs.length && qs.n%2===1;
+  const exs = exOf(answer), cloze = exs.length && Math.random()<(mst<0.3?0.15:mst<0.6?0.45:0.8);
   const sent = cloze ? exs[Math.floor(Math.random()*exs.length)] : null;
   const others = shuffle(s.items.filter(x=>x!==answer && !(sent&&sent[0].includes(x.ja)))).slice(0,2);
   const choices = shuffle([answer,...others]);
@@ -1534,12 +1545,12 @@ function quiz(sid){
     <div class="grid ${big?'big-course':''}" id="choices">` + choices.map(c=>`<div class="card" data-ok="${c===answer?1:0}"><div class="em">${c.em}</div>${(big||cloze)?`<div class="ja">${disp(c)}</div>`:""}<div class="es">${hint(c)}</div></div>`).join("") + `</div>`;
   $("#again").onclick=sayQ;
   setTimeout(sayQ,300);
-  let lock=false;
+  let lock=false, missed=false;
   document.querySelectorAll("#choices .card").forEach(el=>{
     el.onclick=()=>{
       if(lock) return;
       if(el.dataset.ok==="1"){
-        lock=true; el.classList.add("good"); qs.n++; addStar();
+        lock=true; el.classList.add("good"); qs.n++; addStar(); skillRec(`w:${sid}:${answer.ja}`,!missed);
         document.querySelector(".pbar i").style.width=(qs.n/N*100)+"%";
         const ex1 = cloze ? sent : exs[0];
         speakSeq(ex1?["すごい！",say(answer),ex1[0]]:["すごい！",say(answer)]);
