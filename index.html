@@ -222,6 +222,18 @@
   .cbub{background:#fff;color:var(--ink);border-radius:22px;padding:16px 20px;font-size:26px;font-weight:800}
   .cbub.mine{background:#fff4d6}.cbub .hint{font-size:16px;font-weight:600;color:#6a6488}
   .crow{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
+  .kaki{display:grid;grid-template-columns:minmax(300px,44%) 1fr;gap:22px;align-items:start;margin-top:10px}
+  .kbox{position:relative;width:min(100%,60vh);margin:0 auto;aspect-ratio:1;background:#fff;border-radius:24px;box-shadow:0 5px 0 var(--soft);overflow:hidden}
+  .kbox svg,.kbox canvas{position:absolute;inset:0;width:100%;height:100%}
+  .krow{display:flex;gap:10px;justify-content:center;margin-top:12px}
+  .ktabs{display:flex;gap:6px;flex-wrap:wrap}.ktabs .btn{padding:8px 14px;font-size:16px}
+  .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px;margin:12px 0;max-height:46vh;overflow:auto;padding:4px}
+  .kgrid button{font-size:24px;padding:6px 0;border-radius:12px;border:2px solid #ffffff22;background:#ffffff14;color:#fff;font-family:inherit;cursor:pointer}
+  .kgrid button.on{border-color:var(--gold);background:#ffc83d33}.kgrid button.ok{color:var(--ok)}
+  .kinfo{background:#ffffff14;border-radius:16px;padding:10px 14px;font-size:16px}
+  .kcred{font-size:11px;color:var(--mut);margin-top:10px}
+  @keyframes shk{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  #ksv.shake{animation:shk .25s}
 </style>
 </head>
 <body>
@@ -1107,34 +1119,76 @@ function evEnd(E){
 const HIRA="あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん";
 let kanaMode="hira", kanaSel="あ";
 function toKana(c){ return kanaMode==="kata" ? String.fromCharCode(c.charCodeAt(0)+0x60) : c; }
-function nazori(){
-  const chars=Array.from(HIRA);
-  $("#app").innerHTML = gameHead("✍️","ひらがな・カタカナ") + `<div style="display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-items:flex-start"><div style="flex:1 1 380px;max-width:520px"><div style="text-align:center;margin:10px 0">
-    <button class="btn ${kanaMode==='hira'?'':'ghost'}" onclick="kanaMode='hira';nazori()">ひらがな</button>
-    <button class="btn ${kanaMode==='kata'?'':'ghost'}" onclick="kanaMode='kata';nazori()">カタカナ</button></div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px">`+
-    chars.map(c=>`<button class="btn ${toKana(c)===toKana(kanaSel)?'':'ghost'}" style="font-size:22px;padding:8px 12px" onclick="kanaSel='${c}';nazori()">${toKana(c)}</button>`).join("")+`</div>
-    </div><div style="flex:0 0 auto"><div style="position:relative;width:min(80vw,340px);height:min(80vw,340px);margin:10px auto 0;background:#fff;border-radius:24px;box-shadow:0 5px 0 var(--soft)">
-      <canvas id="cg" width="640" height="640" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
-      <canvas id="cd" width="640" height="640" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas></div>
-    <div style="text-align:center;margin-top:12px"><button class="btn ghost" id="nz-say">🔊</button> <button class="btn ghost" id="nz-clr">けす</button> <button class="btn" id="nz-ok">できた！</button></div>
-    <div class="msg" id="msg"></div></div></div>`;
-  const ch=toKana(kanaSel);
-  const g=$("#cg").getContext("2d"); g.font="500px 'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif"; g.textAlign="center"; g.textBaseline="middle"; g.fillStyle="#e6e0d6"; g.fillText(ch,320,350);
-  const cv=$("#cd"), d=cv.getContext("2d"); d.lineWidth=26; d.lineCap="round"; d.lineJoin="round"; d.strokeStyle="#3a2e22";
-  let down=false, ink=0;
-  const pt=e=>{const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*640/r.width,(e.clientY-r.top)*640/r.height]};
-  cv.onpointerdown=e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=pt(e);d.beginPath();d.moveTo(x,y);d.lineTo(x+0.1,y);d.stroke();ink++};
-  cv.onpointermove=e=>{if(!down)return;const [x,y]=pt(e);d.lineTo(x,y);d.stroke();ink++};
-  cv.onpointerup=cv.onpointercancel=()=>{down=false};
-  $("#nz-clr").onclick=()=>{d.clearRect(0,0,640,640);ink=0};
-  $("#nz-say").onclick=()=>speak(ch);
-  $("#nz-ok").onclick=()=>{
-    if(ink<8){ $("#msg").textContent="なぞって みよう！"; return; }
-    $("#msg").textContent="じょうず！"; addStar();
-    const i=(Array.from(HIRA).indexOf(kanaSel)+1)%HIRA.length; setTimeout(()=>{kanaSel=Array.from(HIRA)[i];nazori()},1500);
+// ===== かきじゅん（ひらがな・カタカナ・小学校の かんじ）：みる → なぞる =====
+// 書き順データ: KanjiVG (c) Ulrich Apel, CC BY-SA 3.0 — strokes/ に同梱
+let kakiTab="hira", kakiCh="あ", kakiMode="watch", KSTR={}, kTok=0, kMiss=0;
+async function kakiLoad(tab){ const f=(tab==="hira"||tab==="kata")?"kana":"k"+tab.slice(1); if(KSTR[f]!==undefined) return KSTR[f];
+  try{ const r=await fetch("strokes/"+f+".json"); KSTR[f]=await r.json(); }catch(e){ KSTR[f]=null; } return KSTR[f]; }
+const hk=c=>String.fromCharCode(c.charCodeAt(0)+0x60);
+function kakiList(tab,data){ if(tab==="hira") return Array.from(HIRA); if(tab==="kata") return Array.from(HIRA).map(hk); return data?Object.keys(data):[]; }
+function kakiStrokes(data,ch){ const v=data&&data[ch]; return Array.isArray(v)?v:(v&&v.s)||[]; }
+async function nazori(){
+  kTok++; const tok=kTok;
+  const data=await kakiLoad(kakiTab); if(tok!==kTok||view!=="game:nazori") return;
+  const list=kakiList(kakiTab,data); if(!list.includes(kakiCh)) kakiCh=list[0];
+  const st=kakiStrokes(data,kakiCh), info=data&&data[kakiCh]&&!Array.isArray(data[kakiCh])?data[kakiCh]:null, hn=opt().hint;
+  const TABS=[["hira","ひらがな"],["kata","カタカナ"],["g1","1ねん"],["g2","2ねん"],["g3","3ねん"],["g4","4ねん"],["g5","5ねん"],["g6","6ねん"]];
+  $("#app").innerHTML=gameHead("✍️","かきじゅん")+`<div class="kaki"><div class="kleft">
+    <div class="kbox"><svg id="ksv" viewBox="0 0 109 109"><g stroke="#cfc8bb" stroke-width=".6" stroke-dasharray="2 2"><path d="M54.5 2V107M2 54.5H107"/></g>
+      <g id="kghost" stroke="#e6e0d6" stroke-width="5.4" fill="none" stroke-linecap="round" stroke-linejoin="round">${st.map(d=>`<path d="${d}"/>`).join("")}</g>
+      <g id="kdone" stroke="#3a2e22" stroke-width="5.4" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
+      <g id="kanim" stroke="#e0602a" stroke-width="5.4" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
+      <g id="kguide"></g></svg>
+      <canvas id="kcv" width="654" height="654" style="touch-action:none;${kakiMode==="trace"?"":"display:none"}"></canvas></div>
+    <div class="krow"><button class="btn ${kakiMode==="watch"?"":"ghost"}" id="kw">▶ みる</button><button class="btn ${kakiMode==="trace"?"":"ghost"}" id="kt">✍️ なぞる</button><button class="btn ghost" id="ks">🔊</button></div>
+    <div class="msg" id="msg">${st.length?`${kakiCh}　${st.length}かく`:""}</div>
+  </div><div class="kright">
+    <div class="ktabs">${TABS.map(t=>`<button class="btn ${kakiTab===t[0]?"":"ghost"}" onclick="kakiTab='${t[0]}';kakiCh=null;kakiMode='watch';nazori()">${t[1]}</button>`).join("")}</div>
+    <div class="kgrid">${list.map(c=>`<button class="${c===kakiCh?"on":""}${isDone("kaki:"+c)?" ok":""}" onclick="kakiCh='${c}';kakiMode='watch';nazori()">${c}</button>`).join("")}</div>
+    ${info?`<div class="kinfo"><b style="font-size:22px">${kakiCh}</b> <span>${info.k?"くん："+info.k:""} ${info.o?"　おん："+info.o:""}</span></div>`:""}
+    <div class="kcred">かきじゅん データ: <a href="http://kanjivg.tagaini.net" target="_blank" rel="noopener" style="color:inherit">KanjiVG</a> (CC BY-SA 3.0)</div>
+  </div></div>`;
+  const svg=$("#ksv"), NS="http://www.w3.org/2000/svg", anim=$("#kanim"), done=$("#kdone"), guide=$("#kguide");
+  const mk=(d,par)=>{ const e=document.createElementNS(NS,"path"); e.setAttribute("d",d); par.appendChild(e); return e; };
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const num=(i,pt,par)=>{ const g=document.createElementNS(NS,"g"); g.innerHTML=`<circle cx="${pt.x}" cy="${pt.y}" r="4.3" fill="#e0602a" stroke="none"/><text x="${pt.x}" y="${pt.y+1.9}" font-size="5.6" text-anchor="middle" fill="#fff" stroke="none" font-weight="800">${i+1}</text>`; par.appendChild(g); };
+  async function play(){
+    const my=++kTok; kTok=my; anim.innerHTML=""; guide.innerHTML=""; done.innerHTML="";
+    for(let i=0;i<st.length;i++){
+      if(my!==kTok) return; const e=mk(st[i],anim); const L=e.getTotalLength(); e.setAttribute("stroke-dasharray",L); e.setAttribute("stroke-dashoffset",L);
+      num(i,e.getPointAtLength(0),guide); e.getBoundingClientRect(); e.style.transition=`stroke-dashoffset ${Math.max(.35,L/90)}s linear`; e.setAttribute("stroke-dashoffset",0);
+      await sleep(Math.max(350,L/90*1000)+280);
+    }
+    if(my===kTok){ await sleep(600); anim.setAttribute("stroke","#3a2e22"); }
+  }
+  $("#ks").onclick=()=>speak(kakiCh);
+  $("#kw").onclick=()=>{ kakiMode="watch"; $("#kcv").style.display="none"; $("#kw").className="btn"; $("#kt").className="btn ghost"; anim.setAttribute("stroke","#e0602a"); play(); };
+  $("#kt").onclick=()=>{ kakiMode="trace"; nazori(); };
+  if(!st.length){ $("#msg").textContent="この もじは まだ ありません"; return; }
+  if(kakiMode==="watch"){ speak(kakiCh); play(); return; }
+  // ---- なぞる ----
+  kMiss=0; let idx=0; const cv=$("#kcv"), d=cv.getContext("2d"); d.lineWidth=34; d.lineCap="round"; d.lineJoin="round"; d.strokeStyle="#5aa0e8";
+  const exp=st.map(dd=>{ const e=document.createElementNS(NS,"path"); e.setAttribute("d",dd); svg.appendChild(e); const L=e.getTotalLength(), pts=[]; for(let i=0;i<=24;i++){ const q=e.getPointAtLength(L*i/24); pts.push([q.x,q.y]); } svg.removeChild(e); return {L,pts}; });
+  const showGuide=()=>{ guide.innerHTML=""; if(idx>=st.length) return; const g=mk(st[idx],guide); g.setAttribute("stroke","#e0602a"); g.setAttribute("stroke-width","1.6"); g.setAttribute("stroke-dasharray","3 3"); g.setAttribute("fill","none"); num(idx,{x:exp[idx].pts[0][0],y:exp[idx].pts[0][1]},guide); };
+  showGuide();
+  let down=false, up=[]; const sc=109/654, pt=e=>{ const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*654/r.width,(e.clientY-r.top)*654/r.height]; };
+  cv.onpointerdown=e=>{ if(idx>=st.length) return; down=true; cv.setPointerCapture(e.pointerId); const [x,y]=pt(e); up=[[x*sc,y*sc]]; d.beginPath(); d.moveTo(x,y); d.lineTo(x+.1,y); d.stroke(); };
+  cv.onpointermove=e=>{ if(!down) return; const [x,y]=pt(e); up.push([x*sc,y*sc]); d.lineTo(x,y); d.stroke(); };
+  const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  const judge=()=>{ const E=exp[idx].pts, n=up.length; if(n<3) return false; const sE=E[0], eE=E[E.length-1], sU=up[0], eU=up[n-1], len=exp[idx].L;
+    const tiny=len<14; if(dist(sU,sE)>(tiny?22:20)||dist(eU,eE)>(tiny?24:24)) return false;
+    const vx=[eE[0]-sE[0],eE[1]-sE[1]], ux=[eU[0]-sU[0],eU[1]-sU[1]], lv=Math.hypot(...vx), lu=Math.hypot(...ux);
+    if(lv>14){ if((vx[0]*ux[0]+vx[1]*ux[1])/(lv*(lu||1))<0.35) return false; }
+    let m=0; for(const q of E){ let b=1e9; for(const u of up){ const dd=dist(q,u); if(dd<b) b=dd; } m+=b; } return m/E.length<=15; };
+  cv.onpointerup=cv.onpointercancel=()=>{ if(!down) return; down=false;
+    const ok=judge(); d.clearRect(0,0,654,654);
+    if(ok){ mk(st[idx],done); idx++; kMiss=0; chime([660,880]); $("#msg").style.color=""; $("#msg").textContent=idx<st.length?`いいね！ つぎは ${idx+1}かくめ`:"";
+      if(idx>=st.length){ guide.innerHTML=""; $("#msg").textContent="じょうず！ ✨"; doneAdd("kaki:"+kakiCh); addStar(); const i=list.indexOf(kakiCh), nx=list[(i+1)%list.length]; setTimeout(()=>{ if(view==="game:nazori"){ kakiCh=nx; nazori(); } },1600); }
+      else showGuide();
+    } else { kMiss++; svg.classList.remove("shake"); void svg.getBoundingClientRect(); svg.classList.add("shake"); $("#msg").style.color="#c96a25"; $("#msg").textContent=`${idx+1}かくめ：オレンジの ●から はじめてね`;
+      if(kMiss>=2){ const g=mk(st[idx],anim); const L=g.getTotalLength(); g.setAttribute("stroke-dasharray",L); g.setAttribute("stroke-dashoffset",L); g.getBoundingClientRect(); g.style.transition="stroke-dashoffset .9s linear"; g.setAttribute("stroke-dashoffset",0); setTimeout(()=>g.remove(),1500); } }
   };
-  speak(ch);
+  speak(kakiCh);
 }
 
 // ===== ゲーム：まねっこ（おてほんを きいて、じぶんの こえで いう → きいて くらべる）=====
