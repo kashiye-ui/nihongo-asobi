@@ -334,8 +334,8 @@
   <label><span>おこさんの なまえ<br><span class="hint">なまえで よびかけます</span><br><span class="hint" id="nameHint"></span></span><input id="optName" list="nameList" style="font-size:17px;padding:6px;width:150px" onchange="childName=this.value.trim();setTimeout(updateNameHint,0);try{localStorage.setItem('childName',childName)}catch(e){}"><datalist id="nameList"></datalist></label>
   <label><span>コース<br><span class="hint">がくねんに あわせて</span></span><select id="optCourse" onchange="setCourse(this.value)"><option value="big">小4〜中学生</option><option value="small">5さい〜小3</option></select></label>
   <label><span>ぼご ヒント<br><span class="hint">母語のヒントを出す</span></span><input type="checkbox" id="optHint" checked></label>
-  <label><span>ヒントの ことば<br><span class="hint">母語が決まったら増やします</span></span>
-    <select id="optLang"><option value="ne">नेपाली（仮）</option><option value="es">español（仮）</option></select></label>
+  <label><span>ヒントの ことば<br><span class="hint">母語に あわせて えらぶ</span></span>
+    <select id="optLang" onchange="setHintLang(this.value)"><option value="ne">नेपाली（仮）</option><option value="vi">Tiếng Việt（仮）</option><option value="zh">中文（仮）</option><option value="fil">Filipino（仮）</option><option value="id">Indonesia（仮）</option></select></label>
   <label><span>ごほうび チケット<br><span class="hint">試作では表示のみ</span></span><input type="checkbox" id="optTicket"></label>
   <label><span>「つうじたか」の きびしさ</span><select id="optStrict" onchange="try{localStorage.setItem('strict',this.value)}catch(e){}"><option value="easy">やさしい</option><option value="normal">ふつう</option><option value="hard">きびしい</option></select></label>
   <label><span>よみあげの はやさ</span><input type="range" id="optRate" min="0.5" max="1.1" step="0.1" value="0.8"></label>
@@ -458,7 +458,7 @@ let sMiss=false, stars = 0, course = null, view = "title", gameStars = 0;
 try{ stars = +localStorage.getItem("stars")||0 }catch(e){}
 const $ = s=>document.querySelector(s);
 const opt = ()=>({hint:$("#optHint").checked, lang:$("#optLang").value, ticket:$("#optTicket").checked, rate:+$("#optRate").value});
-const hint = o=>{const p=opt(); return p.hint && o.tr && o.tr[p.lang] ? o.tr[p.lang] : ""};
+const hint = o=>{const p=opt(); return p.hint && o.tr && o.tr.ne ? o.tr.ne : ""};
 const disp = it=>it.h||it.ja;
 const say = it=>it.say||it.ja;
 
@@ -621,7 +621,7 @@ try{ childName=localStorage.getItem("childName")||""; }catch(e){}
 try{ fetch("phrases.json").then(r=>r.json()).then(j=>{PHRASES=j}).catch(()=>{}); }catch(e){}
 function nameSlug(n){ return Array.from(n).map(c=>c.codePointAt(0).toString(16)).join("-"); }
 function phraseText(p){ return childName ? p.ja.split("{name}").join(childName) : p.ja.split("{name}、").join("").split("、{name}").join("").split("{name}").join(""); }
-function phraseTr(p){ const t=p.tr&&p.tr[opt().lang]; if(!t) return ""; return childName ? t.split("{name}").join(childName) : t.split(", {name}").join("").split("{name}, ").join("").split("{name}").join(""); }
+function phraseTr(p){ const t=HT(p.ja,p.tr&&p.tr.ne); if(!t) return ""; return childName ? t.split("{name}").join(childName) : t.split(", {name}").join("").split("{name}, ").join("").split("{name}").join(""); }
 function clipUrl(p){ return childName ? "audio/names/"+nameSlug(childName)+"/"+p.id+".mp3" : "audio/"+p.id+".mp3"; }
 function playPhrase(p){
   if(CLIPS.size) return spk(p.ja,"p");
@@ -986,11 +986,11 @@ function missionList(){
 }
 function todayMissions(){
   return missionList().l.map(x=>{
-    if(x.kind==="pet"){ const ac=petActs()[x.ref]||petActs().greet; return {...x,em:ac.em,label:"ペットと おはなし",ne:"पाल्तुसँग कुरा",sub:ac.label+"・3かい",go:`go('pet');petAsk('${x.ref||"greet"}')`}; }
-    if(x.kind==="word"){ const s=findScene(x.ref); return {...x,em:s.em,label:"ことば",ne:"शब्द",sub:s.title,go:`qs={};go('quiz:${x.ref}')`}; }
-    if(x.kind==="review"){ const s=findScene(x.ref); return {...x,em:"🔁",label:"ふくしゅう",ne:"दोहोर्याउने",sub:s.title,go:`qs={};go('quiz:${x.ref}')`}; }
-    if(x.kind==="story"){ const s=STORIES.find(q=>q.id===x.ref); return {...x,em:s.em,label:"ものがたり",ne:"कथा",sub:s.title,go:`storyI=0;go('story:${x.ref}')`}; }
-    const gi=GAMEINFO[x.ref]; return {...x,em:gi[0],label:"ゲーム",ne:"खेल",sub:gi[1],go:`go('game:${x.ref}')`};
+    if(x.kind==="pet"){ const ac=petActs()[x.ref]||petActs().greet; return {...x,em:ac.em,label:"ペットと おはなし",ne:HT("ペットと おはなし","पाल्तुसँग कुरा"),sub:ac.label+"・3かい",go:`go('pet');petAsk('${x.ref||"greet"}')`}; }
+    if(x.kind==="word"){ const s=findScene(x.ref); return {...x,em:s.em,label:"ことば",ne:HT("ことば","शब्द"),sub:s.title,go:`qs={};go('quiz:${x.ref}')`}; }
+    if(x.kind==="review"){ const s=findScene(x.ref); return {...x,em:"🔁",label:"ふくしゅう",ne:HT("ふくしゅう","दोहोर्याउने"),sub:s.title,go:`qs={};go('quiz:${x.ref}')`}; }
+    if(x.kind==="story"){ const s=STORIES.find(q=>q.id===x.ref); return {...x,em:s.em,label:"ものがたり",ne:HT("ものがたり","कथा"),sub:s.title,go:`storyI=0;go('story:${x.ref}')`}; }
+    const gi=GAMEINFO[x.ref]; return {...x,em:gi[0],label:"ゲーム",ne:HT("ゲーム","खेल")+(HT("g:"+x.ref,gi[2])?" / "+HT("g:"+x.ref,gi[2]):""),sub:gi[1],go:`go('game:${x.ref}')`};
   });
 }
 function missionDone(kind,ref){
@@ -1190,7 +1190,7 @@ function petHome(){
     <div class="petcard2"><div style="flex:1"><div class="nm">${pet.name} <small style="display:inline">${STAGE_NAME[st-1]}</small></div><div class="meter"><i style="width:${m}%"></i></div></div><div style="font-size:22px">❤️ ${pet.hearts}</div></div></div>
     <div class="psr"><h2>🐾 ${pet.name}の おせわ</h2>
       <p class="sub">したい ことを えらぼう。${pet.name}が はなしかけるから、にほんごで こたえてね！</p>
-      <div class="acts">${Object.entries(petActs()).map(([k,a])=>`<button class="act" onclick="petAsk('${k}')"><span class="ae">${a.em}</span><b>${a.label}</b><span style="letter-spacing:2px;color:var(--gold);font-size:14px">${"●".repeat(petLv(k)+1)}${"○".repeat(3-petLv(k))}</span>${hn?`<small>${ACT_NE[k]||""}</small>`:""}</button>`).join("")}</div>
+      <div class="acts">${Object.entries(petActs()).map(([k,a])=>`<button class="act" onclick="petAsk('${k}')"><span class="ae">${a.em}</span><b>${a.label}</b><span style="letter-spacing:2px;color:var(--gold);font-size:14px">${"●".repeat(petLv(k)+1)}${"○".repeat(3-petLv(k))}</span>${hn?`<small>${HT("act:"+k,ACT_NE[k])||""}</small>`:""}</button>`).join("")}</div>
       <p style="margin:14px 0 0">きょうの おせわ <b style="color:var(--gold)">${n} / 3</b> ${"⭐".repeat(n)}${"☆".repeat(3-n)}</p>
       <div class="tools"><button class="btn ghost" onclick="go('petnote')">📒 ことばノート ${Object.keys(pet.learned||{}).length}</button><button class="btn ghost" onclick="go('evlist')">🎒 おでかけ</button></div>
     </div></div>`;
@@ -1241,7 +1241,7 @@ async function petSpeak(){
 function petNote(){
   const L=pet.learned||{}, ks=Object.keys(L), hn=opt().hint;
   $("#app").innerHTML=gameHead("📒","ことばノート","pet")+`<p class="hint" style="text-align:center">いえた ことばが たまるよ（${ks.length}）</p><div style="max-width:560px;margin:0 auto">`+
-   (ks.length?ks.map((k,i)=>`<div class="scene" style="margin:8px 0;cursor:pointer" data-k="${i}">${k}${hn?`<div class="hint" style="font-size:16px;font-weight:400">${L[k].ne}</div>`:""}<small>${"⭐".repeat(Math.min(5,L[k].n))}</small></div>`).join(""):`<p style="text-align:center">まだ ありません。おせわを してみよう！</p>`)+`</div>`;
+   (ks.length?ks.map((k,i)=>`<div class="scene" style="margin:8px 0;cursor:pointer" data-k="${i}">${k}${hn?`<div class="hint" style="font-size:16px;font-weight:400">${HT(k,L[k].ne)}</div>`:""}<small>${"⭐".repeat(Math.min(5,L[k].n))}</small></div>`).join(""):`<p style="text-align:center">まだ ありません。おせわを してみよう！</p>`)+`</div>`;
   document.querySelectorAll("[data-k]").forEach(el=>el.onclick=()=>speak(ks[el.dataset.k]));
 }
 
@@ -1836,7 +1836,7 @@ function quiz(sid){
   const others = shuffle(s.items.filter(x=>x!==answer && !(sent&&sent[0].includes(x.ja)))).slice(0,2);
   const choices = shuffle([answer,...others]);
   const sayQ = ()=>speak(cloze?sent[0]:say(answer));
-  const lang=opt().lang, trS = cloze&&opt().hint&&lang==="ne"?sent[1]:"";
+  const lang=opt().lang, trS = cloze&&opt().hint?sent[1]:"";
   $("#app").innerHTML = lessonHead("scene:"+sid, qs.n/N*100) + banner(sid) + `<div class="qtitle">${s.em} ${s.title}　${cloze?"ぶんを きいて えらぼう":"きいて えらぼう"}</div>`
     + (cloze?`<div class="qsent">${sent[0].replace(answer.ja,'<span class="blank">＿＿＿</span>')}</div>${trS?`<div class="qtr">${trS}</div>`:""}`:"")
     + `<button class="spk" id="again" aria-label="もういちど">🔊</button>
@@ -1852,7 +1852,7 @@ function quiz(sid){
         document.querySelector(".pbar i").style.width=(qs.n/N*100)+"%";
         const ex1 = cloze ? sent : exs[0];
         speakSeq(ex1?["すごい！",say(answer),ex1[0]]:["すごい！",say(answer)]);
-        const body = `${answer.em} ${disp(answer)}${hint(answer)?"　"+hint(answer):""}` + (ex1?`<div class="exs">${ex1[0].replace(answer.ja,"<b>"+answer.ja+"</b>")}${opt().hint&&opt().lang==="ne"?"<br><small>"+ex1[1]+"</small>":""}</div>`:"");
+        const body = `${answer.em} ${disp(answer)}${hint(answer)?"　"+hint(answer):""}` + (ex1?`<div class="exs">${ex1[0].replace(answer.ja,"<b>"+answer.ja+"</b>")}${opt().hint&&ex1[1]?"<br><small>"+ex1[1]+"</small>":""}</div>`:"");
         sheet(true,"せいかい！ ✨",body,"つぎへ ▶",()=>quiz(sid));
       }else{
         el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
@@ -1895,8 +1895,31 @@ try{ fetch("names.txt").then(r=>r.text()).then(t=>{ const dl=document.getElement
 function openPanel(){ try{ $("#optStrict").value=strictMode(); }catch(e){}setTimeout(updateNameHint,50);$("#optCourse").value=courseSel;renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
 function closePanel(){$("#panel").classList.remove("on"); render()}
 try{ speechSynthesis.getVoices(); }catch(e){}
+// ===== 母語ヒントの きりかえ（ne=ネパール／vi／zh／fil／id）=====
+// 訳は lang/<code>.json（キー＝にほんごの ぶん）。ne は もとの データを そのまま つかう。
+let PACK={}, HREG=null;
+const HT=(key,ne)=>{ let l="ne"; try{ l=$("#optLang").value; }catch(e){} return l==="ne"?(ne||""):(PACK[key]||""); };
+function hintReg(){
+  if(HREG) return HREG; const R=[], reg=(o,f,key)=>{ if(o&&o[f]) R.push({o,f,key,orig:o[f]}); };
+  for(const k in COURSES) for(const sc of COURSES[k].scenes){ reg(sc.tr,"ne",sc.title); for(const it of sc.items||[]) reg(it.tr,"ne",it.ja); }
+  for(const ja in EX) for(const e of EX[ja]) reg(e,1,e[0]);
+  for(const S of STORIES){ reg(S,"ne",S.title); for(const n of S.nodes){ if(n.t==="talk"){ reg(n,"ne",n.ja); n.words.forEach(w=>reg(w,"ne",w.ja)); } else { reg(n,"ne",n.ja); n.ch.forEach(c=>{ reg(c,"ne",c.ja); reg(c,"why","why:"+c.ja); }); } } }
+  for(const e of EVENTS){ reg(e,"ne",e.title); for(const n of e.nodes) reg(n,"ne",n.t==="say"?n.say:n.ja); }
+  for(const j of JOSHI) reg(j,4,j[1]+"□"+j[3]);
+  return HREG=R;
+}
+function applyHints(){ const l=$("#optLang").value; hintReg().forEach(r=>{ r.o[r.f]= l==="ne"?r.orig:(PACK[r.key]||""); }); }
+async function setHintLang(l,noRender){
+  try{ localStorage.setItem("hlang",l); }catch(e){}
+  PACK={}; if(l!=="ne"){ try{ PACK=await (await fetch("lang/"+l+".json")).json(); }catch(e){ PACK={}; } }
+  const sel=$("#optLang"); if(sel) sel.value=l; applyHints(); if(!noRender) render();
+}
+const petActs0=petActs;
+petActs=function(){ const A=petActs0(); for(const k in A) A[k].v.forEach(v=>{ v.cueNe=HT(v.cue,v.cueNe); v.sayNe=HT(v.say,v.sayNe); }); return A; };
+
 loadVoices();
 render();
+try{ const hl=localStorage.getItem("hlang"); if(hl&&hl!=="ne") setHintLang(hl); }catch(e){}
 try{ if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{}); }catch(e){}
 </script>
 </body>
