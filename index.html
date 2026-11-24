@@ -791,7 +791,8 @@ function buildMissions(){
   const w1=pool[d%pool.length], w2=pool[(d+1)%pool.length];
   const us=STORIES.filter(x=>!isDone("story:"+x.id)), st=us.length?us[0]:STORIES[d%STORIES.length];
   const games=["nazori","manekko","ageyou",courseSel==="small"?"kyushoku":"otayori"], g=games[d%games.length];
-  return [{kind:"pet"},{kind:"word",ref:w1.id},{kind:"story",ref:st.id},{kind:"word",ref:w2.id},{kind:"game",ref:g}].map(x=>({...x,done:false}));
+  const ak=Object.keys(petActs()), mn=Math.min(...ak.map(petLv)), cand=ak.filter(k=>petLv(k)===mn), pk=cand[d%cand.length];
+  return [{kind:"pet",ref:pk},{kind:"word",ref:w1.id},{kind:"story",ref:st.id},{kind:"word",ref:w2.id},{kind:"game",ref:g}].map(x=>({...x,done:false}));
 }
 const GAMEINFO={nazori:["✍️","ひらがな","लेख्ने अभ्यास"],manekko:["🎤","まねっこ","नक्कल"],ageyou:["🎁","あげよう","दिउँ"],kyushoku:["🍱","きゅうしょく","स्कूल खाजा"],otayori:["🕵️","おたより","स्कूलको सूचना"]};
 function missionList(){
@@ -801,7 +802,7 @@ function missionList(){
 }
 function todayMissions(){
   return missionList().l.map(x=>{
-    if(x.kind==="pet") return {...x,em:"🐾",label:"ペットと おはなし",ne:"पाल्तुसँग कुरा",sub:pet.name,go:"go('pet')"};
+    if(x.kind==="pet"){ const ac=petActs()[x.ref]||petActs().greet; return {...x,em:ac.em,label:"ペットと おはなし",ne:"पाल्तुसँग कुरा",sub:ac.label+"・3かい",go:`go('pet');petAsk('${x.ref||"greet"}')`}; }
     if(x.kind==="word"){ const s=findScene(x.ref); return {...x,em:s.em,label:"ことば",ne:"शब्द",sub:s.title,go:`qs={};go('quiz:${x.ref}')`}; }
     if(x.kind==="story"){ const s=STORIES.find(q=>q.id===x.ref); return {...x,em:s.em,label:"ものがたり",ne:"कथा",sub:s.title,go:`storyI=0;go('story:${x.ref}')`}; }
     const gi=GAMEINFO[x.ref]; return {...x,em:gi[0],label:"ゲーム",ne:"खेल",sub:gi[1],go:`go('game:${x.ref}')`};
@@ -844,7 +845,7 @@ function homeView(){
     <div class="mhead"><h2>きょうの ミッション</h2><span>${done} / 5</span></div>
     <p class="msub">まいにち この 5つを やろう！ ${hn?"· हरेक दिन यी ५ वटा गरौँ!":""}</p>
     <div class="msteps">${M.map((x,i)=>`<div class="mstep ${x.done?"done":next===x?"cur":""}" onclick="${x.go}"><span class="no">${i+1}</span><div class="e">${x.em}</div><b>${x.label}</b><small>${x.sub}${hn?"<br>"+x.ne:""}</small></div>`).join("")}</div>
-    ${next?`<button class="btn big gobtn" onclick="${next.go}">${next.em} つぎは「${next.label}：${next.sub}」 ▶</button>`:`<div class="allclear">🏆 きょうの ミッション ぜんぶ クリア！<br><small>すごい！ あしたも まってるよ</small></div>`}
+    ${next?`<button class="btn big gobtn" onclick="${next.go}">${next.em} つぎは「${next.sub.replace("・3かい","")}」 ▶</button>`:`<div class="allclear">🏆 きょうの ミッション ぜんぶ クリア！<br><small>すごい！ あしたも まってるよ</small></div>`}
     <div class="more"><h3>ほかにも あそべるよ</h3><div class="mtiles">
       <button class="mtile" onclick="go('pet')"><span class="e">🐾</span>ペットの おせわ</button>
       <button class="mtile" onclick="go('free')"><span class="e">📚</span>ぜんぶの ことば・ゲーム</button>
