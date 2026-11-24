@@ -52,7 +52,46 @@ def text_for(p, name):
     if name: return t.replace("{name}", name)
     return t.replace("{name}、", "").replace("、{name}", "").replace("{name}", "")
 
+def pcm_to_mp3(pcm):
+    import subprocess
+    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", "-",
+                        "-b:a", "64k", "-f", "mp3", "-"], input=pcm, capture_output=True)
+    if r.returncode: raise SystemExit("ffmpeg error: " + r.stderr.decode()[:200])
+    return r.stdout
+
+def synth_gemini(text, voice):
+    import time
+    prompt = PET_BY_NAME.get(voice, TTS_PROMPT)
+    body = json.dumps({
+        "contents": [{"role": "user", "parts": [{"text": "%s、次の言葉だけを読んでください:\n%s" % (prompt, text)}]}],
+        "generationConfig": {"responseModalities": ["AUDIO"],
+            "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice or "Zephyr"}}}}}).encode()
+    url = "https://aiplatform.googleapis.com/v1/publishers/google/models/%s:generateContent?key=%s" % (TTS_MODEL, KEY)
+    err = None
+    for attempt in range(6):
+        try:
+            req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=90) as r:
+                d = json.load(r)
+            for p in d["candidates"][0]["content"]["parts"]:
+                if "inlineData" in p:
+                    return pcm_to_mp3(base64.b64decode(p["inlineData"]["data"]))
+            err = "no audio"
+            time.sleep(2); continue
+        except urllib.error.HTTPError as e:
+            err = e
+            if e.code in (429, 500, 502, 503, 504) and attempt < 5:
+                time.sleep(2 + attempt * 3); continue
+            raise SystemExit("Gemini TTS error %s: %s" % (e.code, e.read().decode()[:300]))
+        except (KeyError, IndexError):
+            time.sleep(2); continue
+        except Exception:
+            if attempt < 5: time.sleep(2 + attempt * 3); continue
+            raise
+    raise SystemExit("Gemini TTS failed: %s" % err)
+
 def synth(text, voice=None, with_rate=True):
+    if TTS_MODEL: return synth_gemini(text, voice)
     cfg = {"audioEncoding": "MP3"}
     if TTS_MODEL:
         inp = {"text": text, "prompt": PET_BY_NAME.get(voice, TTS_PROMPT)}
