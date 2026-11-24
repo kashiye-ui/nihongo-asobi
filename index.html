@@ -323,6 +323,7 @@
   .jch{display:flex;gap:16px;justify-content:center;margin:20px 0;flex-wrap:wrap}
   .jbtn{font:inherit;font-size:44px;font-weight:800;min-width:120px;min-height:100px;border-radius:26px;border:0;background:#fff;color:#2a2540;box-shadow:0 7px 0 var(--soft);cursor:pointer;text-shadow:none}
   .jbtn:active{transform:translateY(4px);box-shadow:0 3px 0 var(--soft)}.jbtn.good{background:#4be3a0}.jbtn.bad{background:#ff8c8c;animation:shk .25s}
+  .petscreen .acts{grid-template-columns:repeat(5,1fr);gap:9px}.petscreen .act{padding:10px 2px}.petscreen .act .ae{font-size:40px}.petscreen .act b{font-size:17px}.petscreen .act small{font-size:11px}
 </style>
 </head>
 <body>
@@ -936,12 +937,12 @@ function parentView(){
   const mastered=ks.filter(k=>k.startsWith("w:")&&SK[k].ok-SK[k].ng>=2).length, weak=ks.filter(k=>k.startsWith("w:")&&SK[k].ng>SK[k].ok);
   const acts=petActs(), kakiN=(JSON.parse(localStorage.getItem("done")||"[]")).filter(x=>x.startsWith("kaki:")).length;
   const M=todayMissions();
-  const bars=Object.entries(acts).map(([k,a])=>`<div style="display:flex;align-items:center;gap:10px;margin:1px 0"><span style="font-size:24px;width:36px">${a.em}</span><span style="width:110px">${a.label}</span><div class="meter" style="flex:1;margin:0"><i style="width:${(petLv(k)+1)*25}%"></i></div><b style="width:48px;text-align:right">Lv.${petLv(k)+1}</b></div>`).join("");
+  const bars=Object.entries(acts).map(([k,a])=>`<div style="display:flex;align-items:center;gap:10px;margin:1px 0"><span style="font-size:24px;width:36px">${a.em}</span><span style="width:84px;font-size:15px">${a.label}</span><div class="meter" style="flex:1;margin:0"><i style="width:${(petLv(k)+1)*25}%"></i></div><b style="width:40px;text-align:right;font-size:15px">Lv.${petLv(k)+1}</b></div>`).join("");
   const weakList=weak.slice(0,12).map(k=>{ const [,sid,ja]=k.split(":"); const scn=sc.find(x=>x.id===sid); return `<span class="chipw">${scn?scn.em:""} ${ja}</span>`; }).join("")||"<span style='opacity:.8'>まだ ありません</span>";
   return `<div class="parent"><h2 style="margin:6px 0 14px">👪 おうちのひとへ：がくしゅうの ようす</h2>
    <div class="prog"><div><b>🔥 ${stats.streak}</b>れんぞく（にち）</div><div><b>⭐ ${stars}</b>ほし</div><div><b>📚 ${mastered}</b>みについた ことば</div><div><b>✍️ ${kakiN}</b>かけた もじ</div></div>
    <div class="pcols"><div class="pbox"><h3>きょうの ミッション ${M.filter(x=>x.done).length} / 5</h3>${M.map(x=>`<div>${x.done?"✅":"⬜"} ${x.em} ${x.label}：${x.sub.replace("・3かい","")}</div>`).join("")}
-     <h3 style="margin-top:16px">ペットと おはなし（レベル）</h3>${bars}</div>
+     <h3 style="margin-top:16px">ペットと おはなし（レベル）</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">${bars}</div></div>
    <div class="pbox"><h3>にがてな ことば</h3><div>${weakList}</div><p style="opacity:.85;font-size:15px;margin:10px 0 0">まちがえた ことばは、ミッションの「ふくしゅう」に でます。</p>
      <h3 style="margin-top:18px">データの ひきつぎ</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" onclick="saveExport()">📤 コピー</button><button class="btn ghost" onclick="saveImport()">📥 ひきつぐ</button></div>
      <textarea id="sv" rows="3" placeholder="ここに ペースト（ひきつぎ）" style="width:100%;margin-top:10px;border-radius:12px;padding:8px;font-size:14px"></textarea><div class="msg" id="svm"></div></div></div></div>`;
@@ -1087,12 +1088,30 @@ function petActs(){
      V(2,"ごほん ごほん… かぜ かも。","खोक्..खोक्.. रुघाखोकी जस्तो छ।","だいじょうぶ？ ゆっくり やすんでね。","ठीक छ? आराम गर्नू।",["だいじょうぶ","大丈夫","やすんで","休んで"]),
      V(2,"あたまが いたいよ…","मेरो टाउको दुख्यो…","くすりを のもうね。","औषधि खाऊँ है।",["くすり","薬","のもう","飲もう"]),
      V(3,"おなかが いたいよ…","मेरो पेट दुख्यो…","トイレに いく？ びょういんに いく？","शौचालय जाने? अस्पताल जाने?",["トイレ","びょういん","病院","いく","行く"]),
-     V(4,"ねつが あるみたい…","ज्वरो आएजस्तो छ…","あたたかくして、きょうは ゆっくり やすもう。あとで びょういんに いこうね。","न्यानो बनाएर आज आराम गरौँ। पछि अस्पताल जाऔं है।",["やすもう","休もう","びょういん","病院","あたた"])]}
+     V(4,"ねつが あるみたい…","ज्वरो आएजस्तो छ…","あたたかくして、きょうは ゆっくり やすもう。あとで びょういんに いこうね。","न्यानो बनाएर आज आराम गरौँ। पछि अस्पताल जाऔं है।",["やすもう","休もう","びょういん","病院","あたた"])]},
+   gakkou:{em:"🏫",label:"がっこう",v:[
+     V(1,"がっこう どう？","स्कूल कस्तो छ?","たのしいよ。","रमाइलो छ।",["たのしい","楽しい"]),
+     V(2,"がっこうは どうだった？","स्कूल कस्तो रह्यो?","たのしかったよ。","रमाइलो भयो।",["たのしかった","楽しかった","たのしい"]),
+     V(2,"なにが いちばん すき？","के सबैभन्दा मन पर्छ?","きゅうしょくが すきだよ。","खाजा मन पर्छ।",["きゅうしょく","給食","すき","好き"]),
+     V(3,"きょうの じゅぎょうは なあに？","आजको कक्षा के हो?","こくごと さんすうを べんきょうしたよ。","नेपाली/जापानी भाषा र गणित पढें।",["こくご","国語","さんすう","算数","べんきょう"]),
+     V(4,"ともだちと なにを したの？","साथीसँग के गर्यौ?","やすみじかんに ともだちと うんどうじょうで あそんだよ。","आराम समयमा साथीसँग खेल मैदानमा खेल्यौँ।",["やすみじかん","ともだち","うんどうじょう","あそんだ","遊んだ"])]},
+   kaimono:{em:"🛒",label:"おかいもの",v:[
+     V(1,"いらっしゃいませ！","स्वागत छ! (पसलमा)","これを ください。","यो दिनुहोस्।",["ください","これ"]),
+     V(2,"ぜんぶで 300えんです。","जम्मा ३०० येन हो।","はい、どうぞ。","हुन्छ, लिनुहोस्।",["どうぞ","はい"]),
+     V(2,"ふくろは いりますか？","झोला चाहिन्छ?","いりません。","चाहिँदैन।",["いりません","いらない","いります"]),
+     V(3,"なにを かいに きたの？","के किन्न आएको?","ノートと えんぴつを かいに きたよ。","कापी र पेन्सिल किन्न आएँ।",["ノート","えんぴつ","鉛筆","かい","買い"]),
+     V(4,"おかいけいは 500えんです。","जम्मा ५०० येन हो।","これで おねがいします。ありがとうございました。","यसले तिर्छु। धन्यवाद।",["おねがい","お願い","ありがとう"])]},
+   tomodachi:{em:"🧒",label:"ともだち",v:[
+     V(1,"いっしょに あそぼう！","सँगै खेलौँ!","いいよ。","हुन्छ।",["いいよ","いい"]),
+     V(2,"なんさい？","कति वर्षको?","12さいです。","१२ वर्षको हुँ।",["さい","歳","12","じゅうに"]),
+     V(2,"どこから きたの？","कहाँबाट आएको?","ネパールから きたよ。","नेपालबाट आएँ।",["ネパール","きた","来た"]),
+     V(3,"すきな たべものは なに？","मनपर्ने खाना के हो?","カレーが すきだよ。あなたは？","मलाई करी मन पर्छ। तिमीलाई?",["カレー","すき","好き"]),
+     V(4,"あした いっしょに あそばない？","भोलि सँगै खेल्ने?","うん、いいよ。がっこうが おわったら こうえんで あそぼう。","हुन्छ। स्कूल सकिएपछि पार्कमा खेलौँ।",["いいよ","がっこう","こうえん","あそぼう","おわったら"])]}
   };
 }
 function petLv(k){ return Math.max(0,Math.min(3,((pet.lvl||{})[k])||0)); }
 let petAct=null, petTry=0, petV=null;
-const ACT_NE={greet:"अभिवादन",deru:"बाहिर जाने",gohan:"खाना",sanpo:"हिँडाइ",nenne:"सुत्ने",nade:"सुम्सुम्याउने",kaze:"चिन्ता"};
+const ACT_NE={greet:"अभिवादन",deru:"बाहिर जाने",gohan:"खाना",sanpo:"हिँडाइ",nenne:"सुत्ने",nade:"सुम्सुम्याउने",kaze:"चिन्ता",gakkou:"स्कूल",kaimono:"किनमेल",tomodachi:"साथी"};
 function petHome(){
   const m=petMood(), hn=opt().hint, n=Math.min(3,(pet.day&&pet.day.d===todayStr())?pet.day.n:0), st=stageOf(), hello=m<45?"さびしいよ〜":m<70?"あそぼう！":"げんきだよ！";
   $("#app").innerHTML=header("home")+`<div class="petscreen"><div>${roomHTML("proom","",hello)}
