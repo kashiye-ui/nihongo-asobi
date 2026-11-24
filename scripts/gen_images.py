@@ -100,6 +100,49 @@ def scenes():
         except Exception as e:
             bad += 1; print("NG", k, e)
     return bad
+STAGES = {
+ 1: "a tiny newborn baby version: very round, huge head, tiny stubby body, extremely cute",
+ 2: "a small young child version: playful, still small and chubby",
+ 3: "a teenager version: medium size, energetic and bouncy",
+ 4: "a fully grown adult: strong, graceful and healthy",
+ 5: "a magnificent grown-up version wearing a tiny golden crown and a small red cape, proud and gentle, a few sparkles",
+}
+FSTYLE = ("Warm friendly children's-book illustration, soft watercolor and gouache texture, rounded shapes, pastel palette. "
+          "FULL BODY of the character from head to toe, standing on four legs (or on feet), side view facing right, completely visible, centered with margin around. "
+          "Background must be a flat solid pure green (#00FF00) with NO shadow, NO ground, NO gradient, NO text. ")
+def keyout(raw, path):
+    from PIL import Image; import io, numpy as np
+    im = Image.open(io.BytesIO(raw)).convert("RGB"); a = np.asarray(im).astype("float32")
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    gd = g - np.maximum(r, b)                      # みどりらしさ
+    alpha = np.clip(1 - (gd - 25) / 70, 0, 1)      # 25以下=のこす 95以上=けす
+    # ふちの みどり かぶりを おさえる
+    spill = np.clip(gd, 0, None) * (alpha < 1) * 0.6
+    a[..., 1] = np.clip(g - spill, 0, 255)
+    out = np.dstack([a, alpha * 255]).astype("uint8"); o = Image.fromarray(out, "RGBA")
+    bb = o.getchannel("A").point(lambda v: 255 if v > 20 else 0).getbbox()
+    if bb: o = o.crop(bb)
+    w, h = o.size; sc = 512 / max(w, h); o = o.resize((max(1, int(w * sc)), max(1, int(h * sc))))
+    o.save(path, "WEBP", quality=88)
+def fullpets():
+    os.makedirs("pets3", exist_ok=True); bad = 0
+    for k, d in PETS.items():
+        prev = None
+        for n in range(1, 6):
+            path = f"pets3/{k}_{n}.webp"
+            try:
+                if os.path.exists(path) and not FORCE:
+                    prev = base64.b64encode(open(f"pets3/raw_{k}_{n}.png", "rb").read()).decode() if os.path.exists(f"pets3/raw_{k}_{n}.png") else None
+                    continue
+                if prev is None:
+                    raw, _ = gen(FSTYLE + f"Character: {d}, {STAGES[n]}.")
+                else:
+                    raw, _ = gen(FSTYLE + f"This is the same pet at the previous growth stage. Draw the SAME character (same species, colors, markings, style) now as {STAGES[n]}. Keep the pose and framing similar.", prev, "image/png")
+                open(f"pets3/raw_{k}_{n}.png", "wb").write(raw)
+                keyout(raw, path); prev = base64.b64encode(raw).decode(); print("ok", path)
+            except Exception as e:
+                bad += 1; print("NG", path, e); prev = None
+    return bad
 def main():
     if not KEY: sys.exit("no key")
     os.makedirs("portraits", exist_ok=True); bad = 0
@@ -113,5 +156,6 @@ def main():
             bad += 1; print("NG", k, e)
     bad += pets()
     bad += scenes()
+    bad += fullpets()
     sys.exit(1 if bad else 0)
 main()
