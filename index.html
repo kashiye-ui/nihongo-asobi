@@ -483,6 +483,12 @@ function speak(t,v){
     } else ttsFallback(t,res);
   });
 }
+
+// いま ながれている おんせいが おわるまで まつ（ほめことばを きって つぎの もんだいを よまない）
+function audioSettle(max){ max=max||9000; return new Promise(res=>{ const t0=Date.now(); let quiet=0;
+  const tick=()=>{ let busy=false; try{ busy=(curAudio&&!curAudio.paused&&!curAudio.ended)||speechSynthesis.speaking; }catch(e){}
+    quiet=busy?0:quiet+1; if(quiet>=3||Date.now()-t0>max) return res(); setTimeout(tick,120); };
+  setTimeout(tick,350); }); }
 async function speakSeq(list,v){ for(const t of list) await speak(t,v); }
 const VOICE_OF={"せんせい":"t","ほけんの せんせい":"t","ともだち":"f","おかあさん":"m","おいしゃさん":"dr","きゅうしょくとうばん":"c"};
 const vOf=w=>VOICE_OF[w]||"n";
@@ -1458,7 +1464,7 @@ async function nazori(){
   cv.onpointerup=cv.onpointercancel=()=>{ if(!down) return; down=false;
     const ok=judge(); d.clearRect(0,0,654,654);
     if(ok){ mk(st[idx],done); idx++; kMiss=0; chime([660,880]); $("#msg").style.color=""; $("#msg").textContent=idx<st.length?`いいね！ つぎは ${idx+1}かくめ`:"";
-      if(idx>=st.length){ guide.innerHTML=""; $("#msg").textContent="じょうず！ ✨"; doneAdd("kaki:"+kakiCh); addStar(); const i=list.indexOf(kakiCh), nx=list[(i+1)%list.length]; setTimeout(()=>{ if(view==="game:nazori"){ kakiCh=nx; nazori(); } },1600); }
+      if(idx>=st.length){ guide.innerHTML=""; $("#msg").textContent="じょうず！ ✨"; doneAdd("kaki:"+kakiCh); addStar(); const i=list.indexOf(kakiCh), nx=list[(i+1)%list.length]; setTimeout(()=>audioSettle(6000).then(()=>{ if(view==="game:nazori"){ kakiCh=nx; nazori(); } }),1200); }
       else showGuide();
     } else { kMiss++; svg.classList.remove("shake"); void svg.getBoundingClientRect(); svg.classList.add("shake"); $("#msg").style.color="#c96a25"; $("#msg").textContent=`${idx+1}かくめ：オレンジの ●から はじめてね`;
       if(kMiss>=2){ const g=mk(st[idx],anim); const L=g.getTotalLength(); g.setAttribute("stroke-dasharray",L); g.setAttribute("stroke-dashoffset",L); g.getBoundingClientRect(); g.style.transition="stroke-dashoffset .9s linear"; g.setAttribute("stroke-dashoffset",0); setTimeout(()=>g.remove(),1500); } }
@@ -1487,10 +1493,10 @@ function joshi(){
   let lock=false, missed=false;
   document.querySelectorAll(".jbtn").forEach(b=>b.onclick=()=>{
     if(lock) return; const c=b.dataset.c, key="j:"+pre+ans+post;
-    if(c===ans){ lock=true; b.classList.add("good"); $("#jb").textContent=ans; $("#jb").classList.add("ok"); skillRec(key,!missed); speak(full); addStar();
+    if(c===ans){ lock=true; b.classList.add("good"); $("#jb").textContent=ans; $("#jb").classList.add("ok"); skillRec(key,!missed); const sp=speak(full);
       if(!missed){ joStreak++; if(joStreak>=5&&joLv<2){ joLv++; joStreak=0; try{ localStorage.setItem("jlv",joLv); }catch(e){} setTimeout(()=>toast("🆙 じょし レベルアップ！"),700); } }
       else joStreak=0;
-      $("#msg").style.color=""; $("#msg").textContent="せいかい！ ✨"; setTimeout(()=>{ if(view==="game:joshi") joshi(); },1700);
+      $("#msg").style.color=""; $("#msg").textContent="せいかい！ ✨"; sp.then(()=>{ addStar(); return audioSettle(); }).then(()=>{ if(view==="game:joshi") setTimeout(joshi,300); });
     } else { if(!missed){ missed=true; skillRec(key,false); joStreak=0; if(joLv>0&&Math.random()<0.0) joLv--; } b.classList.add("bad"); setTimeout(()=>b.classList.remove("bad"),400); $("#msg").style.color="#c96a25"; $("#msg").textContent="もういちど きいて みよう"; speak(pre+c+post); }
   });
   setTimeout(()=>speak(pre+"…"+post),250);
@@ -1690,7 +1696,7 @@ function ageyou(){
       const ok = selected===g.n && +el.dataset.id===p.id;
       if(ok){
         el.classList.add("good"); $("#msg").style.color=""; $("#msg").textContent=p.name+"「ありがとう！」🎉";
-        showCheer(p,"ありがとう！"); speak(p.name+"、ありがとう！",p.v||"p"); addStar(); setTimeout(ageyou, 2200);
+        showCheer(p,"ありがとう！"); speak(p.name+"、ありがとう！",p.v||"p").then(()=>{ addStar(); return audioSettle(); }).then(()=>{ if(view==="game:ageyou") setTimeout(ageyou,300); });
       } else {
         el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400); if(!missed){ missed=true; skillRec(`w:${sid}:${answer.ja}`,false); }
         $("#msg").style.color="#c96a25"; $("#msg").textContent = selected? "あれ？ もういちど きいてみよう" : "さきに ものを えらんでね"; say1();
@@ -1759,8 +1765,7 @@ function otayori(){
       const c = m.choices[+el.dataset.i];
       if(c.ok){
         el.classList.add("good"); $("#msg").style.color=""; $("#msg").textContent="せいかい！ ミッション クリア！🎉";
-        speak("せいかい！"); addStar(); missionIdx++;
-        setTimeout(otayori, 2200);
+        missionIdx++; speak("せいかい！").then(()=>{ addStar(); return audioSettle(); }).then(()=>{ if(view==="game:otayori") setTimeout(otayori,300); });
       } else {
         el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
         $("#msg").style.color="#c96a25"; $("#msg").textContent = c.fun || "もういちど！";
