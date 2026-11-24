@@ -310,6 +310,12 @@
   .home .mission{display:none}
   .unit.gt:has(+.kaki){display:none}
   .kbox{width:min(100%,64vh)}
+
+  .parent .pcols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .pbox{background:#ffffff30;border-radius:22px;padding:18px 20px;font-size:19px;line-height:1.7}.pbox h3{margin:0 0 8px;font-size:21px}
+  .chipw{display:inline-block;background:#fff;color:#2a2540;text-shadow:none;border-radius:14px;padding:2px 12px;margin:3px;font-size:18px}
+  .pbox{font-size:17px;line-height:1.5;padding:14px 18px}.pbox h3{font-size:19px}
+  .parent h2{font-size:26px}
 </style>
 </head>
 <body>
@@ -435,7 +441,7 @@ COURSES.big.scenes.push(
 const exOf=it=>EX[it.ja]||[];
 
 // ===== 状態 =====
-let stars = 0, course = null, view = "title", gameStars = 0;
+let sMiss=false, stars = 0, course = null, view = "title", gameStars = 0;
 try{ stars = +localStorage.getItem("stars")||0 }catch(e){}
 const $ = s=>document.querySelector(s);
 const opt = ()=>({hint:$("#optHint").checked, lang:$("#optLang").value, ticket:$("#optTicket").checked, rate:+$("#optRate").value});
@@ -690,6 +696,8 @@ function render(){
   if(view==="title"){
     if(!course) course=courseSel;
     app.innerHTML = titleView();
+  } else if(view==="parent"){
+    app.innerHTML = header("title")+parentView();
   } else if(view==="free"){
     if(!course) course=courseSel;
     app.innerHTML = header("home")+freeView();
@@ -793,8 +801,8 @@ function storyPlay(id){
     let lock=false;
     document.querySelectorAll("#choices .choice").forEach(el=>{ el.onclick=()=>{
       if(lock) return; const c=n.ch[el.dataset.i]; spk(c.ja,"n");
-      if(c.ok){ lock=true; el.classList.add("good"); addStar(); sheet(true,"せいかい！ ✨",nm(c.ja),"つぎへ ▶",nextNode); }
-      else { sheet(false,"おしい！",hn&&c.why?c.why:"もういちど かんがえよう","もういちど",null); }
+      if(c.ok){ lock=true; el.classList.add("good"); addStar(); skillRec("s:"+S.id+":"+n.ja,!sMiss); sMiss=false; sheet(true,"せいかい！ ✨",nm(c.ja),"つぎへ ▶",nextNode); }
+      else { sMiss=true; sheet(false,"おしい！",hn&&c.why?c.why:"もういちど かんがえよう","もういちど",null); }
     };});
   }
 }
@@ -911,6 +919,28 @@ function missionDone(kind,ref){
   return true;
 }
 function wordsLearned(){ return COURSES[courseSel].scenes.filter(x=>isDone("scene:"+x.id)).reduce((a,x)=>a+x.items.length,0); }
+
+// ===== おうちのひと：しんちょく・ひきつぎ =====
+const SAVE_KEYS=["stats","stars","done","pet","skill","mis","courseSel","strict"];
+function parentView(){
+  const SK=skillAll(), sc=COURSES[courseSel].scenes, ks=Object.keys(SK);
+  const mastered=ks.filter(k=>k.startsWith("w:")&&SK[k].ok-SK[k].ng>=2).length, weak=ks.filter(k=>k.startsWith("w:")&&SK[k].ng>SK[k].ok);
+  const acts=petActs(), kakiN=(JSON.parse(localStorage.getItem("done")||"[]")).filter(x=>x.startsWith("kaki:")).length;
+  const M=todayMissions();
+  const bars=Object.entries(acts).map(([k,a])=>`<div style="display:flex;align-items:center;gap:10px;margin:1px 0"><span style="font-size:24px;width:36px">${a.em}</span><span style="width:110px">${a.label}</span><div class="meter" style="flex:1;margin:0"><i style="width:${(petLv(k)+1)*25}%"></i></div><b style="width:48px;text-align:right">Lv.${petLv(k)+1}</b></div>`).join("");
+  const weakList=weak.slice(0,12).map(k=>{ const [,sid,ja]=k.split(":"); const scn=sc.find(x=>x.id===sid); return `<span class="chipw">${scn?scn.em:""} ${ja}</span>`; }).join("")||"<span style='opacity:.8'>まだ ありません</span>";
+  return `<div class="parent"><h2 style="margin:6px 0 14px">👪 おうちのひとへ：がくしゅうの ようす</h2>
+   <div class="prog"><div><b>🔥 ${stats.streak}</b>れんぞく（にち）</div><div><b>⭐ ${stars}</b>ほし</div><div><b>📚 ${mastered}</b>みについた ことば</div><div><b>✍️ ${kakiN}</b>かけた もじ</div></div>
+   <div class="pcols"><div class="pbox"><h3>きょうの ミッション ${M.filter(x=>x.done).length} / 5</h3>${M.map(x=>`<div>${x.done?"✅":"⬜"} ${x.em} ${x.label}：${x.sub.replace("・3かい","")}</div>`).join("")}
+     <h3 style="margin-top:16px">ペットと おはなし（レベル）</h3>${bars}</div>
+   <div class="pbox"><h3>にがてな ことば</h3><div>${weakList}</div><p style="opacity:.85;font-size:15px;margin:10px 0 0">まちがえた ことばは、ミッションの「ふくしゅう」に でます。</p>
+     <h3 style="margin-top:18px">データの ひきつぎ</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" onclick="saveExport()">📤 コピー</button><button class="btn ghost" onclick="saveImport()">📥 ひきつぐ</button></div>
+     <textarea id="sv" rows="3" placeholder="ここに ペースト（ひきつぎ）" style="width:100%;margin-top:10px;border-radius:12px;padding:8px;font-size:14px"></textarea><div class="msg" id="svm"></div></div></div></div>`;
+}
+async function saveExport(){ const o={}; SAVE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) o[k]=v; }); const t="NIHONGO1:"+btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+  $("#sv").value=t; try{ await navigator.clipboard.writeText(t); $("#svm").textContent="コピーしました。ほかの たんまつで ペーストしてね"; }catch(e){ $("#sv").select(); $("#svm").textContent="せんたくしました。コピーしてね"; } }
+function saveImport(){ const t=$("#sv").value.trim(); try{ if(!t.startsWith("NIHONGO1:")) throw 0; const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(9))))); if(!confirm("この たんまつの きろくを うわがき します。いい？")) return; SAVE_KEYS.forEach(k=>{ if(o[k]!=null) localStorage.setItem(k,o[k]); }); location.reload(); }catch(e){ $("#svm").textContent="よみこめませんでした"; } }
+let pgT=null; function pgDown(b){ b.style.opacity=.6; pgT=setTimeout(()=>go('parent'),1200); } function pgUp(){ clearTimeout(pgT); const b=$('#pgate'); if(b) b.style.opacity=1; }
 function titleView(){
   rollover(); const hn=opt().hint, st=stageOf(), M=todayMissions(), md=M.filter(x=>x.done).length;
   return `<div class="title"><div>
@@ -927,7 +957,7 @@ function titleView(){
     </div>
     <div class="prog"><div><b>🔥 ${stats.streak}</b>れんぞく（にち）</div><div><b>⭐ ${stars}</b>ほし</div><div><b>${STAGE_NAME[st-1]}</b>${pet.name}</div><div><b>📚 ${wordsLearned()}</b>おぼえた ことば</div></div>
     <button class="btn big startbtn" onclick="go('home')">▶ はじめる${md?`<small style="display:block;font-size:16px">きょうの ミッション ${md} / 5</small>`:""}</button>
-    <div class="smallrow"><button class="btn ghost" onclick="openPanel()">⚙️ せってい</button><button class="btn ghost" onclick="go('badges')">🏅 バッジ</button>
+    <div class="smallrow"><button class="btn ghost" onclick="openPanel()">⚙️ せってい</button><button class="btn ghost" onclick="go('badges')">🏅 バッジ</button><button class="btn ghost" id="pgate" onpointerdown="pgDown(this)" onpointerup="pgUp()" onpointerleave="pgUp()">👪 おうちのひと（ながおし）</button>
       <button class="btn ghost" onclick="$('#optHint').checked=!$('#optHint').checked;render()">${hn?"✅":"⬜"} ネパールごの ヒント</button></div>
   </div></div>`;
 }
@@ -1280,7 +1310,8 @@ async function nazori(){
 // ろくおんは この たんまつの メモリ だけ。ほぞんも おくりも しない。
 function manekko(){
   const pool = COURSES[course].scenes.flatMap(s=>s.items);
-  const it = pool[Math.floor(Math.random()*pool.length)];
+  const SKm=skillAll(), weakP=pool.filter(i=>COURSES[course].scenes.some(sc=>sc.items.includes(i)&&(SKm[`w:${sc.id}:${i.ja}`]||{ng:0,ok:0}).ng>(SKm[`w:${sc.id}:${i.ja}`]||{ng:0,ok:0}).ok));
+  const src=(weakP.length&&Math.random()<0.5)?weakP:pool, it = src[Math.floor(Math.random()*src.length)];
   let mine = null, recorder = null;
   $("#app").innerHTML = gameHead("🎤","まねっこ") +
     `
