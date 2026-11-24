@@ -350,8 +350,13 @@
   <hr>
   <b>みぢかな ひと</b> <span class="hint">（しゃしんは この たんまつの なかだけ。ネットには おくりません）</span>
   <div id="peopleList"></div>
-  <input id="pName" placeholder="なまえ（ママ、ともだち の なまえ など）" style="width:100%;font-size:17px;padding:6px;margin:6px 0">
-  <input id="pFile" type="file" accept="image/*" style="margin:6px 0">
+  <select id="pRole" style="font-size:17px;padding:6px;margin:6px 0" onchange="if(this.value)$('#pName').value=this.value">
+    <option value="">だれ？（えらぶ）</option><option>パパ</option><option>ママ</option><option>おにいちゃん</option><option>おねえちゃん</option><option>おじいちゃん</option><option>おばあちゃん</option><option>ともだち</option><option>せんせい</option></select>
+  <input id="pName" placeholder="なまえ（パパ、ママ、ともだち の なまえ など）" style="width:100%;font-size:17px;padding:6px;margin:6px 0">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+    <label class="btn ghost" style="padding:8px 16px;font-size:16px;cursor:pointer">📷 しゃしんを とる<input id="pCam" type="file" accept="image/*" capture="user" hidden onchange="$('#pFile').value='';pPick(this)"></label>
+    <label class="btn ghost" style="padding:8px 16px;font-size:16px;cursor:pointer">🖼️ アルバムから<input id="pFile" type="file" accept="image/*" hidden onchange="$('#pCam').value='';pPick(this)"></label>
+    <span class="hint" id="pPicked"></span></div>
   <button class="btn ghost" style="padding:8px 16px;font-size:16px" onclick="addPerson()">ついか</button>
   <div style="margin-top:14px"><button class="btn" onclick="closePanel()">とじる</button></div>
 </div></div>
@@ -602,7 +607,7 @@ function cheer(){
   const now=Date.now(); if(now-lastCheer<2000) return; lastCheer=now;
   const p=pickPhrase("praise");
   const cp=people.filter(x=>x.cheers&&x.cheers.length);
-  if(voices.length && Math.random()<0.4){ const v=voices[Math.floor(Math.random()*voices.length)]; const who=people.find(x=>x.id===v.who); if(who) showCheer(who,"🎙️"); playVoice(v); }
+  if(voices.length && Math.random()<0.4){ const v=voices[Math.floor(Math.random()*voices.length)]; const who=people.find(x=>String(x.id)===String(v.who)); if(who) showCheer(who,"🎙️"); playVoice(v); }
   else if(cp.length && Math.random()<0.7){ const who=cp[Math.floor(Math.random()*cp.length)], line=who.cheers[Math.floor(Math.random()*who.cheers.length)]; showCheer(who,line); speak(line,who.v||"n"); }
   else if(p) playPhrase(p);
   else speak(SAMPLE_CHEERS[Math.floor(Math.random()*SAMPLE_CHEERS.length)]);
@@ -1635,12 +1640,13 @@ function showCheer(p,line){
 }
 function renderPeopleList(){
   const rw=document.getElementById("recWho"); if(rw){ const cur=rw.value; rw.innerHTML='<option value="">だれの こえ？</option>'+people.map(q=>`<option value="${q.id}">${q.name}</option>`).join(""); rw.value=cur; }
-  $("#peopleList").innerHTML = people.map(p=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">${avatar(p,40)}<span style="flex:1">${p.name}</span><button onclick="delPerson(${p.id})">✕</button></div>`).join("");
+  $("#peopleList").innerHTML = people.map(p=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">${avatar(p,40)}<span style="flex:1">${p.name}</span><button onclick="delPerson('${p.id}')">✕</button></div>`).join("");
 }
+function pPick(el){ $("#pPicked").textContent=el.files[0]?"✅ しゃしん OK":""; }
 function addPerson(){
   const name=$("#pName").value.trim(); if(!name) return;
-  const f=$("#pFile").files[0];
-  const done=photo=>{ people.push({id:Date.now(),name,photo}); savePeople(); $("#pName").value=""; $("#pFile").value=""; renderPeopleList(); };
+  const f=($("#pCam").files[0])||($("#pFile").files[0]);
+  const done=photo=>{ people.push({id:Date.now(),name,photo,v:/パパ|おじいちゃん|おにいちゃん/.test(name)?"dr":/ママ|おばあちゃん|おねえちゃん|せんせい/.test(name)?"m":"n",cheers:["がんばれ！ おうえん してるよ。","すごいね！ よく できたね！"]}); savePeople(); $("#pName").value=""; $("#pFile").value=""; $("#pCam").value=""; $("#pRole").value=""; $("#pPicked").textContent=""; renderPeopleList(); };
   if(!f){ done(null); return; }
   const rd=new FileReader();
   rd.onload=()=>{ const img=new Image(); img.onload=()=>{
@@ -1651,7 +1657,7 @@ function addPerson(){
     img.src=rd.result; };
   rd.readAsDataURL(f);
 }
-function delPerson(id){ people=people.filter(p=>p.id!==id); savePeople(); renderPeopleList(); }
+function delPerson(id){ people=people.filter(p=>String(p.id)!==String(id)); savePeople(); renderPeopleList(); }
 
 // ===== ゲーム：あげよう（「ままに きょうかしょを あげよう」）=====
 const GIFTS=[{n:"きょうかしょ",em:"📘"},{n:"えんぴつ",em:"✏️"},{n:"ノート",em:"📓"},{n:"おべんとう",em:"🍱"},{n:"ぎゅうにゅう",em:"🥛"},{n:"はさみ",em:"✂️"}];
