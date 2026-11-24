@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#4a8df0">
 <link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
 <link rel="icon" href="icon-192.png">
-<title>にほんご あそび（試作）</title>
+<title>にほんごをまなぼう</title>
 <style>
   :root{--bg:#171a3d;--ink:#2a2540;--accent:#3ddc97;--ad:#1f9c68;--ok:#4be3a0;--card:#ffffff;--soft:#dcd8f0;--gold:#ffc83d;--gd:#c99700;--mut:#a9b0e0}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -59,7 +59,7 @@
   @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
   .tag{display:inline-block;background:#ffffff22;border-radius:12px;padding:2px 10px;font-size:13px;margin-left:6px}
   /* ---- home ---- */
-  .home{display:grid;grid-template-columns:minmax(300px,400px) 1fr;gap:22px;align-items:start}
+  .home{display:block;max-width:1100px;margin:0 auto}
   @media(max-width:820px){.home{grid-template-columns:1fr}}
   .stagecol{position:sticky;top:12px}
   @media(max-width:820px){.stagecol{position:static}}
@@ -96,14 +96,14 @@
   .u-w{background:linear-gradient(90deg,#2f7bff,#4cb0ff);box-shadow:0 5px 0 #1d4fae}
   .u-s{background:linear-gradient(90deg,#ff5f93,#ff8fb0);box-shadow:0 5px 0 #b93063}
   .u-g{background:linear-gradient(90deg,#8b5cf6,#b08cff);box-shadow:0 5px 0 #5a35b8}
-  .path{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
-  .node{position:relative;text-align:center;cursor:pointer;margin:8px 0 6px;--nc:#4c9bff;--nd:#2559b8;width:160px}
+  .path{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:14px 8px;justify-items:center;padding:12px 0 6px}
+  .node{position:relative;text-align:center;cursor:pointer;margin:4px 0;--nc:#4c9bff;--nd:#2559b8;width:124px}
   .node.s{--nc:#ff6b9d;--nd:#b93063}.node.g{--nc:#9b6bff;--nd:#5a35b8}
   .node.done{--nc:#ffc83d;--nd:#c99700}
-  .node .c{width:92px;height:92px;margin:0 auto;border-radius:50%;display:grid;place-items:center;font-size:44px;background:var(--nc);box-shadow:0 8px 0 var(--nd),inset 0 5px 0 #ffffff55,inset 0 -5px 0 #00000020;transition:transform .1s}
+  .node .c{width:80px;height:80px;margin:0 auto;border-radius:50%;display:grid;place-items:center;font-size:44px;background:var(--nc);box-shadow:0 8px 0 var(--nd),inset 0 5px 0 #ffffff55,inset 0 -5px 0 #00000020;transition:transform .1s}
   .node.g .c{border-radius:28px}
   .node:active .c{transform:translateY(6px);box-shadow:0 2px 0 var(--nd),inset 0 5px 0 #ffffff55}
-  .node b{display:block;font-size:15px;margin-top:14px;line-height:1.25}
+  .node b{display:block;word-break:auto-phrase;font-size:15px;margin-top:14px;line-height:1.25}
   .node .chk{position:absolute;left:calc(50% + 24px);top:-6px;width:30px;height:30px;border-radius:50%;background:#34c759;border:3px solid #171a3d;display:grid;place-items:center;font-size:15px;color:#fff}
   .node.cur .c{animation:pulse 1.5s ease-in-out infinite}
   @keyframes pulse{0%,100%{box-shadow:0 8px 0 var(--nd),0 0 0 0 #ffffffaa,inset 0 5px 0 #ffffff55}50%{box-shadow:0 8px 0 var(--nd),0 0 0 14px #ffffff00,inset 0 5px 0 #ffffff55}}
@@ -184,6 +184,10 @@
   .title h1{font-size:clamp(34px,5vw,54px);margin:0;line-height:1.1}
   .title .logoRow{display:flex;align-items:center;gap:12px}.title .logo{font-size:52px}
   .title .tag{font-size:21px;margin:10px 0 14px}
+  .dtbox{background:#ffffff26;border-radius:20px;padding:10px 16px;margin:10px 0;cursor:pointer;text-align:center}.dtbox .dt1{font-size:clamp(24px,3.2vw,34px);font-weight:800}.dtbox .dt2{font-size:clamp(30px,4.4vw,46px);font-weight:800;color:#ffe27a;line-height:1.1}.dtbox small{font-size:13px;opacity:.85}.dtbox:active{transform:scale(.98)}
+  .dgbox{max-width:760px;margin:20px auto;text-align:center}.dgq{font-size:84px;font-weight:800;background:#fff;color:#2a2540;border-radius:28px;padding:24px;margin:12px 0}.dgch{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}.dgb{font-size:34px!important;min-width:200px}.dglv{font-size:30px;margin:10px 0}.dglv b{font-size:64px;color:#ffe27a}
+  ruby rt{font-size:.5em;font-weight:600}
+  .pcap{text-align:center;font-size:22px;font-weight:800;margin-top:6px}
   .petopts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
   .petopts button{font-size:26px;padding:4px 10px;border-radius:14px;border:2px solid transparent;background:#ffffff1c;cursor:pointer}
   .petopts button.on{border-color:var(--accent)}
@@ -333,6 +337,12 @@
   <h2 style="margin-top:0">おうちのひと へ</h2>
   <label><span>おこさんの なまえ<br><span class="hint">なまえで よびかけます</span><br><span class="hint" id="nameHint"></span></span><input id="optName" list="nameList" style="font-size:17px;padding:6px;width:150px" onchange="childName=this.value.trim();setTimeout(updateNameHint,0);try{localStorage.setItem('childName',childName)}catch(e){}"><datalist id="nameList"></datalist></label>
   <label><span>コース<br><span class="hint">がくねんに あわせて</span></span><select id="optCourse" onchange="setCourse(this.value)"><option value="big">小4〜中学生</option><option value="small">5さい〜小3</option></select></label>
+  <label><span>ペット<br><span class="hint">1ぴき えらぶ</span></span><select id="optSpecies" onchange="setSpecies(this.value);$('#optPetName').value=pet.name" style="font-size:20px;padding:4px"></select></label>
+  <label><span>ペットの なまえ</span><input id="optPetName" maxlength="8" style="font-size:17px;padding:6px;width:150px" onchange="pet.name=this.value.trim()||PETS[pet.species||'dog'].name;savePet();render()"></label>
+  <label><span>がくしゅうの ようす<br><span class="hint">おうちのひと むけ</span></span><button class="btn ghost" style="padding:8px 16px;font-size:16px" onclick="$('#panel').classList.remove('on');go('parent')">👪 みる</button></label>
+  <label><span>ことばの レベル<br><span class="hint">かんじ・ふりがなが かわる</span></span><select id="optKlv" onchange="setKlv(+this.value)"><option value="0">みしんだん</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></label>
+  <label><span>ふりがな<br><span class="hint">かんじの うえに よみがな</span></span><input type="checkbox" id="optFuri" onchange="setFuri(this.checked)"></label>
+  <label><span>しんだん<br><span class="hint">ことばの レベルを しらべる</span></span><button class="btn ghost" style="padding:8px 16px;font-size:16px" onclick="$('#panel').classList.remove('on');diagStart()">🔍 やる</button></label>
   <label><span>ぼご ヒント<br><span class="hint">母語のヒントを出す</span></span><input type="checkbox" id="optHint" checked></label>
   <label><span>ヒントの ことば<br><span class="hint">母語に あわせて えらぶ</span></span>
     <select id="optLang" onchange="setHintLang(this.value)"><option value="ne">नेपाली（仮）</option><option value="vi">Tiếng Việt（仮）</option><option value="zh">中文（仮）</option><option value="fil">Filipino（仮）</option><option value="id">Indonesia（仮）</option></select></label>
@@ -674,8 +684,8 @@ function shuffle(a){return a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).ma
 // ===== 画面 =====
 function header(backTo){
   return `<header>
-    ${backTo?`<button class="btn ghost" onclick="go('${backTo}')">← もどる</button>`:`<div class="brand" onclick="go('title')" style="cursor:pointer"><span class="logo">🌰</span><div><b>にほんご あそび</b><small>試作</small></div></div>`}
-    <div class="hud"><span class="stars">${starsText()}</span><button class="btn ghost gear" onclick="openPanel()" aria-label="おうちのひと">⚙️</button></div>
+    ${backTo?`<button class="btn ghost" onclick="go('${backTo}')">← もどる</button>`:`<div class="brand" onclick="go('title')" style="cursor:pointer"><span class="logo">🌰</span><div><b>にほんごをまなぼう</b></div></div>`}
+    <div class="hud"><span class="stars" onclick="starHelp()" style="cursor:pointer">${starsText()}</span><button class="btn ghost gear" onclick="openPanel()" aria-label="おうちのひと">⚙️</button></div>
   </header>`;
 }
 function gameHead(em,t,back){ return header(back||"home")+`<div class="unit u-g gt"><span>${em} ${t}</span></div>`; }
@@ -754,6 +764,8 @@ function render(){
     joshi();
   } else if(view==="game:manekko"){
     manekko();
+  } else if(view==="diag"){
+    diagView();
   } else if(view==="badges"){
     badgesView();
   }
@@ -1032,24 +1044,37 @@ async function saveExport(){ const o={}; SAVE_KEYS.forEach(k=>{ const v=localSto
   $("#sv").value=t; try{ await navigator.clipboard.writeText(t); $("#svm").textContent="コピーしました。ほかの たんまつで ペーストしてね"; }catch(e){ $("#sv").select(); $("#svm").textContent="せんたくしました。コピーしてね"; } }
 function saveImport(){ const t=$("#sv").value.trim(); try{ if(!t.startsWith("NIHONGO1:")) throw 0; const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(9))))); if(!confirm("この たんまつの きろくを うわがき します。いい？")) return; SAVE_KEYS.forEach(k=>{ if(o[k]!=null) localStorage.setItem(k,o[k]); }); location.reload(); }catch(e){ $("#svm").textContent="よみこめませんでした"; } }
 let pgT=null; function pgDown(b){ b.style.opacity=.6; pgT=setTimeout(()=>go('parent'),1200); } function pgUp(){ clearTimeout(pgT); const b=$('#pgate'); if(b) b.style.opacity=1; }
+// ===== きょうの ひづけ・じかん（タップで よみあげ）=====
+const MON_R=["","いちがつ","にがつ","さんがつ","しがつ","ごがつ","ろくがつ","しちがつ","はちがつ","くがつ","じゅうがつ","じゅういちがつ","じゅうにがつ"];
+const DAY_R=["","ついたち","ふつか","みっか","よっか","いつか","むいか","なのか","ようか","ここのか","とおか","じゅういちにち","じゅうににち","じゅうさんにち","じゅうよっか","じゅうごにち","じゅうろくにち","じゅうしちにち","じゅうはちにち","じゅうくにち","はつか","にじゅういちにち","にじゅうににち","にじゅうさんにち","にじゅうよっか","にじゅうごにち","にじゅうろくにち","にじゅうしちにち","にじゅうはちにち","にじゅうくにち","さんじゅうにち","さんじゅういちにち"];
+const WD_R=["にちようび","げつようび","かようび","すいようび","もくようび","きんようび","どようび"], WD_K="日月火水木金土";
+const HR_R=["れいじ","いちじ","にじ","さんじ","よじ","ごじ","ろくじ","しちじ","はちじ","くじ","じゅうじ","じゅういちじ","じゅうにじ"];
+const MN1=["","いっぷん","にふん","さんぷん","よんぷん","ごふん","ろっぷん","ななふん","はっぷん","きゅうふん"], TENS=["","じゅう","にじゅう","さんじゅう","よんじゅう","ごじゅう"];
+function minR(n){ if(n===0) return ""; if(n<10) return MN1[n]; const t=Math.floor(n/10), o=n%10; return o===0?TENS[t].replace(/う$/,"")+"っぷん":TENS[t]+MN1[o]; }
+function nowParts(){ const d=new Date(), h=d.getHours(), h12=h%12||12;
+  return {d, y:d.getFullYear(), mo:d.getMonth()+1, da:d.getDate(), wd:d.getDay(), h, mi:d.getMinutes(), ap:h<12?"ごぜん":"ごご", h12}; }
+function nowDateText(){ const n=nowParts(); return n.mo+"がつ "+n.da+"にち　"+WD_R[n.wd]; }
+function nowTimeText(){ const n=nowParts(); return n.ap+" "+n.h12+":"+String(n.mi).padStart(2,"0"); }
+function sayNow(){ const n=nowParts(); const mi=minR(n.mi);
+  speak("きょうは、"+MON_R[n.mo]+"、"+DAY_R[n.da]+"、"+WD_R[n.wd]+"です。いまは、"+n.ap+"、"+HR_R[n.h12]+(mi?"、"+mi:" ちょうど")+"です。"); }
+function starHelp(){ toast("⭐ ほしは、できたら もらえるよ。ためると ペットが おおきく なる！"); speak("ほしは、できたら もらえるよ。ためると ペットが おおきく なるよ。"); }
+setInterval(()=>{ const t=document.getElementById("dtt"); if(t){ t.textContent=nowTimeText(); const dd=document.getElementById("dtd"); if(dd) dd.textContent=nowDateText(); } },5000);
 function titleView(){
-  rollover(); const hn=opt().hint, st=stageOf(), M=todayMissions(), md=M.filter(x=>x.done).length;
+  rollover(); const hn=opt().hint, st=stageOf(), M=todayMissions(), md=M.filter(x=>x.done).length, n=nowParts();
   return `<div class="title"><div>
-    <div class="logoRow"><span class="logo">🌰</span><h1>にほんご あそび</h1></div>
-    <p class="tag">あそびながら、にほんごを はなせるように なろう！${hn?`<small class="hint" style="display:block;font-size:16px">खेल्दै खेल्दै जापानी बोल्न सिकौँ!</small>`:""}</p>
+    <div class="logoRow"><span class="logo">🌰</span><h1>にほんごをまなぼう</h1></div>
+    <div class="dtbox" onclick="sayNow()" role="button" aria-label="きょうの ひづけと じかん"><div class="dt1"><span id="dtd">${nowDateText()}</span></div><div class="dt2"><span id="dtt">${nowTimeText()}</span></div><small>${n.y}年${n.mo}月${n.da}日 ${WD_K[n.wd]}曜日　🔊 タップで よみあげ</small></div>
     ${roomHTML("troom","wide")}
-    <div class="petopts">${Object.entries(PETS).map(([k,v])=>`<button class="${k===(pet.species||"dog")?"on":""}" onclick="setSpecies('${k}')" aria-label="${v.label}">${v.em}</button>`).join("")}
-      <input value="${pet.name}" maxlength="8" onchange="pet.name=this.value.trim()||'コロ';savePet()" aria-label="なまえ"> <small style="color:var(--mut)">← なまえを つけよう</small></div>
+    <div class="pcap">${STAGE_NAME[st-1]}　${pet.name}</div>
   </div><div>
     <div class="how">
       <div><span class="n">📋</span><span>まいにち 5つの ミッション<small>${hn?"हरेक दिन ५ मिसन":"いろいろな ぶんやを すこしずつ"}</small></span></div>
       <div><span class="n">🐾</span><span>ペットと にほんごで おはなし<small>${hn?"पाल्तुसँग जापानीमा कुरा गरौँ":"こえに だして はなそう"}</small></span></div>
       <div><span class="n">🌱</span><span>ことばが ふえると ペットが おおきく なる！<small>${hn?"शब्द बढ्दै जाँदा पाल्तु ठूलो हुन्छ":"あかちゃん → でんせつ（5だんかい）"}</small></span></div>
     </div>
-    <div class="prog"><div><b>🔥 ${stats.streak}</b>れんぞく（にち）</div><div><b>⭐ ${stars}</b>ほし</div><div><b>${STAGE_NAME[st-1]}</b>${pet.name}</div><div><b>📚 ${wordsLearned()}</b>おぼえた ことば</div></div>
-    <button class="btn big startbtn" onclick="go('home')">▶ はじめる${md?`<small style="display:block;font-size:16px">きょうの ミッション ${md} / 5</small>`:""}</button>
-    <div class="smallrow"><button class="btn ghost" onclick="openPanel()">⚙️ せってい</button><button class="btn ghost" onclick="go('badges')">🏅 バッジ</button><button class="btn ghost" id="pgate" onpointerdown="pgDown(this)" onpointerup="pgUp()" onpointerleave="pgUp()">👪 おうちのひと（ながおし）</button>
-      <button class="btn ghost" onclick="$('#optHint').checked=!$('#optHint').checked;render()">${hn?"✅":"⬜"} ぼごの ヒント</button></div>
+    <div class="prog" style="grid-template-columns:repeat(3,1fr)"><div><b>🔥 ${stats.streak}</b>れんぞく（にち）</div><div onclick="starHelp()" style="cursor:pointer"><b>⭐ ${stars}</b>ほし<br><small>できると ふえる</small></div><div><b>📚 ${wordsLearned()}</b>おぼえた ことば</div></div>
+    ${klv?"":`<button class="btn" style="width:100%;margin:6px 0;background:#ffe27a;color:#3a2f00" onclick="diagStart()">🔍 まず ことばの レベルを しらべよう（3ぷん）</button>`}<button class="btn big startbtn" onclick="go('home')">▶ はじめる${md?`<small style="display:block;font-size:16px">きょうの ミッション ${md} / 5</small>`:""}</button>
+    <div class="smallrow"><button class="btn ghost" onclick="openPanel()">⚙️ せってい</button><button class="btn ghost" onclick="go('badges')">🏅 バッジ</button></div>
   </div></div>`;
 }
 function homeView(){
@@ -1082,19 +1107,11 @@ function freeView(){
     {go:"go('evlist')",em:"🚌",t:"おでかけ"},{go:"go('game:nazori')",em:"✍️",t:"ひらがな・カタカナ"},{go:"go('game:joshi')",em:"🔤",t:"じょし"},{go:"go('game:ageyou')",em:"🎁",t:"あげよう"},{go:"go('game:manekko')",em:"🎤",t:"まねっこ"} ].map(x=>({...x,k:"g:"+x.t,ty:"g"}));
   const cur=[...W,...S].find(n=>!isDone(n.k));
   const OFF=[0,46,66,46,0,-46,-66,-46];
-  const row=(n,i)=>`<div class="node ${n.ty} ${n.k&&isDone(n.k)?"done":""} ${cur&&n===cur?"cur":""}" style="transform:translateX(${OFF[i%8]}px)" onclick="${n.go}">
+  const row=(n,i)=>`<div class="node ${n.ty} ${n.k&&isDone(n.k)?"done":""} ${cur&&n===cur?"cur":""}" onclick="${n.go}">
       ${cur&&n===cur?'<span class="go">スタート</span>':""}<div class="c">${n.em}</div>${n.k&&isDone(n.k)?'<span class="chk">✓</span>':""}<b>${n.t}</b></div>`;
   const unit=(cls,t,sub,list)=>`<div class="unit ${cls}"><span>${t}</span><small>${sub}</small></div><div class="path">${list.map(row).join("")}</div>`;
   const doneN=[...W,...S].filter(n=>isDone(n.k)).length;
   return `<div class="home">
-    <div class="stagecol">
-      <div class="stage"><div class="win">${sun}</div><div class="rug"></div>
-        <div class="bubble" id="pbub">${petGreet()}</div>
-        <div class="petw" onclick="petTap()">${petBody(300).replace('width:300px','width:100%')}</div></div>
-      <div class="petcard"><div style="flex:1"><div class="nm">${pet.name} <span class="hint">Lv.${lv.n+1}</span></div>
-        <div class="meter"><i style="width:${m}%"></i></div></div><div style="font-size:22px">❤️ ${pet.hearts}</div></div>
-      <div class="stagebtns"><button class="btn pink" onclick="go('pet')">🐾 おせわ</button><button class="btn ghost" onclick="ohanashi()">🗨️ おはなし</button></div>
-    </div>
     <div>
       <div class="mission"><div class="t">きょうの ミッション</div>
         <div class="g">⭐ ${Math.min(stats.today,stats.goal)} / ${stats.goal}${stats.today>=stats.goal?"　たっせい！🎉":""}</div>
@@ -1901,7 +1918,7 @@ function updateNameHint(){ const e=document.getElementById("nameHint"); if(!e) r
   e.textContent = !childName ? "" : CLIPS.size ? (CLIPS.has(K("p","@"+childName)) ? "✔ こえで よべます" : "× この なまえの こえは まだ ありません（なまえなしで はなします）") : "";
 }
 try{ fetch("names.txt").then(r=>r.text()).then(t=>{ const dl=document.getElementById("nameList"); if(dl) dl.innerHTML=t.split("\n").filter(l=>l.trim()&&!l.startsWith("#")).map(l=>`<option value="${l.trim()}">`).join(""); }).catch(()=>{}); }catch(e){}
-function openPanel(){ try{ $("#optStrict").value=strictMode(); }catch(e){}setTimeout(updateNameHint,50);$("#optCourse").value=courseSel;renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
+function openPanel(){ try{ $("#optKlv").value=String(klv); $("#optFuri").checked=furi; }catch(e){} try{ $("#optSpecies").innerHTML=Object.entries(PETS).map(([k,v])=>`<option value="${k}">${v.em} ${v.label}</option>`).join(""); $("#optSpecies").value=pet.species||"dog"; $("#optPetName").value=pet.name; }catch(e){} try{ $("#optStrict").value=strictMode(); }catch(e){}setTimeout(updateNameHint,50);$("#optCourse").value=courseSel;renderPeopleList();renderVoiceList();$("#optGoal").value=String(stats.goal);$("#optName").value=childName;$("#panel").classList.add("on")}
 function closePanel(){$("#panel").classList.remove("on"); render()}
 try{ speechSynthesis.getVoices(); }catch(e){}
 // ===== 母語ヒントの きりかえ（ne=ネパール／vi／zh／fil／id）=====
@@ -1925,6 +1942,75 @@ async function setHintLang(l,noRender){
 }
 const petActs0=petActs;
 petActs=function(){ const A=petActs0(); for(const k in A) A[k].v.forEach(v=>{ v.cueNe=HT(v.cue,v.cueNe); v.sayNe=HT(v.say,v.sayNe); }); return A; };
+
+// ===== ことばの レベル（1〜10）・しんだん・かんじ ふりがな =====
+// klv: 0=みしんだん／1=ひらがなから／2=ひらがなOK／3〜8=かんじ しょうがく1〜6ねん／9〜10=ふりがな ひかえめ
+let klv=0, furi=true; try{ klv=+localStorage.getItem("klv")||0; furi=localStorage.getItem("furi")!=="0"; }catch(e){}
+function klvEff(){ return klv?Math.min(10,klv+Math.min(2,Math.floor(wordsLearned()/40))):2; }
+function setKlv(n){ klv=n; try{ localStorage.setItem("klv",n); }catch(e){} if(n) setCourse(n<=4?"small":"big"); }
+function setFuri(b){ furi=b; try{ localStorage.setItem("furi",b?"1":"0"); }catch(e){} }
+const KD=[
+["きょう",[["今日","きょう"]],2],["あした",[["明日","あした"]],2],["まいにち",[["毎日","まいにち"]],2],["にほんご",[["日本語","にほんご"]],2],
+["がっこう",[["学校","がっこう"]],1],["せんせい",[["先生","せんせい"]],1],["ともだち",[["友","とも"],"だち"],2],["かぞく",[["家族","かぞく"]],3],
+["ことば",[["言葉","ことば"]],3],["じかん",[["時間","じかん"]],2],["もんだい",[["問題","もんだい"]],3],["れんしゅう",[["練習","れんしゅう"]],3],
+["せってい",[["設定","せってい"]],5],["れんぞく",[["連続","れんぞく"]],4],["おぼえた",[["覚","おぼ"],"えた"],4],["せいかい",[["正解","せいかい"]],5],
+["きゅうしょく",[["給食","きゅうしょく"]],4],["かいもの",[["買","か"],"い",["物","もの"]],3],["おでかけ",["お",["出","で"],"かけ"],1],["おせわ",["お",["世話","せわ"]],3],
+["おはなし",["お",["話","はなし"]],2],["ぜんぶ",[["全部","ぜんぶ"]],3],["なまえ",[["名前","なまえ"]],2],["つぎ",[["次","つぎ"]],3],
+["はじめる",[["始","はじ"],"める"],3],["まなぼう",[["学","まな"],"ぼう"],1],["おうちのひと",["おうちの",["人","ひと"]],1],["ものがたり",[["物語","ものがたり"]],3],
+["おんがく",[["音楽","おんがく"]],2],["たいいく",[["体育","たいいく"]],2],["さんすう",[["算数","さんすう"]],2],["こくご",[["国語","こくご"]],2],["しゃかい",[["社会","しゃかい"]],2],
+["かんじ",[["漢字","かんじ"]],3],["もくひょう",[["目標","もくひょう"]],4],["じぶん",[["自分","じぶん"]],2],["かず",[["数","かず"]],2]
+].sort((a,b)=>b[0].length-a[0].length);
+const KMENU=["title","home","free","pet","parent","badges","evlist","petnote"];
+function kHTML(e,lv){ const showR=furi&&!(lv>=9&&e[2]<=lv-6);
+  return e[1].map(p=>typeof p==="string"?p:(showR?`<ruby>${p[0]}<rt>${p[1]}</rt></ruby>`:p[0])).join(""); }
+let _kapp=false, _kT=null;
+function applyKanji(){
+  if(_kapp||!KMENU.includes(view)) return; const lv=klvEff(), al=lv-2; if(al<1) return;
+  const L=KD.filter(e=>e[2]<=al); if(!L.length) return;
+  const re=new RegExp(L.map(e=>e[0]).join("|"),"g"), mp={}; L.forEach(e=>mp[e[0]]=e);
+  const root=document.getElementById("app"); if(!root) return;
+  _kapp=true;
+  try{
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT), ns=[];
+    while(w.nextNode()){ const n=w.currentNode; if(n.nodeValue.trim()&&re.test(n.nodeValue)&&!n.parentElement.closest("ruby,rt,input,textarea,script,style,option,select,[data-nok]")) ns.push(n); re.lastIndex=0; }
+    for(const n of ns){ const esc=n.nodeValue.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      const t=document.createElement("template"); t.innerHTML=esc.replace(re,m=>kHTML(mp[m],lv)); n.replaceWith(t.content); }
+  }finally{ _kapp=false; }
+}
+try{ new MutationObserver(()=>{ if(_kapp) return; clearTimeout(_kT); _kT=setTimeout(applyKanji,0); }).observe(document.getElementById("app"),{childList:true,subtree:true,characterData:true}); }catch(e){}
+
+// ---- しんだん ----
+const DGW={
+1:[["学校","がっこう",["がくこう","かっこう"]],["先生","せんせい",["せんじょう","さんせい"]],["山","やま",["かわ","たに"]],["日本","にほん",["にっぽ","ひほん"]]],
+2:[["毎日","まいにち",["まいじつ","ばいにち"]],["時間","じかん",["じげん","ときかん"]],["今日","きょう",["こんにち","いまひ"]],["自分","じぶん",["じふん","みずぶん"]],["音楽","おんがく",["おんらく","おとがく"]]],
+3:[["勉強","べんきょう",["べんこう","まんきょう"]],["問題","もんだい",["もんたい","とうだい"]],["運動","うんどう",["ゆんどう","うんとう"]],["漢字","かんじ",["かんし","かんぜ"]]],
+4:[["給食","きゅうしょく",["きゅうしょ","ごうしょく"]],["連続","れんぞく",["れんしょく","れんぞう"]],["季節","きせつ",["きしょう","きぜつ"]],["目標","もくひょう",["めひょう","もくしょう"]]],
+5:[["経験","けいけん",["けいげん","きょうけん"]],["設定","せってい",["せつてい","せっちょう"]],["以上","いじょう",["いしょう","いじょ"]],["正解","せいかい",["せいげ","しょうかい"]]],
+6:[["宇宙","うちゅう",["うじゅう","うちょう"]],["宣言","せんげん",["せんごん","せんけん"]],["尊敬","そんけい",["そんきょう","そんげい"]],["延期","えんき",["えんぎ","のびき"]]]};
+let dg=null;
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]);
+function diagStart(){ dg={g:0,qs:[],i:0,right:0,passed:0,done:false}; go("diag"); }
+function diagView(){
+  const app=$("#app"); if(!dg||dg.done&&!dg.res){ dg={g:0,qs:[],i:0,right:0,passed:0,done:false}; }
+  if(dg.res){ const n=dg.res, D=["ひらがなから がんばろう！","ひらがなが よめるよ","かんじ 1ねんせいの ことば","かんじ 2ねんせい まで","かんじ 3ねんせい まで","かんじ 4ねんせい まで","かんじ 5ねんせい まで","かんじ 6ねんせい まで"];
+    app.innerHTML=header("title")+`<div class="dgbox"><h2>しんだん おわり！</h2><div class="dglv">ことばの レベル <b>${n}</b></div><p>${D[n-1]}</p><p style="opacity:.85;font-size:16px">がくしゅうが すすむと、じどうで レベルが あがるよ。<br>せっていで いつでも かえられます。</p><button class="btn big" onclick="dg=null;go('title')">▶ はじめよう</button></div>`; return; }
+  if(dg.g===0&&!dg.qs.length){ dg.qs=[{em:"🐟",ans:"さかな",ch:shuf(["さかな","さがな","ざかな"]),k:0}]; }
+  const q=dg.qs[dg.i];
+  app.innerHTML=header("title")+`<div class="dgbox"><div style="opacity:.85">${dg.g===0?"ひらがな":"かんじ"} ${dg.g?`（${dg.g}）`:""}</div>
+    <div class="dgq" data-nok>${q.em?`<span style="font-size:96px">${q.em}</span>`:q.w}</div><p>${q.em?"これは なんて よむ？":"なんて よむ？"}</p>
+    <div class="dgch" data-nok>${q.ch.map(c=>`<button class="btn dgb" onclick="diagAns('${c}')">${c}</button>`).join("")}</div>
+    ${dg.g===0?`<p><button class="btn ghost" onclick="diagFin(1)">ひらがなが よめない</button></p>`:`<p><button class="btn ghost" onclick="diagAns('')">わからない</button></p>`}</div>`;
+}
+function diagAns(c){
+  const q=dg.qs[dg.i], ok=c===q.ans;
+  if(dg.g===0){ return ok?diagGrade(1):diagFin(1); }
+  if(ok) dg.right++;
+  dg.i++;
+  if(dg.i<dg.qs.length) return diagView();
+  if(dg.right>=1){ dg.passed++; if(dg.g>=6) return diagFin(2+dg.passed); diagGrade(dg.g+1); } else diagFin(2+dg.passed);
+}
+function diagGrade(g){ dg.g=g; dg.i=0; dg.right=0; dg.qs=shuf(DGW[g]).slice(0,2).map(w=>({w:w[0],ans:w[1],ch:shuf([w[1],...w[2]])})); diagView(); }
+function diagFin(n){ n=Math.max(1,Math.min(8,n)); setKlv(n); dg={res:n,done:true}; diagView(); }
 
 loadVoices();
 render();

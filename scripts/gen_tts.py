@@ -68,7 +68,7 @@ def synth_gemini(text, voice):
             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice or "Zephyr"}}}}}).encode()
     url = "https://aiplatform.googleapis.com/v1/publishers/google/models/%s:generateContent?key=%s" % (TTS_MODEL, KEY)
     err = None
-    for attempt in range(6):
+    for attempt in range(10):
         try:
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=90) as r:
@@ -80,7 +80,9 @@ def synth_gemini(text, voice):
             time.sleep(2); continue
         except urllib.error.HTTPError as e:
             err = e
-            if e.code in (429, 500, 502, 503, 504) and attempt < 5:
+            if e.code == 429 and attempt < 9:
+                time.sleep(20 + attempt * 10); continue
+            if e.code in (500, 502, 503, 504) and attempt < 5:
                 time.sleep(2 + attempt * 3); continue
             raise SystemExit("Gemini TTS error %s: %s" % (e.code, e.read().decode()[:300]))
         except (KeyError, IndexError):
@@ -171,10 +173,25 @@ def main():
     if not KEY:
         print("GOOGLE_TTS_API_KEY が未設定のため、音声は作りません（アプリは端末の声で代用します）。")
         return
-    for f, t, vo in todo:
-        os.makedirs(os.path.dirname(f), exist_ok=True)
-        open(f, "wb").write(synth(t, vo))
-        print("ok", os.path.relpath(f, ROOT))
+    donep = os.path.join(ROOT, "audio", "gemini_done.txt")
+    done = set(l.strip() for l in open(donep, encoding="utf-8")) if (TTS_MODEL and os.path.exists(donep)) else set()
+    def write_manifest():
+        d = os.path.join(ROOT, "audio", "s")
+        keys = sorted(x[:-4] for x in os.listdir(d)) if os.path.isdir(d) else []
+        json.dump(keys, open(os.path.join(ROOT, "audio", "manifest.json"), "w"))
+        print("manifest:", len(keys))
+    try:
+        for f, t, vo in todo:
+            rel = os.path.relpath(f, ROOT).replace(os.sep, "/")
+            if rel in done: continue            # もう Gemini で つくった もの（つづきから）
+            os.makedirs(os.path.dirname(f), exist_ok=True)
+            open(f, "wb").write(synth(t, vo))
+            if TTS_MODEL:
+                open(donep, "a", encoding="utf-8").write(rel + "\n")
+            print("ok", rel)
+    finally:
+        write_manifest()
+    return
     d = os.path.join(ROOT, "audio", "s")
     keys = sorted(x[:-4] for x in os.listdir(d)) if os.path.isdir(d) else []
     json.dump(keys, open(os.path.join(ROOT, "audio", "manifest.json"), "w"))
