@@ -44,7 +44,7 @@
   @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
   .q{text-align:center;margin:18px 0}
   .msg{text-align:center;font-size:28px;font-weight:800;min-height:40px;color:var(--ok)}
-  .bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .bar{display:flex;gap:10px;justify-content:flex-start;flex-wrap:wrap;margin:14px 0}
   .panel{position:fixed;inset:0;background:rgba(5,6,20,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:200}
   .panel.on{display:flex}
   .panel .box{background:#fff;color:var(--ink);border-radius:24px;padding:22px;max-width:440px;width:100%;font-size:17px;max-height:92vh;overflow:auto}
@@ -186,7 +186,7 @@
   .title .logoRow{display:flex;align-items:center;gap:12px}.title .logo{font-size:52px}
   .title .tag{font-size:21px;margin:10px 0 14px}
   .dtbox{background:#ffffff26;border-radius:20px;padding:10px 16px;margin:10px 0;cursor:pointer;text-align:center}.dtbox .dt1{font-size:clamp(24px,3.2vw,34px);font-weight:800}.dtbox .dt2{font-size:clamp(30px,4.4vw,46px);font-weight:800;color:#ffe27a;line-height:1.1}.dtbox small{font-size:13px;opacity:.85}.dtbox:active{transform:scale(.98)}
-  .dgbox{max-width:760px;margin:20px auto;text-align:center}.dgq{font-size:84px;font-weight:800;background:#fff;color:#2a2540;border-radius:28px;padding:24px;margin:12px 0}.dgch{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}.dgb{font-size:34px!important;min-width:200px}.dglv{font-size:30px;margin:10px 0}.dglv b{font-size:64px;color:#ffe27a}
+  .dgbox{max-width:760px;margin:20px auto;text-align:center}.dgq{font-size:84px;font-weight:800;background:#fff;color:#2a2540;border-radius:28px;padding:24px;margin:12px 0}.dgch{display:flex;gap:14px;justify-content:flex-start;flex-wrap:wrap}.dgb{font-size:34px!important;min-width:200px}.dglv{font-size:30px;margin:10px 0}.dglv b{font-size:64px;color:#ffe27a}
   ruby rt{font-size:.5em;font-weight:600}
   .pcap{text-align:center;font-size:22px;font-weight:800;margin-top:6px}
   .petopts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
@@ -198,7 +198,7 @@
   .prog{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
   .prog div{background:#ffffff18;border-radius:18px;padding:10px 6px;text-align:center;font-size:13px;color:var(--mut)}.prog b{display:block;font-size:24px;color:#fff;margin-bottom:2px}
   .startbtn{font-size:34px!important;padding:22px!important}
-  .smallrow{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}.smallrow .btn{font-size:16px;padding:10px 16px}
+  .smallrow{display:flex;gap:10px;justify-content:flex-start;margin-top:14px;flex-wrap:wrap}.smallrow .btn{font-size:16px;padding:10px 16px}
   /* ホーム（ミッション） */
   .home2{display:grid;grid-template-columns:minmax(300px,36%) 1fr;gap:22px;align-items:start}
   .mhead{display:flex;justify-content:space-between;align-items:baseline}.mhead h2{margin:0;font-size:28px}.mhead span{font-size:26px;color:var(--gold)}
@@ -230,7 +230,7 @@
   .kaki{display:grid;grid-template-columns:minmax(300px,44%) 1fr;gap:22px;align-items:start;margin-top:10px}
   .kbox{position:relative;width:min(100%,60vh);margin:0 auto;aspect-ratio:1;background:#fff;border-radius:24px;box-shadow:0 5px 0 var(--soft);overflow:hidden}
   .kbox svg,.kbox canvas{position:absolute;inset:0;width:100%;height:100%}
-  .krow{display:flex;gap:10px;justify-content:center;margin-top:12px}
+  .krow{display:flex;gap:10px;justify-content:flex-start;margin-top:12px}
   .ktabs{display:flex;gap:6px;flex-wrap:wrap}.ktabs .btn{padding:8px 14px;font-size:16px}
   .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px;margin:12px 0;max-height:46vh;overflow:auto;padding:4px}
   .kgrid button{font-size:24px;padding:6px 0;border-radius:12px;border:2px solid #ffffff22;background:#ffffff14;color:#fff;font-family:inherit;cursor:pointer}
@@ -325,7 +325,7 @@
   .jo{max-width:900px;margin:10px auto;text-align:center}.jlv{color:#ffe27a;font-size:20px;letter-spacing:3px;margin-bottom:6px}
   .jsent{font-size:52px;background:#fff;color:#2a2540;text-shadow:none;border-radius:28px;padding:34px 20px;margin:10px 0;box-shadow:0 6px 0 var(--soft)}
   .jblank{display:inline-block;min-width:1.4em;border-bottom:5px solid #e0602a;margin:0 6px;color:#e0602a}.jblank.ok{color:#1f9c68;border-color:#1f9c68}
-  .jch{display:flex;gap:16px;justify-content:center;margin:20px 0;flex-wrap:wrap}
+  .jch{display:flex;gap:16px;justify-content:flex-start;margin:20px 0;flex-wrap:wrap}
   .jbtn{font:inherit;font-size:44px;font-weight:800;min-width:120px;min-height:100px;border-radius:26px;border:0;background:#fff;color:#2a2540;box-shadow:0 7px 0 var(--soft);cursor:pointer;text-shadow:none}
   .jbtn:active{transform:translateY(4px);box-shadow:0 3px 0 var(--soft)}.jbtn.good{background:#4be3a0}.jbtn.bad{background:#ff8c8c;animation:shk .25s}
   .petscreen .acts{grid-template-columns:repeat(5,1fr);gap:9px}.petscreen .act{padding:10px 2px}.petscreen .act .ae{font-size:40px}.petscreen .act b{font-size:17px}.petscreen .act small{font-size:11px}
@@ -1123,7 +1123,7 @@ function freeView(){
       ${unit("u-w","ことば","✔ "+W.filter(n=>isDone(n.k)).length+" / "+W.length,W)}
       ${unit("u-s","ものがたり","✔ "+S.filter(n=>isDone(n.k)).length+" / "+S.length,S)}
       ${unit("u-g","ゲーム","じゆうに あそぶ",G)}
-      <p style="text-align:center;margin-top:24px"><button class="btn ghost" onclick="go('badges')">🏅 バッジ</button></p>
+      <p style="text-align:left;margin-top:24px"><button class="btn ghost" onclick="go('badges')">🏅 バッジ</button></p>
     </div></div>`;
 }
 function k2h(s){ return s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[\s、。！？!?,.・ー]/g,""); }
@@ -1329,14 +1329,14 @@ function evPlay(){
   if(n.t==="talk"){
     $("#app").innerHTML=head+`<div style="text-align:center;font-size:80px;margin-top:6px">${n.em} <span style="font-size:60px">${petBody()}</span></div><div style="text-align:center;font-weight:700">${n.who}</div>
      <div class="scene" style="margin:10px auto;max-width:600px" id="line">${evx(n.ja)}${hn?`<div class="hint" style="font-size:17px;font-weight:400;margin-top:8px">${evx(n.ne)}</div>`:""}</div>
-     <div style="text-align:center"><button class="btn ghost" id="again">🔊</button> <button class="btn" id="next">つぎ ▶</button></div>`;
+     <div style="text-align:left"><button class="btn ghost" id="again">🔊</button> <button class="btn" id="next">つぎ ▶</button></div>`;
     $("#line").onclick=$("#again").onclick=()=>spk(n.ja,vOf(n.who),evx); $("#next").onclick=next; setTimeout(()=>spk(n.ja,vOf(n.who),evx),250);
   } else {
     evTry=0;
     $("#app").innerHTML=head+`<div style="text-align:center;font-size:80px;margin-top:6px">🧑‍🎓 <span style="font-size:60px">${petBody()}</span></div>
      <p style="text-align:center;font-size:18px;margin:4px">なんて いう？</p>
      <div class="scene" style="margin:8px auto;max-width:600px;background:#fff4d6;cursor:default">${evx(n.say)}${hn?`<div class="hint" style="font-size:17px;font-weight:400;margin-top:8px">${evx(n.ne)}</div>`:""}</div>
-     <div style="text-align:center"><button class="btn ghost" id="pm">🔊 おてほん</button> <button class="btn" id="pr" style="font-size:24px">🎤 はなす</button></div>
+     <div style="text-align:left"><button class="btn ghost" id="pm">🔊 おてほん</button> <button class="btn" id="pr" style="font-size:24px">🎤 はなす</button></div>
      <div class="msg" id="msg"></div><div id="pfb" style="text-align:center"></div>`;
     $("#pm").onclick=()=>spk(n.say,"n",evx);
     const pass=(full)=>{ $("#msg").style.color=""; $("#msg").textContent=full?"つうじたよ！":"いっしょに いえたね！"; if(full){ addStar(); pet.hearts++; savePet(); }
@@ -2001,7 +2001,7 @@ function diagView(){
   app.innerHTML=header("title")+`<div class="dgbox"><div style="opacity:.85">${dg.g===0?"ひらがな":"かんじ"} ${dg.g?`（${dg.g}）`:""}</div>
     <div class="dgq" data-nok>${q.em?`<span style="font-size:96px">${q.em}</span>`:q.w}</div><p>${q.em?"これは なんて よむ？":"なんて よむ？"}</p>
     <div class="dgch" data-nok>${q.ch.map(c=>`<button class="btn dgb" onclick="diagAns('${c}')">${c}</button>`).join("")}</div>
-    ${dg.g===0?`<p><button class="btn ghost" onclick="diagFin(1)">ひらがなが よめない</button></p>`:`<p><button class="btn ghost" onclick="diagAns('')">わからない</button></p>`}</div>`;
+    ${dg.g===0?`<p style="text-align:left"><button class="btn ghost" onclick="diagFin(1)">ひらがなが よめない</button></p>`:`<p style="text-align:left"><button class="btn ghost" onclick="diagAns('')">わからない</button></p>`}</div>`;
 }
 function diagAns(c){
   const q=dg.qs[dg.i], ok=c===q.ans;
@@ -2032,10 +2032,10 @@ function setupView(){
   let body="";
   if(S===1) body=`<h2>1. おなまえ</h2><p>なまえを おしえてね。ペットが よんでくれるよ。</p><input id="suName" value="${(childName||"").replace(/"/g,"&quot;")}" maxlength="10" placeholder="なまえ" style="font-size:28px;padding:10px;width:320px;text-align:center;border-radius:14px;border:3px solid #e0a82e"><p><small>（なくても だいじょうぶ）</small></p>`;
   if(S===2){ const L=[["ne","नेपाली"],["vi","Tiếng Việt"],["zh","中文"],["fil","Filipino"],["id","Indonesia"]]; const cur=(()=>{try{return localStorage.getItem("hlang")||"ne"}catch(e){return "ne"}})();
-    body=`<h2>2. ぼこくご（ヒントの ことば）</h2><p>どの ことばで ヒントを みる？</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">${L.map(([c,n])=>`<button class="btn" style="font-size:22px;${c===cur?"outline:5px solid #e0a82e":""}" onclick="suLang('${c}')">${n}</button>`).join("")}<button class="btn ghost" onclick="try{$('#optHint').checked=false}catch(e){};suNext()">ヒントは いらない</button></div>`; }
-  if(S===3) body=`<h2>3. ペットを えらぼう</h2><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">${Object.entries(PETS).map(([k,v])=>`<button class="btn" style="font-size:20px;${k===sp?"outline:5px solid #e0a82e;background:#fff3c4":""}" onclick="suSpecies('${k}')"><span style="font-size:52px;display:block">${v.em}</span>${v.label}</button>`).join("")}</div><p>なまえ：<input id="suPet" value="${pet.name.replace(/"/g,"&quot;")}" maxlength="8" style="font-size:24px;padding:6px;width:180px;text-align:center;border-radius:12px;border:3px solid #e0a82e"></p>`;
-  if(S===4) body=`<h2>4. ことばの レベル</h2><p>かんたんな もんだいで、いまの にほんごの レベルを しらべるよ（3ぷん）。<br>わからなくても だいじょうぶ。</p><button class="btn big" style="background:#ffe27a;color:#3a2f00" onclick="suDiag()">🔍 しらべる</button><p><button class="btn ghost" onclick="suEnd()">あとで する</button></p>`;
-  app.innerHTML=header("title")+`<div class="dgbox"><div>${dots}</div>${body}<p style="margin-top:18px">${S>1?`<button class="btn ghost" onclick="suBack()">◀ もどる</button> `:""}${S<4?`<button class="btn big" onclick="suNext()">つぎへ ▶</button>`:""}</p></div>`;
+    body=`<h2>2. ぼこくご（ヒントの ことば）</h2><p>どの ことばで ヒントを みる？</p><div style="display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap">${L.map(([c,n])=>`<button class="btn" style="font-size:22px;${c===cur?"outline:5px solid #e0a82e":""}" onclick="suLang('${c}')">${n}</button>`).join("")}<button class="btn ghost" onclick="try{$('#optHint').checked=false}catch(e){};suNext()">ヒントは いらない</button></div>`; }
+  if(S===3) body=`<h2>3. ペットを えらぼう</h2><div style="display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap">${Object.entries(PETS).map(([k,v])=>`<button class="btn" style="font-size:20px;${k===sp?"outline:5px solid #e0a82e;background:#fff3c4":""}" onclick="suSpecies('${k}')"><span style="font-size:52px;display:block">${v.em}</span>${v.label}</button>`).join("")}</div><p>なまえ：<input id="suPet" value="${pet.name.replace(/"/g,"&quot;")}" maxlength="8" style="font-size:24px;padding:6px;width:180px;text-align:center;border-radius:12px;border:3px solid #e0a82e"></p>`;
+  if(S===4) body=`<h2>4. ことばの レベル</h2><p>かんたんな もんだいで、いまの にほんごの レベルを しらべるよ（3ぷん）。<br>わからなくても だいじょうぶ。</p><button class="btn big" style="background:#ffe27a;color:#3a2f00" onclick="suDiag()">🔍 しらべる</button><p style="text-align:left"><button class="btn ghost" onclick="suEnd()">あとで する</button></p>`;
+  app.innerHTML=header("title")+`<div class="dgbox"><div>${dots}</div>${body}<p style="margin-top:18px;text-align:left">${S>1?`<button class="btn ghost" onclick="suBack()">◀ もどる</button> `:""}${S<4?`<button class="btn big" onclick="suNext()">つぎへ ▶</button>`:""}</p></div>`;
 }
 
 loadVoices();
