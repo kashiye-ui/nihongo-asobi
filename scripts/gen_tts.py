@@ -15,13 +15,22 @@ FORCE = os.environ.get("FORCE") == "1"
 DRY = os.environ.get("DRY") == "1"
 
 # 登場人物ごとの声（speech.json の v）。VOICEMAP='{"t":"ja-JP-Chirp3-HD-Kore"}' で上書き可
-VOICES = {"n": "Kore", "p": "Leda", "t": "Gacrux", "f": "Puck", "m": "Sulafat", "dr": "Charon", "c": "Zephyr"}
+VOICES = {"pd": "Fenrir", "pc": "Vindemiatrix", "pr": "Autonoe", "pb": "Aoede", "ph": "Callirrhoe", "n": "Kore", "p": "Leda", "t": "Gacrux", "f": "Puck", "m": "Sulafat", "dr": "Charon", "c": "Zephyr"}
 try: VOICES.update({k: v.split("-")[-1] for k, v in json.loads(os.environ.get("VOICEMAP") or "{}").items()})
 except Exception: pass
 # Gemini TTS（まなびチケットと同じ方式）: TTS_MODEL に モデル名 を入れると、Chirp3 HD の かわりに つかう。
 # TTS_PROMPT = 話し方の指示（ゆっくり・はっきり など）。声の名前（Zephyr など）は VOICES と同じ。
 TTS_MODEL = os.environ.get("TTS_MODEL", "").strip()
 TTS_PROMPT = os.environ.get("TTS_PROMPT", "やさしい先生が、日本語を学ぶ子どもに話すように、明るく、ゆっくり、はっきり話してください。")
+# どうぶつごとの 話し方（Gemini TTS の prompt）
+PET_PROMPTS = {
+  "pd": "元気いっぱいで人なつっこい子犬が、うれしそうに、ゆっくりはっきり話してください。",
+  "pc": "あまえん坊の子猫が、やわらかく、ゆっくりはっきり話してください。",
+  "pr": "はずかしがりやの小さなうさぎが、やさしく小さな声で、ゆっくりはっきり話してください。",
+  "pb": "明るく軽やかな小鳥が、高めの声で、ゆっくりはっきり話してください。",
+  "ph": "好奇心いっぱいの小さなハムスターが、かわいらしく、ゆっくりはっきり話してください。",
+}
+PET_BY_NAME = {VOICES[k]: v for k, v in PET_PROMPTS.items()}
 def vname(v):
     n = VOICES.get(v, VOICES["n"])
     return n if TTS_MODEL else "ja-JP-Chirp3-HD-" + n
@@ -46,7 +55,7 @@ def text_for(p, name):
 def synth(text, voice=None, with_rate=True):
     cfg = {"audioEncoding": "MP3"}
     if TTS_MODEL:
-        inp = {"text": text, "prompt": TTS_PROMPT}
+        inp = {"text": text, "prompt": PET_BY_NAME.get(voice, TTS_PROMPT)}
         vc = {"languageCode": "ja-JP", "name": voice or "Zephyr", "modelName": TTS_MODEL}
     else:
         if with_rate: cfg["speakingRate"] = RATE

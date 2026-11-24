@@ -960,7 +960,10 @@ function startRoam(){
   roamT=setTimeout(step,900);
 }
 function petFace(m){ return ""; }
-function setSpecies(k){ const defs=Object.values(PETS).map(x=>x.name); if(defs.includes(pet.name)) pet.name=PETS[k].name; pet.species=k; savePet(); render(); speak(pet.name+"！","p"); }
+// どうぶつごとに こえを かえる（pd=いぬ pc=ねこ pr=うさぎ pb=ことり ph=ハムスター）
+const PVOICE={dog:"pd",cat:"pc",rabbit:"pr",bird:"pb",hamster:"ph"};
+const pvOf=k=>PVOICE[k]||"p", pv=()=>pvOf(pet.species);
+function setSpecies(k){ const defs=Object.values(PETS).map(x=>x.name); if(defs.includes(pet.name)) pet.name=PETS[k].name; pet.species=k; savePet(); render(); speak(pet.name+"！",pvOf(k)); }
 function petTap(){
   const el=document.querySelector(".rpet"); if(el){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
   const g=petGreet(), b=$("#pbub"); if(b) b.textContent=g; chime([660,880]); speak(g);
@@ -1200,7 +1203,7 @@ function petHome(){
       <p style="margin:14px 0 0">きょうの おせわ <b style="color:var(--gold)">${n} / 3</b> ${"⭐".repeat(n)}${"☆".repeat(3-n)}</p>
       <div class="tools"><button class="btn ghost" onclick="go('petnote')">📒 ことばノート ${Object.keys(pet.learned||{}).length}</button><button class="btn ghost" onclick="go('evlist')">🎒 おでかけ</button></div>
     </div></div>`;
-  startRoam(); speak(hello,"p");
+  startRoam(); speak(hello,pv());
 }
 function petAsk(k){
   const a=petActs()[k]; petAct=k; petTry=0; const pool=a.v.filter(x=>x.lv===petLv(k)+1); petV=pool[Math.floor(Math.random()*pool.length)];
@@ -1213,7 +1216,7 @@ function petAsk(k){
       <div class="msg" id="msg"></div><div id="pfb"></div></div></div>`;
   $("#pm").onclick=()=>speak(v.say);
   $("#pr").onclick=petSpeak;
-  startRoam(); setTimeout(()=>speak(v.cue,"p"),250);
+  startRoam(); setTimeout(()=>speak(v.cue,pv()),250);
 }
 function petPass(full){
   pet.mood=Math.min(100,petMood()+(full?15:6)); pet.t=Date.now(); if(full) pet.hearts++;
@@ -1882,9 +1885,10 @@ function collectSpeech(){
   for(const S of STORIES) for(const n of S.nodes){ if(n.t==="talk"){ add(vOf(n.who),n.ja); n.words.forEach(w=>add("n",w.ja)); } else { add("n",n.ja); n.ch.forEach(c=>add("n",c.ja)); } }
   for(const E of EVENTS) for(const n of E.nodes){ if(n.t==="talk") pnAll(n.ja).forEach(t=>add(vOf(n.who),t)); else pnAll(n.say).forEach(t=>add("n",t)); }
   JOSHI.forEach(x=>{ add('n',x[1]+x[2]+x[3]); });
-  const g0=greetCtx; ["greet-morning","greet-noon","greet-evening"].forEach(ctx=>{ greetCtx=()=>ctx; Object.values(petActs()).forEach(a=>a.v.forEach(v=>{ add("p",v.cue); add("n",v.say); })); }); greetCtx=g0;
+  const g0=greetCtx; ["greet-morning","greet-noon","greet-evening"].forEach(ctx=>{ greetCtx=()=>ctx; Object.values(petActs()).forEach(a=>a.v.forEach(v=>{ Object.values(PVOICE).forEach(pc=>add(pc,v.cue)); add("n",v.say); })); }); greetCtx=g0;
   ["さびしいよ〜","あそぼう！","げんきだよ！","さびしいよ〜。あそぼう！","ありがとう！ だいすき！","きょうも いっしょに やろう！","ありがとう、{name}！","いっしょに がんばったね、{name}！","ママ、ありがとう！","パパ、ありがとう！"].forEach(t=>add("p",t));
   for(let i=1;i<=20;i++) add("p","あと "+i+" こ！ がんばろう！");
+  Object.entries(PVOICE).forEach(([k,pc])=>{ ["さびしいよ〜","あそぼう！","げんきだよ！"].forEach(t=>add(pc,t)); add(pc,PETS[k].name+"！"); });
   ["すごい！","そう！","せいかい！","クリア！ すごい！","できた！ いただきます！","ん？ もういちど ゆっくり いってみて。"].concat(SAMPLE_CHEERS).forEach(t=>add("n",t));
   MISSIONS.forEach(m=>add("n",m.say));
   FOODS.forEach(f=>add("c",f.n+"を おぼんに のせてください"));
