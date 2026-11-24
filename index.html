@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#ff8a3d">
+<meta name="theme-color" content="#4a8df0">
 <link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
 <link rel="icon" href="icon-192.png">
 <title>にほんご あそび（試作）</title>
@@ -234,6 +234,82 @@
   .kcred{font-size:11px;color:var(--mut);margin-top:10px}
   @keyframes shk{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
   #ksv.shake{animation:shk .25s}
+
+  /* ===== テーマ：あかるい そらいろ（10インチ 1280×800 よこむき前提） ===== */
+  :root{--bg:#4a8df0;--mut:#e3eeff;--soft:#c9dcff}
+  body{background:radial-gradient(900px 520px at 10% -10%,#9cc6ff99,transparent 60%),radial-gradient(800px 520px at 100% 0%,#b79bff77,transparent 60%),linear-gradient(#4a8df0,#3a78e0);background-attachment:fixed;font-size:20px;text-shadow:0 1px 0 #0000001f}
+  .card,.cbub,.bubble,.sheet,.panel .box{text-shadow:none}
+  #app{max-width:1280px;padding:16px 26px 28px}
+  header{margin-bottom:14px;min-height:64px}
+  .brand .logo{width:54px;height:54px;font-size:32px;border-radius:17px}
+  .brand b{font-size:22px}
+  .btn{min-height:60px;padding:14px 28px;font-size:22px;border-radius:20px}
+  .btn.ghost{background:#ffffff38;color:#fff;box-shadow:0 5px 0 #0000002e;border:2px solid #ffffff55}
+  header .btn,header button{min-height:56px}
+  /* ひろい ふちを あけて、したの ふちの てが あたる ところは さける */
+  #app{padding-bottom:36px}
+  /* ホーム */
+  .home2{grid-template-columns:minmax(340px,38%) 1fr;gap:26px}
+  .room{height:min(56vh,440px);box-shadow:0 8px 0 #0003,0 0 0 5px #ffffff66}
+  .petcard2{background:#ffffff30;padding:14px 18px}
+  .petcard2 .nm{font-size:26px}
+  .meter{height:14px;background:#ffffff48}
+  .mhead h2{font-size:32px}.mhead span{font-size:32px;color:#ffe27a}
+  .msub{font-size:18px}
+  .msteps{gap:12px}
+  .mstep{min-height:164px;padding:34px 8px 12px;background:#ffffff30;border:3px solid #ffffff55;border-radius:24px;box-shadow:0 6px 0 #0000002a}
+  .mstep .no{width:32px;height:32px;font-size:18px;left:10px;top:10px;background:#ffffff66;color:#2a2540;text-shadow:none}
+  .mstep .e{font-size:62px;line-height:1.1}
+  .mstep b{font-size:19px}.mstep small{font-size:14px}
+  .mstep.cur{background:#fff;color:#2a2540;text-shadow:none;border-color:#ffc83d;box-shadow:0 0 0 7px #ffc83d66,0 8px 0 #0000002a;transform:translateY(-4px)}
+  .mstep.cur small{color:#5b5780}
+  .mstep.cur .no{background:var(--gold);color:#4a3600}
+  .mstep.done{background:#2fb87a99;border-color:#c8ffe4}
+  .gobtn{font-size:30px!important;min-height:84px;margin-top:20px}
+  .allclear{background:#2fb87acc;font-size:26px}
+  .more h3{font-size:20px;color:#fff;margin:24px 0 10px}
+  .mtiles{gap:12px}
+  .mtile{padding:18px 8px;font-size:18px;background:#ffffff30;border:2px solid #ffffff55;border-radius:22px;color:#fff;box-shadow:0 5px 0 #0000002a}
+  .mtile .e{font-size:44px;margin-bottom:4px}
+  /* タイトル */
+  .title{grid-template-columns:1.1fr 1fr;gap:34px}
+  .title .tag{background:#ffffff30!important;font-size:24px}
+  .how{background:#ffffff2e}.how div{font-size:22px}.how .n{font-size:40px}.how small{font-size:16px}
+  .prog div{background:#ffffff30;font-size:15px}.prog b{font-size:28px}
+  .startbtn{min-height:96px;font-size:38px!important}
+  .petopts button{font-size:34px;padding:6px 14px;background:#ffffff38}
+  .petopts button.on{border-color:#ffe27a;background:#ffffff66}
+  .petopts input{font-size:24px;width:170px}
+  /* ペット */
+  .petscreen{grid-template-columns:minmax(360px,44%) 1fr;gap:26px}
+  .act{padding:20px 6px;background:#ffffff38;border:2px solid #ffffff66;border-radius:24px;box-shadow:0 6px 0 #0000002e}
+  .act .ae{font-size:56px}.act b{font-size:21px}.act small{font-size:13px}
+  .cbub{font-size:32px;padding:20px 24px}.cbub .hint{font-size:18px}
+  .chat .who{font-size:16px}
+  .crow .btn{min-height:72px}
+  .psr h2{font-size:32px}
+  /* かきじゅん・ゲーム共通 */
+  .ktabs .btn{padding:10px 18px;font-size:19px;min-height:52px}
+  .kgrid{grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px}
+  .kgrid button{font-size:28px;padding:10px 0;min-height:56px;background:#ffffff38;border-color:#ffffff55}
+  .kgrid button.ok{color:#c8ffe4;background:#2fb87a77}
+  .kgrid button.on{background:#fff;color:#2a2540;text-shadow:none;border-color:#ffc83d}
+  .kinfo{background:#ffffff30;font-size:20px}
+  .unit{font-size:22px;padding:14px 20px}
+  .card .em{font-size:84px}
+  .grid{gap:18px}
+  .toast{font-size:22px}
+
+  .mstep b,.mstep small,.mtile{word-break:keep-all;overflow-wrap:break-word}
+  .mstep b{font-size:18px;line-height:1.25}
+  .home2 .room{height:min(64vh,520px)}
+  .prog b{white-space:nowrap;font-size:26px}
+  .petscreen .room{height:min(50vh,400px)}
+  .act{padding:12px 4px}.act .ae{font-size:46px}.act b{font-size:20px;margin-top:2px}
+  .acts{gap:10px}
+  .home .mission{display:none}
+  .unit.gt:has(+.kaki){display:none}
+  .kbox{width:min(100%,64vh)}
 </style>
 </head>
 <body>
@@ -983,7 +1059,7 @@ function petHome(){
   $("#app").innerHTML=header("home")+`<div class="petscreen"><div>${roomHTML("proom","",hello)}
     <div class="petcard2"><div style="flex:1"><div class="nm">${pet.name} <small style="display:inline">${STAGE_NAME[st-1]}</small></div><div class="meter"><i style="width:${m}%"></i></div></div><div style="font-size:22px">❤️ ${pet.hearts}</div></div></div>
     <div class="psr"><h2>🐾 ${pet.name}の おせわ</h2>
-      <p class="sub">したい ことを えらぼう。${pet.name}が はなしかけるから、にほんごで こたえてね！${hn?"<br>"+"आफ्नो रोजाइ छान्नुहोस्। पाल्तुले बोल्छ, जापानीमा जवाफ दिनुहोस्।":""}</p>
+      <p class="sub">したい ことを えらぼう。${pet.name}が はなしかけるから、にほんごで こたえてね！</p>
       <div class="acts">${Object.entries(petActs()).map(([k,a])=>`<button class="act" onclick="petAsk('${k}')"><span class="ae">${a.em}</span><b>${a.label}</b><span style="letter-spacing:2px;color:var(--gold);font-size:14px">${"●".repeat(petLv(k)+1)}${"○".repeat(3-petLv(k))}</span>${hn?`<small>${ACT_NE[k]||""}</small>`:""}</button>`).join("")}</div>
       <p style="margin:14px 0 0">きょうの おせわ <b style="color:var(--gold)">${n} / 3</b> ${"⭐".repeat(n)}${"☆".repeat(3-n)}</p>
       <div class="tools"><button class="btn ghost" onclick="go('petnote')">📒 ことばノート ${Object.keys(pet.learned||{}).length}</button><button class="btn ghost" onclick="go('evlist')">🎒 おでかけ</button></div>
