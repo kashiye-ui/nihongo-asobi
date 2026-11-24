@@ -160,9 +160,72 @@
   .stars.bump{animation:bump .4s}
   @keyframes bump{40%{transform:scale(1.25);background:#ffd84a55}}
   .paperc{position:fixed;top:-20px;width:10px;height:16px;z-index:250;animation:fall 2.4s linear forwards}
+
+  #rot{display:none}
+  @media (orientation:portrait) and (max-width:1000px){#rot{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#171a3d;font-size:28px;text-align:center}#rot b{font-size:64px;display:block}}
+  #app{max-width:1200px}
+  /* へや と ペット（ぜんしん・うろうろ） */
+  .room{position:relative;border-radius:28px;overflow:hidden;height:min(54vh,430px);background:linear-gradient(#6f8bff,#a9c1ff 58%,#e9c58d 58%,#d9a867);box-shadow:0 8px 0 #0004,inset 0 0 0 4px #ffffff40}
+  .room.wide{height:min(42vh,330px)}
+  .room .rwin{position:absolute;left:7%;top:7%;width:15%;aspect-ratio:1;background:linear-gradient(#bfe3ff,#e8f6ff);border:6px solid #fff;border-radius:18px;display:grid;place-items:center;font-size:34px}
+  .room .rfloor{position:absolute;left:0;right:0;bottom:0;height:42%;background:repeating-linear-gradient(90deg,#00000008 0 60px,#0000 60px 120px)}
+  .room .rpet{position:absolute;bottom:5%;left:50%;height:var(--ph);transform:translateX(-50%);transition-property:left;transition-timing-function:linear;cursor:pointer}
+  .room .rflip{height:100%;transition:transform .2s}
+  .room .rpet img,.room .rpet .pet3e{height:100%;width:auto;display:block;filter:drop-shadow(0 8px 6px #0003)}
+  .room .rpet.walk img{animation:stepw .45s ease-in-out infinite}
+  @keyframes stepw{50%{transform:translateY(-7%) rotate(2deg)}}
+  .room .rpet.hop img{animation:hop .5s ease-out}
+  .room .bubble{left:auto;right:5%;top:6%;transform:none;max-width:48%}
+  .petcard2{display:flex;align-items:center;gap:12px;margin-top:10px;background:#ffffff18;border-radius:20px;padding:10px 14px}
+  .petcard2 .nm{font-size:22px}.petcard2 small{display:block;color:var(--mut);font-weight:700}
+  .meter{height:12px;background:#ffffff30;border-radius:8px;overflow:hidden;margin-top:6px}.meter i{display:block;height:100%;background:var(--ok)}
+  /* タイトル */
+  .title{display:grid;grid-template-columns:1.15fr 1fr;gap:26px;align-items:center;min-height:calc(100vh - 40px)}
+  .title h1{font-size:clamp(34px,5vw,54px);margin:0;line-height:1.1}
+  .title .logoRow{display:flex;align-items:center;gap:12px}.title .logo{font-size:52px}
+  .title .tag{font-size:21px;margin:10px 0 14px}
+  .petopts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .petopts button{font-size:26px;padding:4px 10px;border-radius:14px;border:2px solid transparent;background:#ffffff1c;cursor:pointer}
+  .petopts button.on{border-color:var(--accent)}
+  .petopts input{font-size:20px;width:140px;text-align:center;border:0;border-bottom:2px solid var(--accent);background:transparent;color:#fff;font-family:inherit;font-weight:800}
+  .how{display:grid;gap:10px;background:#ffffff14;border-radius:24px;padding:16px 18px}
+  .how div{display:flex;gap:12px;align-items:center;font-size:19px}.how .n{font-size:30px}.how small{display:block;color:var(--mut);font-weight:700;font-size:14px}
+  .prog{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+  .prog div{background:#ffffff18;border-radius:18px;padding:10px 6px;text-align:center;font-size:13px;color:var(--mut)}.prog b{display:block;font-size:24px;color:#fff;margin-bottom:2px}
+  .startbtn{font-size:34px!important;padding:22px!important}
+  .smallrow{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}.smallrow .btn{font-size:16px;padding:10px 16px}
+  /* ホーム（ミッション） */
+  .home2{display:grid;grid-template-columns:minmax(300px,36%) 1fr;gap:22px;align-items:start}
+  .mhead{display:flex;justify-content:space-between;align-items:baseline}.mhead h2{margin:0;font-size:28px}.mhead span{font-size:26px;color:var(--gold)}
+  .msub{color:var(--mut);margin:4px 0 12px;font-size:16px}
+  .msteps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .mstep{position:relative;background:#ffffff18;border-radius:20px;padding:26px 6px 10px;text-align:center;cursor:pointer;border:3px solid transparent;min-height:130px}
+  .mstep .no{position:absolute;left:8px;top:8px;width:26px;height:26px;border-radius:50%;background:#ffffff30;display:grid;place-items:center;font-size:15px}
+  .mstep .e{font-size:40px}.mstep b{display:block;font-size:16px;margin-top:2px}.mstep small{display:block;color:var(--mut);font-size:12px;font-weight:700;margin-top:2px}
+  .mstep.cur{background:linear-gradient(#3b4fd8,#6a3fd0);border-color:var(--gold);box-shadow:0 0 0 6px #ffc83d33}
+  .mstep.cur .no{background:var(--gold);color:#4a3600}
+  .mstep.done{background:#1f9c6844;border-color:#4be3a066}.mstep.done .no{background:var(--ok);color:#0c3b27}
+  .mstep.done:after{content:"✓";position:absolute;right:8px;top:6px;font-size:22px;color:var(--ok)}
+  .gobtn{margin-top:16px;font-size:28px!important}
+  .allclear{margin-top:16px;padding:18px;border-radius:20px;background:#1f9c6855;text-align:center;font-size:22px}
+  .more h3{margin:22px 0 8px;font-size:18px;color:var(--mut)}
+  .mtiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .mtile{background:#ffffff14;border:2px solid #ffffff22;border-radius:18px;padding:14px 6px;text-align:center;color:#fff;font:inherit;font-weight:800;cursor:pointer}.mtile .e{font-size:32px;display:block}.mtile small{display:block;color:var(--mut);font-size:12px}
+  /* ペットの おせわ */
+  .petscreen{display:grid;grid-template-columns:minmax(320px,42%) 1fr;gap:22px;align-items:start}
+  .psr h2{margin:0 0 4px;font-size:28px}.psr .sub{color:var(--mut);margin:0 0 14px}
+  .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .act{background:linear-gradient(#ffffff26,#ffffff10);border:2px solid #ffffff30;border-radius:22px;padding:16px 6px;color:#fff;font:inherit;font-weight:800;cursor:pointer;box-shadow:0 5px 0 #0004}.act:active{transform:translateY(3px);box-shadow:0 2px 0 #0004}
+  .act .ae{font-size:44px;display:block}.act b{font-size:18px;display:block;margin-top:4px}.act small{display:block;color:var(--mut);font-size:12px}
+  .tools{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .chat{margin:0 0 12px}.chat .who{font-size:14px;color:var(--mut);margin:0 0 4px}
+  .cbub{background:#fff;color:var(--ink);border-radius:22px;padding:16px 20px;font-size:26px;font-weight:800}
+  .cbub.mine{background:#fff4d6}.cbub .hint{font-size:16px;font-weight:600;color:#6a6488}
+  .crow{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
 </style>
 </head>
 <body>
+<div id="rot"><b>📱↻</b>よこむきに してね</div>
 <div id="app"></div>
 <div class="panel" id="panel"><div class="box">
   <h2 style="margin-top:0">おうちのひと へ</h2>
@@ -284,7 +347,7 @@ COURSES.big.scenes.push(
 const exOf=it=>EX[it.ja]||[];
 
 // ===== 状態 =====
-let stars = 0, course = null, view = "home";
+let stars = 0, course = null, view = "title", gameStars = 0;
 try{ stars = +localStorage.getItem("stars")||0 }catch(e){}
 const $ = s=>document.querySelector(s);
 const opt = ()=>({hint:$("#optHint").checked, lang:$("#optLang").value, ticket:$("#optTicket").checked, rate:+$("#optRate").value});
@@ -389,6 +452,7 @@ function badgesView(){
   $("#app").innerHTML = gameHead("🏅","バッジ")+`<div class="grid">`+BADGES.map(b=>{const on=stats.badges.includes(b.id);return `<div class="card" style="${on?'':'filter:grayscale(1);opacity:.45'}"><div class="em">${b.em}</div><div class="ja" style="font-size:20px">${b.t}</div></div>`}).join("")+`</div>`;
 }
 function addStar(){
+  if(view.startsWith("game:")){ gameStars++; if(gameStars===3) setTimeout(()=>missionDone("game"),600); }
   stars++; try{localStorage.setItem("stars",stars)}catch(e){}
   rollover(); stats.today++;
   const t=todayStr(); let goalHit=false;
@@ -497,7 +561,7 @@ function shuffle(a){return a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).ma
 // ===== 画面 =====
 function header(backTo){
   return `<header>
-    ${backTo?`<button class="btn ghost" onclick="go('${backTo}')">← もどる</button>`:`<div class="brand"><span class="logo">🌰</span><div><b>にほんご あそび</b><small>試作</small></div></div>`}
+    ${backTo?`<button class="btn ghost" onclick="go('${backTo}')">← もどる</button>`:`<div class="brand" onclick="go('title')" style="cursor:pointer"><span class="logo">🌰</span><div><b>にほんご あそび</b><small>試作</small></div></div>`}
     <div class="hud"><span class="stars">${starsText()}</span><button class="btn ghost gear" onclick="openPanel()" aria-label="おうちのひと">⚙️</button></div>
   </header>`;
 }
@@ -523,12 +587,20 @@ function go(v){
   view=v;
   if(v==="home") course=courseSel;
   if(v.startsWith("scene:")) qs.sid=null;
+  if(v.startsWith("game:")) gameStars=0;
   render();
 }
 function render(){
+  clearTimeout(roamT);
   document.querySelectorAll(".sheet").forEach(e=>e.remove());
   const app=$("#app"); document.body.classList.toggle("teen",course==="big");
-  if(view==="home"){
+  if(view==="title"){
+    if(!course) course=courseSel;
+    app.innerHTML = titleView();
+  } else if(view==="free"){
+    if(!course) course=courseSel;
+    app.innerHTML = header("home")+freeView();
+  } else if(view==="home"){
     if(!course) course=courseSel;
     document.body.classList.toggle("teen",course==="big");
     app.innerHTML = header(null)+homeView();
@@ -563,6 +635,7 @@ function render(){
   } else if(view==="badges"){
     badgesView();
   }
+  startRoam();
 }
 
 
@@ -633,7 +706,7 @@ function storyPlay(id){
   }
 }
 function storyEnd(S){
-  addStar(); confetti(); sfx.clear(); doneAdd("story:"+S.id);
+  addStar(); confetti(); sfx.clear(); doneAdd("story:"+S.id); missionDone("story",S.id);
   $("#app").innerHTML=`<div class="clear">${petBody(200,100)}<h2>${S.em} ${S.title} クリア！</h2><div class="xp">⭐ +1</div>
     <div class="bar"><button class="btn" onclick="go('home')">つぎへ ▶</button><button class="btn ghost" onclick="storyI=0;go('story:${S.id}')">もういちど</button></div></div>`;
 }
@@ -677,12 +750,31 @@ function petSVGold(m,hearts,sz){
    ${mouth}${acc.includes("M68 52")?acc:""}
   </g></svg></span>`;
 }
-function petBody(sz,m){ return petSVG(m==null?petMood():m,pet.hearts,sz||90); }
+const STAGE_NAME=["あかちゃん","こども","わかもの","おとな","でんせつ"], STAGE_H=[30,40,52,64,76];
+function stageOf(){ return Math.min(5,1+Math.floor(levelOf(stars).n/2)); }
+function petImgTag(){ const sp=PETS[pet.species]?pet.species:"dog"; return `<img src="pets3/${sp}_${stageOf()}.webp" alt="${PETS[sp].label}" onerror="this.outerHTML='<span class=pet3e style=&quot;font-size:90px&quot;>${PETS[sp].em}</span>'">`; }
+function petBody(sz){ return `<span class="pet"><span class="body" style="display:inline-block;height:${Math.round((sz||90)*0.9)}px">${petImgTag().replace("<img ",'<img style="height:100%;width:auto" ')}</span></span>`; }
+let roamT=null;
+function roomHTML(id,cls,bub){
+  const hr=new Date().getHours(), sun=(hr>=6&&hr<17)?"☀️":(hr>=17&&hr<19)?"🌇":"🌙";
+  return `<div class="room ${cls||""}" id="${id}"><div class="rwin">${sun}</div><div class="rfloor"></div>
+    <div class="rpet" style="--ph:${STAGE_H[stageOf()-1]}%" onclick="petTap()"><div class="rflip">${petImgTag()}</div></div>
+    ${bub===null?"":`<div class="bubble" id="pbub">${bub||petGreet()}</div>`}</div>`;
+}
+function startRoam(){
+  clearTimeout(roamT); const room=document.querySelector(".room"); if(!room) return;
+  const p=room.querySelector(".rpet"), f=room.querySelector(".rflip"); let x=50; p.style.left=x+"%";
+  const step=()=>{ if(!document.body.contains(p)) return;
+    const sad=petMood()<45, nx=16+Math.random()*68, dur=Math.max(1,Math.abs(nx-x)/(sad?6:13));
+    f.style.transform=nx<x?"scaleX(-1)":"scaleX(1)"; p.style.transitionDuration=dur+"s"; p.classList.add("walk"); p.style.left=nx+"%"; x=nx;
+    roamT=setTimeout(()=>{ p.classList.remove("walk"); roamT=setTimeout(step,1200+Math.random()*2600); },dur*1000); };
+  roamT=setTimeout(step,900);
+}
 function petFace(m){ return ""; }
-function setSpecies(k){ const defs=Object.values(PETS).map(x=>x.name); if(defs.includes(pet.name)) pet.name=PETS[k].name; pet.species=k; savePet(); petHome(); speak(pet.name+"！","p"); }
+function setSpecies(k){ const defs=Object.values(PETS).map(x=>x.name); if(defs.includes(pet.name)) pet.name=PETS[k].name; pet.species=k; savePet(); render(); speak(pet.name+"！","p"); }
 function petTap(){
-  const el=document.querySelector(".stage .pet"); if(el){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
-  chime([660,880]); speak(petGreet());
+  const el=document.querySelector(".rpet"); if(el){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
+  const g=petGreet(), b=$("#pbub"); if(b) b.textContent=g; chime([660,880]); speak(g);
 }
 function petGreet(){
   rollover(); const left=Math.max(0,stats.goal-stats.today), m=petMood();
@@ -691,7 +783,77 @@ function petGreet(){
   if(stats.today===0) return "きょうも いっしょに やろう！";
   return "あと "+left+" こ！ がんばろう！";
 }
+
+// ===== きょうの ミッション（5つ・いろいろな ぶんやから） =====
+function dayIdx(){ return Math.floor(Date.parse(todayStr())/86400000); }
+function buildMissions(){
+  const sc=COURSES[courseSel].scenes, un=sc.filter(x=>!isDone("scene:"+x.id)), pool=un.length>=2?un:sc, d=dayIdx();
+  const w1=pool[d%pool.length], w2=pool[(d+1)%pool.length];
+  const us=STORIES.filter(x=>!isDone("story:"+x.id)), st=us.length?us[0]:STORIES[d%STORIES.length];
+  const games=["nazori","manekko","ageyou",courseSel==="small"?"kyushoku":"otayori"], g=games[d%games.length];
+  return [{kind:"pet"},{kind:"word",ref:w1.id},{kind:"story",ref:st.id},{kind:"word",ref:w2.id},{kind:"game",ref:g}].map(x=>({...x,done:false}));
+}
+const GAMEINFO={nazori:["✍️","ひらがな","लेख्ने अभ्यास"],manekko:["🎤","まねっこ","नक्कल"],ageyou:["🎁","あげよう","दिउँ"],kyushoku:["🍱","きゅうしょく","स्कूल खाजा"],otayori:["🕵️","おたより","स्कूलको सूचना"]};
+function missionList(){
+  const td=todayStr(); let m=null; try{ m=JSON.parse(localStorage.getItem("mis")||"null"); }catch(e){}
+  if(!m||m.d!==td||m.c!==courseSel||!Array.isArray(m.l)||m.l.length!==5){ m={d:td,c:courseSel,l:buildMissions()}; try{ localStorage.setItem("mis",JSON.stringify(m)); }catch(e){} }
+  return m;
+}
+function todayMissions(){
+  return missionList().l.map(x=>{
+    if(x.kind==="pet") return {...x,em:"🐾",label:"ペットと おはなし",ne:"पाल्तुसँग कुरा",sub:pet.name,go:"go('pet')"};
+    if(x.kind==="word"){ const s=findScene(x.ref); return {...x,em:s.em,label:"ことば",ne:"शब्द",sub:s.title,go:`qs={};go('quiz:${x.ref}')`}; }
+    if(x.kind==="story"){ const s=STORIES.find(q=>q.id===x.ref); return {...x,em:s.em,label:"ものがたり",ne:"कथा",sub:s.title,go:`storyI=0;go('story:${x.ref}')`}; }
+    const gi=GAMEINFO[x.ref]; return {...x,em:gi[0],label:"ゲーム",ne:"खेल",sub:gi[1],go:`go('game:${x.ref}')`};
+  });
+}
+function missionDone(kind,ref){
+  const m=missionList(); let t=m.l.find(x=>x.kind===kind&&!x.done&&x.ref===ref)||m.l.find(x=>x.kind===kind&&!x.done); if(!t) return;
+  t.done=true; try{ localStorage.setItem("mis",JSON.stringify(m)); }catch(e){}
+  if(m.l.every(x=>x.done)) setTimeout(()=>{ toast("🏆 きょうの ミッション ぜんぶ クリア！"); confetti(); chime([523,659,784,1047]); },900);
+}
+function wordsLearned(){ return COURSES[courseSel].scenes.filter(x=>isDone("scene:"+x.id)).reduce((a,x)=>a+x.items.length,0); }
+function titleView(){
+  rollover(); const hn=opt().hint, st=stageOf(), M=todayMissions(), md=M.filter(x=>x.done).length;
+  return `<div class="title"><div>
+    <div class="logoRow"><span class="logo">🌰</span><h1>にほんご あそび</h1></div>
+    <p class="tag">あそびながら、にほんごを はなせるように なろう！${hn?`<small class="hint" style="display:block;font-size:16px">खेल्दै खेल्दै जापानी बोल्न सिकौँ!</small>`:""}</p>
+    ${roomHTML("troom","wide")}
+    <div class="petopts">${Object.entries(PETS).map(([k,v])=>`<button class="${k===(pet.species||"dog")?"on":""}" onclick="setSpecies('${k}')" aria-label="${v.label}">${v.em}</button>`).join("")}
+      <input value="${pet.name}" maxlength="8" onchange="pet.name=this.value.trim()||'コロ';savePet()" aria-label="なまえ"> <small style="color:var(--mut)">← なまえを つけよう</small></div>
+  </div><div>
+    <div class="how">
+      <div><span class="n">📋</span><span>まいにち 5つの ミッション<small>${hn?"हरेक दिन ५ मिसन":"いろいろな ぶんやを すこしずつ"}</small></span></div>
+      <div><span class="n">🐾</span><span>ペットと にほんごで おはなし<small>${hn?"पाल्तुसँग जापानीमा कुरा गरौँ":"こえに だして はなそう"}</small></span></div>
+      <div><span class="n">🌱</span><span>ことばが ふえると ペットが おおきく なる！<small>${hn?"शब्द बढ्दै जाँदा पाल्तु ठूलो हुन्छ":"あかちゃん → でんせつ（5だんかい）"}</small></span></div>
+    </div>
+    <div class="prog"><div><b>🔥 ${stats.streak}</b>れんぞく（にち）</div><div><b>⭐ ${stars}</b>ほし</div><div><b>${STAGE_NAME[st-1]}</b>${pet.name}</div><div><b>📚 ${wordsLearned()}</b>おぼえた ことば</div></div>
+    <button class="btn big startbtn" onclick="go('home')">▶ はじめる${md?`<small style="display:block;font-size:16px">きょうの ミッション ${md} / 5</small>`:""}</button>
+    <div class="smallrow"><button class="btn ghost" onclick="openPanel()">⚙️ せってい</button><button class="btn ghost" onclick="go('badges')">🏅 バッジ</button>
+      <button class="btn ghost" onclick="$('#optHint').checked=!$('#optHint').checked;render()">${hn?"✅":"⬜"} ネパールごの ヒント</button></div>
+  </div></div>`;
+}
 function homeView(){
+  rollover(); const M=todayMissions(), done=M.filter(x=>x.done).length, next=M.find(x=>!x.done), hn=opt().hint, st=stageOf(), m=petMood(), lv=levelOf(stars);
+  const left=st<5?30*st-stars:0;
+  return `<div class="home2"><div>
+    ${roomHTML("hroom")}
+    <div class="petcard2"><div style="flex:1"><div class="nm">${pet.name} <small style="display:inline">${STAGE_NAME[st-1]}　Lv.${lv.n+1}</small></div><div class="meter"><i style="width:${m}%"></i></div>
+      <small>${st<5?`つぎの せいちょうまで ⭐あと ${Math.max(0,left)}`:"いちばん おおきく なったよ！"}</small></div><div style="font-size:22px">❤️ ${pet.hearts}</div></div>
+  </div><div>
+    <div class="mhead"><h2>きょうの ミッション</h2><span>${done} / 5</span></div>
+    <p class="msub">まいにち この 5つを やろう！ ${hn?"· हरेक दिन यी ५ वटा गरौँ!":""}</p>
+    <div class="msteps">${M.map((x,i)=>`<div class="mstep ${x.done?"done":next===x?"cur":""}" onclick="${x.go}"><span class="no">${i+1}</span><div class="e">${x.em}</div><b>${x.label}</b><small>${x.sub}${hn?"<br>"+x.ne:""}</small></div>`).join("")}</div>
+    ${next?`<button class="btn big gobtn" onclick="${next.go}">${next.em} つぎは「${next.label}：${next.sub}」 ▶</button>`:`<div class="allclear">🏆 きょうの ミッション ぜんぶ クリア！<br><small>すごい！ あしたも まってるよ</small></div>`}
+    <div class="more"><h3>ほかにも あそべるよ</h3><div class="mtiles">
+      <button class="mtile" onclick="go('pet')"><span class="e">🐾</span>ペットの おせわ</button>
+      <button class="mtile" onclick="go('free')"><span class="e">📚</span>ぜんぶの ことば・ゲーム</button>
+      <button class="mtile" onclick="go('petnote')"><span class="e">📒</span>ことばノート</button>
+      <button class="mtile" onclick="go('evlist')"><span class="e">🚌</span>おでかけ</button></div></div>
+  </div></div>`;
+}
+
+function freeView(){
   rollover(); const m=petMood(), c=COURSES[course];
   const pct=Math.min(100,Math.round(stats.today/stats.goal*100)), lv=levelOf(stars);
   const hr=new Date().getHours(), sun=(hr>=6&&hr<17)?"☀️":(hr>=17&&hr<19)?"🌇":"🌙";
@@ -779,40 +941,38 @@ function petActs(){
   };
 }
 let petAct=null, petTry=0, petV=null;
+const ACT_NE={greet:"अभिवादन",deru:"बाहिर जाने",gohan:"खाना",sanpo:"हिँडाइ",nenne:"सुत्ने",nade:"सुम्सुम्याउने",kaze:"चिन्ता"};
 function petHome(){
-  const m=petMood(), hn=opt().hint;
-  const hello=m<45?"さびしいよ〜":m<70?"あそぼう！":"げんきだよ！";
-  $("#app").innerHTML=header("home")+`<div style="text-align:center;margin-top:8px">
-    <div style="width:min(240px,60vw);margin:0 auto">${petBody(240).replace("width:240px","width:100%")}</div>
-    <div style="display:flex;gap:6px;justify-content:center;margin:6px 0">${Object.entries(PETS).map(([k,v])=>`<button onclick="setSpecies('${k}')" aria-label="${v.label}" style="font-size:26px;padding:4px 8px;border-radius:12px;border:2px solid ${k===(pet.species||"dog")?"var(--accent)":"transparent"};background:rgba(255,255,255,.12);cursor:pointer">${v.em}</button>`).join("")}</div>
-    <div><input id="petName" value="${pet.name}" style="font-size:22px;text-align:center;width:150px;border:0;border-bottom:2px solid var(--accent);background:transparent;color:#fff;font-family:inherit;font-weight:800" onchange="pet.name=this.value.trim()||'コロ';savePet()"></div>
-    <div style="margin:8px">❤️ ${pet.hearts} <span style="display:inline-block;width:140px;height:12px;background:#eee;border-radius:6px;vertical-align:middle"><span style="display:block;height:100%;width:${m}%;background:var(--ok);border-radius:6px"></span></span></div>
-    <div class="scene" style="max-width:420px;margin:8px auto;cursor:default" id="pbub">🗨️ ${hello}</div>
-    <div style="font-size:16px">きょうの おせわ ${Math.min(3,(pet.day&&pet.day.d===todayStr())?pet.day.n:0)} / 3 &nbsp; <button class="btn ghost" style="font-size:14px;padding:6px 12px" onclick="go('petnote')">📒 ことばノート ${Object.keys(pet.learned||{}).length}</button> <button class="btn" style="font-size:14px;padding:6px 12px" onclick="go('evlist')">🎒 おでかけ</button></div>
-    <p style="font-size:18px">なにを する？</p>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">`+
-    Object.entries(petActs()).map(([k,a])=>`<button class="btn" style="font-size:22px" onclick="petAsk('${k}')">${a.em} ${a.label}</button>`).join("")+`</div></div>`;
-  speak(hello,"p");
+  const m=petMood(), hn=opt().hint, n=Math.min(3,(pet.day&&pet.day.d===todayStr())?pet.day.n:0), st=stageOf(), hello=m<45?"さびしいよ〜":m<70?"あそぼう！":"げんきだよ！";
+  $("#app").innerHTML=header("home")+`<div class="petscreen"><div>${roomHTML("proom","",hello)}
+    <div class="petcard2"><div style="flex:1"><div class="nm">${pet.name} <small style="display:inline">${STAGE_NAME[st-1]}</small></div><div class="meter"><i style="width:${m}%"></i></div></div><div style="font-size:22px">❤️ ${pet.hearts}</div></div></div>
+    <div class="psr"><h2>🐾 ${pet.name}の おせわ</h2>
+      <p class="sub">したい ことを えらぼう。${pet.name}が はなしかけるから、にほんごで こたえてね！${hn?"<br>"+"आफ्नो रोजाइ छान्नुहोस्। पाल्तुले बोल्छ, जापानीमा जवाफ दिनुहोस्।":""}</p>
+      <div class="acts">${Object.entries(petActs()).map(([k,a])=>`<button class="act" onclick="petAsk('${k}')"><span class="ae">${a.em}</span><b>${a.label}</b>${hn?`<small>${ACT_NE[k]||""}</small>`:""}</button>`).join("")}</div>
+      <p style="margin:14px 0 0">きょうの おせわ <b style="color:var(--gold)">${n} / 3</b> ${"⭐".repeat(n)}${"☆".repeat(3-n)}</p>
+      <div class="tools"><button class="btn ghost" onclick="go('petnote')">📒 ことばノート ${Object.keys(pet.learned||{}).length}</button><button class="btn ghost" onclick="go('evlist')">🎒 おでかけ</button></div>
+    </div></div>`;
+  startRoam(); speak(hello,"p");
 }
 function petAsk(k){
   const a=petActs()[k]; petAct=k; petTry=0; petV=a.v[Math.floor(Math.random()*a.v.length)];
   const hn=opt().hint, v=petV;
-  $("#app").innerHTML=header("home")+`<div style="text-align:center;margin-top:8px">
-    <div style="width:min(190px,50vw);margin:0 auto">${petBody(190).replace("width:190px","width:100%")}</div>
-    <div class="scene" style="max-width:480px;margin:8px auto;cursor:default">🗨️ ${v.cue}${hn?`<div class="hint" style="font-size:16px;font-weight:400">${v.cueNe}</div>`:""}</div>
-    <p style="font-size:18px;margin:14px 0 4px">${pet.name}に いってみよう！</p>
-    <div class="scene" style="max-width:480px;margin:6px auto;background:#fff4d6;cursor:default">${v.say}${hn?`<div class="hint" style="font-size:16px;font-weight:400">${v.sayNe}</div>`:""}</div>
-    <div><button class="btn ghost" id="pm">🔊 おてほん</button> <button class="btn" id="pr" style="font-size:24px">🎤 はなす</button></div>
-    <div class="msg" id="msg"></div><div id="pfb"></div></div>`;
+  $("#app").innerHTML=header("pet")+`<div class="petscreen"><div>${roomHTML("proom","",null)}</div>
+    <div class="psr">
+      <div class="chat"><div class="who">${a.em} ${pet.name}が いったよ</div><div class="cbub">${v.cue}${hn?`<div class="hint">${v.cueNe}</div>`:""}</div></div>
+      <div class="chat me"><div class="who">👤 あなたの ばん：こう いってみよう</div><div class="cbub mine">${v.say}${hn?`<div class="hint">${v.sayNe}</div>`:""}</div></div>
+      <div class="crow"><button class="btn ghost" id="pm">🔊 おてほん</button><button class="btn" id="pr" style="font-size:26px;flex:1">🎤 はなす</button></div>
+      <div class="msg" id="msg"></div><div id="pfb"></div></div></div>`;
   $("#pm").onclick=()=>speak(v.say);
   $("#pr").onclick=petSpeak;
-  setTimeout(()=>speak(v.cue,"p"),250);
+  startRoam(); setTimeout(()=>speak(v.cue,"p"),250);
 }
 function petPass(full){
   pet.mood=Math.min(100,petMood()+(full?15:6)); pet.t=Date.now(); if(full) pet.hearts++;
   pet.learned=pet.learned||{}; const L=pet.learned[petV.say]||{ne:petV.sayNe,n:0}; L.n+=full?1:0; pet.learned[petV.say]=L;
   const td=todayStr(); if(!pet.day||pet.day.d!==td) pet.day={d:td,n:0,done:false}; pet.day.n++;
   let bonus=false; if(pet.day.n>=3&&!pet.day.done){ pet.day.done=true; bonus=true; }
+  if(pet.day.n>=3) missionDone("pet");
   savePet();
   $("#msg").style.color=""; $("#msg").textContent=full?"つうじたよ！ 😄":"いっしょに いえたね！";
   if(full) addStar();
@@ -1321,7 +1481,7 @@ function quiz(sid){
   });
 }
 function lessonClear(s){
-  doneAdd("scene:"+s.id); confetti(); sfx.clear(); qs.sid=null;
+  doneAdd("scene:"+s.id); missionDone("word",s.id); confetti(); sfx.clear(); qs.sid=null;
   $("#app").innerHTML=`<div class="clear">${petBody(200,100)}<h2>${s.em} ${s.title} クリア！</h2><div class="xp">⭐ +5</div>
     <div class="bar"><button class="btn" onclick="go('home')">つぎの レッスンへ ▶</button><button class="btn ghost" onclick="go('quiz:${s.id}')">もういちど</button></div></div>`;
   speak("クリア！ すごい！");
