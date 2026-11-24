@@ -167,6 +167,9 @@
   #app{max-width:1200px}
   /* へや と ペット（ぜんしん・うろうろ） */
   .room{position:relative;border-radius:28px;overflow:hidden;height:min(54vh,430px);background:linear-gradient(#6f8bff,#a9c1ff 58%,#e9c58d 58%,#d9a867);box-shadow:0 8px 0 #0004,inset 0 0 0 4px #ffffff40}
+  .room.t-morning{background:linear-gradient(#ffd2a8,#ffe9c9 58%,#e9c58d 58%,#d9a867)}
+  .room.t-eve{background:linear-gradient(#ff8f6b,#ffc08a 58%,#d9a060 58%,#c48c52)}
+  .room.t-night{background:linear-gradient(#1c2250,#3a4685 58%,#8a7550 58%,#6f5d3f)}
   .room.wide{height:min(42vh,330px)}
   .room .rwin{position:absolute;left:7%;top:7%;width:15%;aspect-ratio:1;background:linear-gradient(#bfe3ff,#e8f6ff);border:6px solid #fff;border-radius:18px;display:grid;place-items:center;font-size:34px}
   .room .rfloor{position:absolute;left:0;right:0;bottom:0;height:42%;background:repeating-linear-gradient(90deg,#00000008 0 60px,#0000 60px 120px)}
@@ -959,8 +962,8 @@ function petImgTag(){ const sp=PETS[pet.species]?pet.species:"dog"; return `<img
 function petBody(sz){ return `<span class="pet"><span class="body" style="display:inline-block;height:${Math.round((sz||90)*0.9)}px">${petImgTag().replace("<img ",'<img style="height:100%;width:auto" ')}</span></span>`; }
 let roamT=null;
 function roomHTML(id,cls,bub){
-  const hr=new Date().getHours(), sun=(hr>=6&&hr<17)?"☀️":(hr>=17&&hr<19)?"🌇":"🌙";
-  return `<div class="room ${cls||""}" id="${id}"><div class="rwin">${sun}</div><div class="rfloor"></div>
+  const hr=new Date().getHours(), tod=(hr>=5&&hr<8)?"morning":(hr>=8&&hr<16)?"day":(hr>=16&&hr<18)?"eve":"night";
+  return `<div class="room t-${tod} ${cls||""}" id="${id}"><div class="rfloor"></div>
     <div class="rpet" style="--ph:${STAGE_H[stageOf()-1]}%" onclick="petTap()"><div class="rflip">${petImgTag()}</div></div>
     ${bub===null?"":`<div class="bubble" id="pbub">${bub||petGreet()}</div>`}</div>`;
 }
