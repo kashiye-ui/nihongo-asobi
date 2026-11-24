@@ -316,6 +316,13 @@
   .chipw{display:inline-block;background:#fff;color:#2a2540;text-shadow:none;border-radius:14px;padding:2px 12px;margin:3px;font-size:18px}
   .pbox{font-size:17px;line-height:1.5;padding:14px 18px}.pbox h3{font-size:19px}
   .parent h2{font-size:26px}
+
+  .jo{max-width:900px;margin:10px auto;text-align:center}.jlv{color:#ffe27a;font-size:20px;letter-spacing:3px;margin-bottom:6px}
+  .jsent{font-size:52px;background:#fff;color:#2a2540;text-shadow:none;border-radius:28px;padding:34px 20px;margin:10px 0;box-shadow:0 6px 0 var(--soft)}
+  .jblank{display:inline-block;min-width:1.4em;border-bottom:5px solid #e0602a;margin:0 6px;color:#e0602a}.jblank.ok{color:#1f9c68;border-color:#1f9c68}
+  .jch{display:flex;gap:16px;justify-content:center;margin:20px 0;flex-wrap:wrap}
+  .jbtn{font:inherit;font-size:44px;font-weight:800;min-width:120px;min-height:100px;border-radius:26px;border:0;background:#fff;color:#2a2540;box-shadow:0 7px 0 var(--soft);cursor:pointer;text-shadow:none}
+  .jbtn:active{transform:translateY(4px);box-shadow:0 3px 0 var(--soft)}.jbtn.good{background:#4be3a0}.jbtn.bad{background:#ff8c8c;animation:shk .25s}
 </style>
 </head>
 <body>
@@ -731,6 +738,8 @@ function render(){
     storyPlay(view.slice(6));
   } else if(view==="game:nazori"){
     nazori();
+  } else if(view==="game:joshi"){
+    joshi();
   } else if(view==="game:manekko"){
     manekko();
   } else if(view==="badges"){
@@ -891,12 +900,12 @@ function buildMissions(){
   const sc=COURSES[courseSel].scenes, un=sc.filter(x=>!isDone("scene:"+x.id)), pool=un.length>=2?un:sc, d=dayIdx();
   const w1=pool[d%pool.length], w2=pool[(d+1)%pool.length];
   const us=STORIES.filter(x=>!isDone("story:"+x.id)), st=us.length?us[0]:STORIES[d%STORIES.length];
-  const games=["nazori","manekko","ageyou",courseSel==="small"?"kyushoku":"otayori"], g=games[d%games.length];
+  const games=["nazori","joshi","manekko","joshi","ageyou",courseSel==="small"?"kyushoku":"otayori"], g=games[d%games.length];
   const ak=Object.keys(petActs()), mn=Math.min(...ak.map(petLv)), cand=ak.filter(k=>petLv(k)===mn), pk=cand[d%cand.length];
   const ws=weakScenes(), rv=ws.length?{kind:"review",ref:ws[0].id}:{kind:"word",ref:w2.id};
   return [{kind:"pet",ref:pk},{kind:"word",ref:w1.id},{kind:"story",ref:st.id},rv,{kind:"game",ref:g}].map(x=>({...x,done:false}));
 }
-const GAMEINFO={nazori:["✍️","ひらがな","लेख्ने अभ्यास"],manekko:["🎤","まねっこ","नक्कल"],ageyou:["🎁","あげよう","दिउँ"],kyushoku:["🍱","きゅうしょく","स्कूल खाजा"],otayori:["🕵️","おたより","स्कूलको सूचना"]};
+const GAMEINFO={joshi:["🔤","じょし","कारक"],nazori:["✍️","ひらがな","लेख्ने अभ्यास"],manekko:["🎤","まねっこ","नक्कल"],ageyou:["🎁","あげよう","दिउँ"],kyushoku:["🍱","きゅうしょく","स्कूल खाजा"],otayori:["🕵️","おたより","स्कूलको सूचना"]};
 function missionList(){
   const td=todayStr(); let m=null; try{ m=JSON.parse(localStorage.getItem("mis")||"null"); }catch(e){}
   if(!m||m.d!==td||m.c!==courseSel||!Array.isArray(m.l)||m.l.length!==5){ m={d:td,c:courseSel,l:buildMissions()}; try{ localStorage.setItem("mis",JSON.stringify(m)); }catch(e){} }
@@ -988,7 +997,7 @@ function freeView(){
   const W=c.scenes.map(x=>({k:"scene:"+x.id,go:`go('scene:${x.id}')`,em:x.em,t:x.title,ty:"w"}));
   const S=STORIES.map(x=>({k:"story:"+x.id,go:`storyI=0;go('story:${x.id}')`,em:x.em,t:x.title,ty:"s"}));
   const G=[ course==="small"?{go:"go('game:kyushoku')",em:"🎮",t:"きゅうしょく とうばん"}:{go:"go('game:otayori')",em:"🕵️",t:"おたより ミッション"},
-    {go:"go('evlist')",em:"🚌",t:"おでかけ"},{go:"go('game:nazori')",em:"✍️",t:"ひらがな・カタカナ"},{go:"go('game:ageyou')",em:"🎁",t:"あげよう"},{go:"go('game:manekko')",em:"🎤",t:"まねっこ"} ].map(x=>({...x,k:"g:"+x.t,ty:"g"}));
+    {go:"go('evlist')",em:"🚌",t:"おでかけ"},{go:"go('game:nazori')",em:"✍️",t:"ひらがな・カタカナ"},{go:"go('game:joshi')",em:"🔤",t:"じょし"},{go:"go('game:ageyou')",em:"🎁",t:"あげよう"},{go:"go('game:manekko')",em:"🎤",t:"まねっこ"} ].map(x=>({...x,k:"g:"+x.t,ty:"g"}));
   const cur=[...W,...S].find(n=>!isDone(n.k));
   const OFF=[0,46,66,46,0,-46,-66,-46];
   const row=(n,i)=>`<div class="node ${n.ty} ${n.k&&isDone(n.k)?"done":""} ${cur&&n===cur?"cur":""}" style="transform:translateX(${OFF[i%8]}px)" onclick="${n.go}">
@@ -1231,6 +1240,66 @@ function evEnd(E){
 }
 
 // ===== ゲーム：ひらがな・カタカナ なぞりがき =====
+COURSES.big.scenes.push(...[
+{id:"kokugo",title:"こくごの ことば",tr:{ne:"नेपाली/जापानी भाषा"},em:"📖",items:[
+      {ja:"ぶん",h:"<ruby>文<rt>ぶん</rt></ruby>",say:"ぶん",tr:{ne:"वाक्य"},em:"📝"},
+      {ja:"かんじ",h:"<ruby>漢字<rt>かんじ</rt></ruby>",say:"かんじ",tr:{ne:"कान्जी"},em:"🈶"},
+      {ja:"おんどく",h:"<ruby>音読<rt>おんどく</rt></ruby>",say:"おんどく",tr:{ne:"ठुलो स्वरले पढ्ने"},em:"🗣️"},
+      {ja:"さくぶん",h:"<ruby>作文<rt>さくぶん</rt></ruby>",say:"さくぶん",tr:{ne:"निबन्ध"},em:"✏️"},
+      {ja:"ものがたり",tr:{ne:"कथा"},em:"📚"},
+      {ja:"ことば",tr:{ne:"शब्द"},em:"💬"},
+    ]},
+{id:"sansuu2",title:"さんすうの ことば②",tr:{ne:"गणितका शब्द २"},em:"📐",items:[
+      {ja:"しき",h:"<ruby>式<rt>しき</rt></ruby>",say:"しき",tr:{ne:"सूत्र / समीकरण"},em:"➕"},
+      {ja:"ずけい",h:"<ruby>図形<rt>ずけい</rt></ruby>",say:"ずけい",tr:{ne:"आकृति"},em:"🔷"},
+      {ja:"ぶんすう",h:"<ruby>分数<rt>ぶんすう</rt></ruby>",say:"ぶんすう",tr:{ne:"भिन्न"},em:"🍕"},
+      {ja:"ながさ",h:"<ruby>長<rt>なが</rt></ruby>さ",say:"ながさ",tr:{ne:"लम्बाइ"},em:"📏"},
+      {ja:"おもさ",tr:{ne:"तौल"},em:"⚖️"},
+      {ja:"けいさん",h:"<ruby>計算<rt>けいさん</rt></ruby>",say:"けいさん",tr:{ne:"हिसाब"},em:"🧮"},
+    ]},
+{id:"taiiku",title:"たいいく・おんがく",tr:{ne:"शारीरिक शिक्षा र संगीत"},em:"🏃",items:[
+      {ja:"うんどうじょう",h:"<ruby>運動場<rt>うんどうじょう</rt></ruby>",say:"うんどうじょう",tr:{ne:"खेल मैदान"},em:"🏟️"},
+      {ja:"はしる",h:"<ruby>走<rt>はし</rt></ruby>る",say:"はしる",tr:{ne:"दौड्नु"},em:"🏃"},
+      {ja:"なわとび",tr:{ne:"डोरी कुद्ने"},em:"🪢"},
+      {ja:"うた",h:"<ruby>歌<rt>うた</rt></ruby>",say:"うた",tr:{ne:"गीत"},em:"🎵"},
+      {ja:"ふえ",h:"<ruby>笛<rt>ふえ</rt></ruby>",say:"ふえ",tr:{ne:"बाँसुरी"},em:"🎶"},
+      {ja:"たいそうふく",h:"<ruby>体操服<rt>たいそうふく</rt></ruby>",say:"たいそうふく",tr:{ne:"व्यायामको पोशाक"},em:"👕"},
+    ]},
+{id:"rika2",title:"りか②（うごき）",tr:{ne:"विज्ञान २ (क्रिया)"},em:"🧫",items:[
+      {ja:"とける",h:"<ruby>溶<rt>と</rt></ruby>ける",say:"とける",tr:{ne:"पग्लनु / घुल्नु"},em:"🧊"},
+      {ja:"ふえる",h:"<ruby>増<rt>ふ</rt></ruby>える",say:"ふえる",tr:{ne:"बढ्नु"},em:"📈"},
+      {ja:"へる",h:"<ruby>減<rt>へ</rt></ruby>る",say:"へる",tr:{ne:"घट्नु"},em:"📉"},
+      {ja:"まぜる",tr:{ne:"मिसाउनु"},em:"🥄"},
+      {ja:"はかる",h:"<ruby>測<rt>はか</rt></ruby>る",say:"はかる",tr:{ne:"नाप्नु"},em:"🌡️"},
+      {ja:"かんさつ",h:"<ruby>観察<rt>かんさつ</rt></ruby>",say:"かんさつ",tr:{ne:"अवलोकन"},em:"🔍"},
+    ]}
+]);
+Object.assign(EX,{
+"ぶん":[["「わたしは がくせいです」は ぶんです。","“わたしは がくせいです” वाक्य हो।"]],
+"かんじ":[["かんじを ノートに かきます。","कापीमा कान्जी लेख्छु।"]],
+"おんどく":[["こくごの じかんに おんどくを します。","नेपाली/जापानी भाषा कक्षामा ठुलो स्वरले पढ्छु।"]],
+"さくぶん":[["あした さくぶんを かきます。","भोलि निबन्ध लेख्छु।"]],
+"ものがたり":[["としょしつで ものがたりを よみます。","पुस्तकालयमा कथा पढ्छु।"]],
+"ことば":[["あたらしい ことばを おぼえます。","नयाँ शब्द सिक्छु।"]],
+"しき":[["さんすうで しきを かきます。","गणितमा सूत्र लेख्छु।"]],
+"ずけい":[["さんかくや しかくは ずけいです。","त्रिभुज र चतुर्भुज आकृति हुन्।"]],
+"ぶんすう":[["ピザを 4つに わけると ぶんすうに なります。","पिज्जालाई ४ भागमा बाँड्दा भिन्न हुन्छ।"]],
+"ながさ":[["えんぴつの ながさを はかります。","पेन्सिलको लम्बाइ नाप्छु।"]],
+"おもさ":[["にもつの おもさを はかります。","सामानको तौल नाप्छु।"]],
+"けいさん":[["けいさんを して こたえを だします。","हिसाब गरेर उत्तर निकाल्छु।"]],
+"うんどうじょう":[["うんどうじょうで ボールを なげます。","खेल मैदानमा बल फ्याँक्छु।"]],
+"はしる":[["たいいくで はやく はしります。","शारीरिक शिक्षामा छिटो दौडिन्छु।"]],
+"なわとび":[["やすみじかんに なわとびを します。","आराम समयमा डोरी कुद्छु।"]],
+"うた":[["おんがくの じかんに うたを うたいます。","संगीत कक्षामा गीत गाउँछु।"]],
+"ふえ":[["おんがくで ふえを ふきます。","संगीतमा बाँसुरी बजाउँछु।"]],
+"たいそうふく":[["たいいくの まえに たいそうふくに きがえます。","शारीरिक शिक्षाअघि व्यायामको पोशाक लगाउँछु।"]],
+"とける":[["こおりが とけて みずに なります。","बरफ पग्लेर पानी हुन्छ।"]],
+"ふえる":[["みずを いれると かさが ふえます。","पानी हाल्दा मात्रा बढ्छ।"]],
+"へる":[["ひなたに おくと みずが へります。","घाममा राख्दा पानी घट्छ।"]],
+"まぜる":[["しおと みずを まぜます。","नुन र पानी मिसाउँछु।"]],
+"はかる":[["おんどけいで おんどを はかります。","तापमापकले तापक्रम नाप्छु।"]],
+"かんさつ":[["あさがおを まいにち かんさつします。","हरेक दिन विहानीफूल अवलोकन गर्छु।"]]
+});
 const HIRA="あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん";
 let kanaMode="hira", kanaSel="あ";
 function toKana(c){ return kanaMode==="kata" ? String.fromCharCode(c.charCodeAt(0)+0x60) : c; }
@@ -1304,6 +1373,36 @@ async function nazori(){
       if(kMiss>=2){ const g=mk(st[idx],anim); const L=g.getTotalLength(); g.setAttribute("stroke-dasharray",L); g.setAttribute("stroke-dashoffset",L); g.getBoundingClientRect(); g.style.transition="stroke-dashoffset .9s linear"; g.setAttribute("stroke-dashoffset",0); setTimeout(()=>g.remove(),1500); } }
   };
   speak(kakiCh);
+}
+
+const JOSHI=[[0, "わたし", "は", "がくせいです。", "म विद्यार्थी हुँ।"], [0, "ごはん", "を", "たべます。", "भात खान्छु।"], [0, "がっこう", "に", "いきます。", "स्कूल जान्छु।"], [0, "ほん", "を", "よみます。", "किताब पढ्छु।"], [0, "ともだち", "は", "やさしいです。", "साथी दयालु छ।"], [0, "いえ", "に", "かえります。", "घर फर्कन्छु।"], [0, "みず", "を", "のみます。", "पानी पिउँछु।"], [0, "きょう", "は", "あめです。", "आज पानी पर्छ।"], [1, "ねこ", "が", "います。", "बिरालो छ।"], [1, "がっこう", "で", "べんきょうします。", "स्कूलमा पढ्छु।"], [1, "わたし", "の", "ほんです。", "मेरो किताब हो।"], [1, "ともだち", "と", "あそびます。", "साथीसँग खेल्छु।"], [1, "バス", "で", "いきます。", "बसमा जान्छु।"], [1, "そら", "が", "あおいです。", "आकाश निलो छ।"], [1, "せんせい", "の", "ノートです。", "शिक्षकको कापी हो।"], [1, "おかあさん", "と", "かいものに いきます。", "आमासँग किनमेल गर्न जान्छु।"], [2, "わたし", "も", "いきます。", "म पनि जान्छु।"], [2, "いえ", "へ", "かえります。", "घर फर्कन्छु।"], [2, "7じ", "から", "べんきょうします。", "७ बजेदेखि पढ्छु।"], [2, "がっこう", "まで", "あるきます。", "स्कूलसम्म हिँड्छु।"], [2, "えんぴつ", "で", "かきます。", "पेन्सिलले लेख्छु।"], [2, "こうえん", "で", "あそびます。", "पार्कमा खेल्छु।"], [2, "こうえん", "に", "いきます。", "पार्कमा जान्छु।"], [2, "ともだち", "に", "あいます。", "साथीलाई भेट्छु।"]];
+
+// ===== ゲーム：じょし（は・を・に… を えらぼう）=====
+let joLv=0, joStreak=0; try{ joLv=+localStorage.getItem("jlv")||0; }catch(e){}
+const JO_POOL=[["は","を","に"],["は","を","に","が","で","の","と"],["は","を","に","が","で","の","と","も","へ","から","まで"]];
+function joshi(){
+  const hn=opt().hint, SK=skillAll(), lv=Math.min(2,joLv);
+  const cand=JOSHI.filter(x=>x[0]<=lv), wt=x=>{ const v=SK["j:"+x[1]+x[2]+x[3]]; return v?(v.ng>v.ok?4:v.ok-v.ng>=2?0.5:1):(x[0]===lv?2:1); };
+  let r=Math.random()*cand.reduce((a,x)=>a+wt(x),0), q=cand[0]; for(const x of cand){ r-=wt(x); if(r<=0){ q=x; break; } }
+  const [,pre,ans,post,ne]=q, pool=JO_POOL[lv];
+  const conf={"に":["で","へ"],"で":["に","を"],"は":["が","も"],"が":["は","を"],"を":["に","が"],"へ":["に","で"],"の":["は","と"],"と":["の","に"],"も":["は","が"]};
+  const ch=shuffle([ans,...shuffle((conf[ans]||[]).filter(x=>pool.includes(x)).concat(pool.filter(x=>x!==ans))).filter((x,i,a)=>x!==ans&&a.indexOf(x)===i).slice(0,2)]);
+  $("#app").innerHTML=gameHead("🔤","じょし（てにをは）")+`<div class="jo"><div class="jlv">レベル ${"●".repeat(lv+1)}${"○".repeat(2-lv)}</div>
+    <div class="jsent"><span>${pre}</span><span class="jblank" id="jb">＿</span><span>${post}</span></div>
+    ${hn?`<div class="hint" style="text-align:center;font-size:20px">${ne}</div>`:""}
+    <div class="jch">${ch.map(c=>`<button class="jbtn" data-c="${c}">${c}</button>`).join("")}</div>
+    <div class="krow"><button class="btn ghost" id="jsay">🔊 きく</button></div><div class="msg" id="msg"></div></div>`;
+  const full=pre+ans+post; $("#jsay").onclick=()=>speak(full);
+  let lock=false, missed=false;
+  document.querySelectorAll(".jbtn").forEach(b=>b.onclick=()=>{
+    if(lock) return; const c=b.dataset.c, key="j:"+pre+ans+post;
+    if(c===ans){ lock=true; b.classList.add("good"); $("#jb").textContent=ans; $("#jb").classList.add("ok"); skillRec(key,!missed); speak(full); addStar();
+      if(!missed){ joStreak++; if(joStreak>=5&&joLv<2){ joLv++; joStreak=0; try{ localStorage.setItem("jlv",joLv); }catch(e){} setTimeout(()=>toast("🆙 じょし レベルアップ！"),700); } }
+      else joStreak=0;
+      $("#msg").style.color=""; $("#msg").textContent="せいかい！ ✨"; setTimeout(()=>{ if(view==="game:joshi") joshi(); },1700);
+    } else { if(!missed){ missed=true; skillRec(key,false); joStreak=0; if(joLv>0&&Math.random()<0.0) joLv--; } b.classList.add("bad"); setTimeout(()=>b.classList.remove("bad"),400); $("#msg").style.color="#c96a25"; $("#msg").textContent="もういちど きいて みよう"; speak(pre+c+post); }
+  });
+  setTimeout(()=>speak(pre+"…"+post),250);
 }
 
 // ===== ゲーム：まねっこ（おてほんを きいて、じぶんの こえで いう → きいて くらべる）=====
@@ -1685,6 +1784,7 @@ function collectSpeech(){
   for(const c of Object.values(COURSES)) for(const sc of c.scenes) for(const it of sc.items){ add("n",say(it)); exOf(it).forEach(e=>add("n",e[0])); }
   for(const S of STORIES) for(const n of S.nodes){ if(n.t==="talk"){ add(vOf(n.who),n.ja); n.words.forEach(w=>add("n",w.ja)); } else { add("n",n.ja); n.ch.forEach(c=>add("n",c.ja)); } }
   for(const E of EVENTS) for(const n of E.nodes){ if(n.t==="talk") pnAll(n.ja).forEach(t=>add(vOf(n.who),t)); else pnAll(n.say).forEach(t=>add("n",t)); }
+  JOSHI.forEach(x=>{ add('n',x[1]+x[2]+x[3]); });
   const g0=greetCtx; ["greet-morning","greet-noon","greet-evening"].forEach(ctx=>{ greetCtx=()=>ctx; Object.values(petActs()).forEach(a=>a.v.forEach(v=>{ add("p",v.cue); add("n",v.say); })); }); greetCtx=g0;
   ["さびしいよ〜","あそぼう！","げんきだよ！","さびしいよ〜。あそぼう！","ありがとう！ だいすき！","きょうも いっしょに やろう！","ありがとう、{name}！","いっしょに がんばったね、{name}！","ママ、ありがとう！","パパ、ありがとう！"].forEach(t=>add("p",t));
   for(let i=1;i<=20;i++) add("p","あと "+i+" こ！ がんばろう！");
