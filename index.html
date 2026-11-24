@@ -495,7 +495,7 @@ async function delVoice(id){
   }catch(e){}
   await loadVoices(); renderVoiceList();
 }
-function playVoice(v){ try{ const a=new Audio(URL.createObjectURL(v.blob)); a.play().catch(()=>{}); }catch(e){} }
+function playVoice(v){ try{ stopAudio(); const a=new Audio(URL.createObjectURL(v.blob)); curAudio=a; a.play().catch(()=>{}); }catch(e){} }
 function cheer(){
   const now=Date.now(); if(now-lastCheer<2000) return; lastCheer=now;
   const p=pickPhrase("praise");
@@ -523,7 +523,7 @@ function playPhrase(p){
     const fin=()=>{ if(!done){ done=true; res(); } };
     const fb=()=>{ if(failed||done) return; failed=true;
       try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(phraseText(p)); u.lang="ja-JP"; u.rate=opt().rate; u.onend=fin; u.onerror=fin; speechSynthesis.speak(u); }catch(e){ fin(); } };
-    try{ const a=new Audio(clipUrl(p)); a.onended=fin; a.onerror=fb; a.play().catch(fb); }catch(e){ fb(); }
+    try{ stopAudio(); const a=new Audio(clipUrl(p)); curAudio=a; a.onended=fin; a.onerror=fb; a.play().catch(fb); }catch(e){ fb(); }
   });
 }
 function pickPhrase(ctx){ const l=PHRASES.filter(p=>p.ctx===ctx); return l.length?l[Math.floor(Math.random()*l.length)]:null; }
@@ -976,9 +976,9 @@ function petPass(full){
   savePet();
   $("#msg").style.color=""; $("#msg").textContent=full?"つうじたよ！ 😄":"いっしょに いえたね！";
   if(full) addStar();
-  spk(full?"ありがとう、{name}！":"いっしょに がんばったね、{name}！","p");
+  setTimeout(()=>spk(full?"ありがとう、{name}！":"いっしょに がんばったね、{name}！","p"),full?1800:0);
   if(bonus) setTimeout(()=>{ toast("🎁 きょうの おせわ ぜんぶ できた！"); confetti(); addStar(); },900);
-  setTimeout(petHome,2200);
+  setTimeout(petHome,4200);
 }
 async function petSpeak(){
   const v=petV; $("#msg").style.color="var(--accent)"; $("#msg").textContent="🎤 きいてるよ…";
