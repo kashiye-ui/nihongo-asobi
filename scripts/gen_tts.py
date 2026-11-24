@@ -164,7 +164,11 @@ def main():
             seen.add(k)
             speech.append((os.path.join(ROOT, "audio", "s", k + ".mp3"), n, vname(v)))
     jobs2 = [(f, t, None) for f, t in jobs] + speech
-    todo = [(f, t, vo) for f, t, vo in jobs2 if FORCE or not os.path.exists(f)]
+    donep = os.path.join(ROOT, "audio", "gemini_done.txt")
+    done = set(l.strip() for l in open(donep, encoding="utf-8")) if (TTS_MODEL and os.path.exists(donep)) else set()
+    rl = lambda f: os.path.relpath(f, ROOT).replace(os.sep, "/")
+    # Gemini モードでは「Gemini で まだ つくっていない もの」を ぜんぶ つくる（つづきから 再開できる）
+    todo = [(f, t, vo) for f, t, vo in jobs2 if FORCE or not os.path.exists(f) or (TTS_MODEL and rl(f) not in done)]
     chars = sum(len(t) for _, t, _ in todo)
     print("voice=%s names=%d 作る=%d本 文字数=%d" % (VOICE, len(names), len(todo), chars))
     if DRY:
@@ -173,8 +177,6 @@ def main():
     if not KEY:
         print("GOOGLE_TTS_API_KEY が未設定のため、音声は作りません（アプリは端末の声で代用します）。")
         return
-    donep = os.path.join(ROOT, "audio", "gemini_done.txt")
-    done = set(l.strip() for l in open(donep, encoding="utf-8")) if (TTS_MODEL and os.path.exists(donep)) else set()
     def write_manifest():
         d = os.path.join(ROOT, "audio", "s")
         keys = sorted(x[:-4] for x in os.listdir(d)) if os.path.isdir(d) else []
