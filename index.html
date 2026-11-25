@@ -172,6 +172,7 @@
   .room.t-night{background:linear-gradient(#1c2250,#3a4685 58%,#8a7550 58%,#6f5d3f)}
   .room.wide{height:min(42vh,330px)}
   .room .rwin{position:absolute;left:7%;top:7%;width:15%;aspect-ratio:1;background:linear-gradient(#bfe3ff,#e8f6ff);border:6px solid #fff;border-radius:18px;display:grid;place-items:center;font-size:34px}
+  .room .rbg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .room .rfloor{position:absolute;left:0;right:0;bottom:0;height:42%;background:repeating-linear-gradient(90deg,#00000008 0 60px,#0000 60px 120px)}
   .room .rpet{position:absolute;bottom:5%;left:50%;height:var(--ph);transform:translateX(-50%);transition-property:left;transition-timing-function:linear;cursor:pointer}
   .room .rflip{height:100%;transition:transform .2s}
@@ -963,7 +964,7 @@ function petBody(sz){ return `<span class="pet"><span class="body" style="displa
 let roamT=null;
 function roomHTML(id,cls,bub){
   const hr=new Date().getHours(), tod=(hr>=5&&hr<8)?"morning":(hr>=8&&hr<16)?"day":(hr>=16&&hr<18)?"eve":"night";
-  return `<div class="room t-${tod} ${cls||""}" id="${id}"><div class="rfloor"></div>
+  return `<div class="room t-${tod} ${cls||""}" id="${id}"><div class="rfloor"></div>${bgHTML()}
     <div class="rpet" style="--ph:${STAGE_H[stageOf()-1]}%" onclick="petTap()"><div class="rflip">${petImgTag()}</div></div>
     ${bub===null?"":`<div class="bubble" id="pbub">${bub||petGreet()}</div>`}</div>`;
 }
@@ -985,13 +986,50 @@ function petTap(){
   const el=document.querySelector(".rpet"); if(el){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
   const g=petGreet(), b=$("#pbub"); if(b) b.textContent=g; chime([660,880]); speak(g);
 }
+const PGREETS=["きょうも いっしょに やろう！","こんにちは！ げんき？","あそぼう あそぼう！","いっしょに にほんご べんきょうしよう！","きょうは なにを する？","ぼくは ここに いるよ！","ことばを おしえて！","にほんご、たのしいね！","わあ、うれしい！","いっしょだと たのしいな！","おなか すいたなあ。","ふわあ、ねむいなあ。","いいてんき だね！","きょうも いちにち がんばろう！","すごいね！ よく できてるよ！","もっと おはなししよう！","ことばが ふえると うれしいな。","ちょっと さんぽに いこうかな。","ねえねえ、きいて きいて！","ありがとう！ だいすき！","えがおが すてきだね！","きょうの ミッション、やった？","いっしょに がんばろうね！","すこしずつ で だいじょうぶ だよ。","まちがえても へいき へいき！","こえに だして いってみよう！","きみと いると げんきが でるよ！","おへやが にぎやかに なってきたね！","ほしを あつめよう！","またね、じゃなくて、もういっかい あそぼう！"];
+let _lastG=-1;
 function petGreet(){
   rollover(); const left=Math.max(0,stats.goal-stats.today), m=petMood();
-  if(m<45) return "さびしいよ〜。あそぼう！";
-  if(left===0) return "ありがとう！ だいすき！";
-  if(stats.today===0) return "きょうも いっしょに やろう！";
-  return "あと "+left+" こ！ がんばろう！";
+  if(m<45 && Math.random()<0.6) return "さびしいよ〜。あそぼう！";
+  if(left>0 && left<=20 && Math.random()<0.15) return "あと "+left+" こ！ がんばろう！";
+  let i; do{ i=Math.floor(Math.random()*PGREETS.length); }while(i===_lastG && PGREETS.length>1);
+  _lastG=i; return PGREETS[i];
 }
+/* ===== おへやの せいちょう（★で30だんかい） ===== */
+function bgStage(){ return Math.min(30,Math.floor(stars/8)); }
+const BGOBJ=[
+ [1,'<rect x="0" y="150" width="400" height="50" fill="#7cc35a"/>'],
+ [2,'<path d="M20 160l3-10 3 10M60 175l3-10 3 10M330 165l3-10 3 10M370 180l3-10 3 10" stroke="#4a9a3a" stroke-width="3" fill="none"/>'],
+ [3,'<g><rect x="50" y="165" width="3" height="10" fill="#4a9a3a"/><circle cx="51" cy="162" r="6" fill="#ff6b6b"/></g>'],
+ [4,'<g><rect x="345" y="170" width="3" height="10" fill="#4a9a3a"/><circle cx="346" cy="167" r="6" fill="#ffd54a"/></g>'],
+ [5,'<g><rect x="30" y="118" width="8" height="40" fill="#8a6d4b"/><circle cx="34" cy="110" r="22" fill="#4f9d45"/></g>'],
+ [6,'<g fill="#fff" opacity=".9"><ellipse cx="300" cy="35" rx="30" ry="12"/><ellipse cx="320" cy="28" rx="20" ry="11"/></g>'],
+ [7,'<circle cx="372" cy="158" r="16" fill="#3f8a3a"/>'],
+ [8,'<ellipse cx="95" cy="172" rx="14" ry="8" fill="#9aa0a6"/>'],
+ [9,'<g stroke="#b88a5a" stroke-width="4"><path d="M0 150h90M10 140v20M40 140v20M70 140v20"/></g>'],
+ [10,'<g><rect x="300" y="105" width="70" height="50" fill="#e8c28f"/><path d="M293 107l42-36 42 36z" fill="#c0563c"/></g>'],
+ [11,'<rect x="325" y="125" width="18" height="30" rx="3" fill="#7a4a2a"/>'],
+ [12,'<g><rect x="350" y="118" width="14" height="14" fill="#bfe3ff" stroke="#fff" stroke-width="2"/></g>'],
+ [13,'<rect x="352" y="62" width="12" height="26" fill="#a0553a"/>'],
+ [14,'<g fill="#ffffffcc"><circle cx="358" cy="52" r="7"/><circle cx="366" cy="40" r="9"/><circle cx="360" cy="26" r="11"/></g>'],
+ [15,'<g><circle cx="120" cy="170" r="5" fill="#ff8ab5"/><circle cx="135" cy="176" r="5" fill="#ffd54a"/><circle cx="150" cy="170" r="5" fill="#ff6b6b"/></g>'],
+ [16,'<g><rect x="262" y="125" width="7" height="32" fill="#8a6d4b"/><circle cx="265" cy="117" r="18" fill="#5aa84f"/></g>'],
+ [17,'<path d="M318 156q-10 20-40 44h50z" fill="#e6d3a8"/>'],
+ [18,'<g><rect x="278" y="150" width="4" height="22" fill="#8a6d4b"/><rect x="270" y="142" width="20" height="12" rx="3" fill="#d94b4b"/></g>'],
+ [19,'<ellipse cx="85" cy="188" rx="38" ry="9" fill="#6fc3e8"/>'],
+ [20,'<g fill="#ff9ec4"><path d="M200 60l8-6 8 6-8 6z"/><path d="M200 60l-8-6-8 6 8 6z"/></g>'],
+ [21,'<g><rect x="6" y="90" width="12" height="68" fill="#7a5a3a"/><circle cx="14" cy="80" r="34" fill="#3f8a3a"/></g>'],
+ [22,'<g fill="#e53935"><circle cx="4" cy="85" r="4"/><circle cx="24" cy="95" r="4"/><circle cx="18" cy="70" r="4"/></g>'],
+ [23,'<g stroke="#b88a5a" stroke-width="4"><path d="M250 152h150M262 142v20"/></g>'],
+ [24,'<path d="M0 150q80-60 180-10t220-20v30H0z" fill="#8ccf7a" opacity=".5"/>'],
+ [25,'<g fill="#fff" opacity=".9"><ellipse cx="120" cy="22" rx="28" ry="11"/><ellipse cx="140" cy="16" rx="18" ry="10"/></g>'],
+ [26,'<g fill="none" stroke-width="5" opacity=".6"><path d="M130 100q70-90 140 0" stroke="#ff6b6b"/><path d="M137 100q63-78 126 0" stroke="#ffd54a"/><path d="M144 100q56-66 112 0" stroke="#6bc96b"/></g>'],
+ [27,'<path d="M190 40q5-6 10 0q5-6 10 0M225 52q4-5 8 0q4-5 8 0" stroke="#444" stroke-width="2" fill="none"/>'],
+ [28,'<g><rect x="108" y="120" width="4" height="40" fill="#555"/><circle cx="110" cy="116" r="8" fill="#ffe27a"/></g>'],
+ [29,'<g><path d="M0 14q100 24 200 0t200 0" stroke="#8a6d4b" fill="none"/><path d="M40 20l8 14 8-14zM120 22l8 14 8-14zM200 20l8 14 8-14zM280 22l8 14 8-14zM350 20l8 14 8-14z" fill="#ff6b6b"/></g>'],
+ [30,'<g fill="#ffe27a"><circle cx="60" cy="60" r="3"/><circle cx="180" cy="90" r="3"/><circle cx="240" cy="70" r="3"/><circle cx="340" cy="95" r="3"/><circle cx="150" cy="40" r="2.5"/></g>']
+];
+function bgHTML(){ const n=bgStage(); if(!n) return ""; return `<svg class="rbg" viewBox="0 0 400 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${BGOBJ.filter(o=>o[0]<=n).map(o=>o[1]).join("")}</svg>`; }
 
 // ===== きょうの ミッション（5つ・いろいろな ぶんやから） =====
 function dayIdx(){ return Math.floor(Date.parse(todayStr())/86400000); }
@@ -1910,6 +1948,7 @@ function collectSpeech(){
   const g0=greetCtx; ["greet-morning","greet-noon","greet-evening"].forEach(ctx=>{ greetCtx=()=>ctx; Object.values(petActs()).forEach(a=>a.v.forEach(v=>{ Object.values(PVOICE).forEach(pc=>add(pc,v.cue)); add("n",v.say); })); }); greetCtx=g0;
   ["さびしいよ〜","あそぼう！","げんきだよ！","さびしいよ〜。あそぼう！","ありがとう！ だいすき！","きょうも いっしょに やろう！","ありがとう、{name}！","いっしょに がんばったね、{name}！","ママ、ありがとう！","パパ、ありがとう！"].forEach(t=>add("p",t));
   for(let i=1;i<=20;i++) add("p","あと "+i+" こ！ がんばろう！");
+  PGREETS.forEach(t=>add("p",t));
   Object.entries(PVOICE).forEach(([k,pc])=>{ ["さびしいよ〜","あそぼう！","げんきだよ！"].forEach(t=>add(pc,t)); add(pc,PETS[k].name+"！"); });
   ["すごい！","そう！","せいかい！","クリア！ すごい！","できた！ いただきます！","ん？ もういちど ゆっくり いってみて。"].concat(SAMPLE_CHEERS).forEach(t=>add("n",t));
   MISSIONS.forEach(m=>add("n",m.say));
