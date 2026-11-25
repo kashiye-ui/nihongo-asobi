@@ -2066,13 +2066,19 @@ function suNext(){ if(su.step===1){ const v=($("#suName")||{}).value; childName=
 function suBack(){ if(su.step>1){ su.step--; setupView(); } else go("title"); }
 function suLang(l){ try{localStorage.setItem("hlang",l)}catch(e){} setHintLang(l,true); try{$("#optLang").value=l}catch(e){} su.lang=l; setupView(); }
 function suSpecies(k){ const defs=Object.values(PETS).map(x=>x.name); if(defs.includes(pet.name)) pet.name=PETS[k].name; pet.species=k; savePet(); setupView(); speak(pet.name+"！",pvOf(k)); }
+function suReset(){
+  if(!confirm("★・れんぞく・おぼえた ことば・ペットなど、ぜんぶ けして、さいしょから やりなおします。もとには もどせません。よろしいですか？")) return;
+  ["stats","stars","done","pet","skill","mis","jlv","slv","slvc","klv","setupDone","childName","furi","courseSel"].forEach(k=>{ try{localStorage.removeItem(k)}catch(e){} });
+  try{ sessionStorage.setItem("openSetup","1"); }catch(e){}
+  location.reload();
+}
 function suEnd(){ setupDone=true; try{localStorage.setItem("setupDone","1")}catch(e){} go("title"); }
 function suDiag(){ setupDone=true; try{localStorage.setItem("setupDone","1")}catch(e){} diagStart(); }
 function setupView(){
   const app=$("#app"), S=su.step, N=4, sp=PETS[pet.species]?pet.species:"dog";
   const dots=[1,2,3,4].map(i=>`<span style="display:inline-block;width:14px;height:14px;border-radius:50%;margin:0 4px;background:${i<=S?"#4a7c3f":"#d9d2bd"}"></span>`).join("");
   let body="";
-  if(S===1) body=`<h2>1. おなまえ</h2><p>なまえを おしえてね。ペットが よんでくれるよ。</p><input id="suName" value="${(childName||"").replace(/"/g,"&quot;")}" maxlength="10" placeholder="なまえ" style="font-size:28px;padding:10px;width:320px;text-align:center;border-radius:14px;border:3px solid #e0a82e"><p><small>（なくても だいじょうぶ）</small></p>`;
+  if(S===1) body=`<h2>1. おなまえ</h2><p>なまえを おしえてね。ペットが よんでくれるよ。</p><input id="suName" value="${(childName||"").replace(/"/g,"&quot;")}" maxlength="10" placeholder="なまえ" style="font-size:28px;padding:10px;width:320px;text-align:center;border-radius:14px;border:3px solid #e0a82e"><p><small>（なくても だいじょうぶ）</small></p><p style="text-align:left;margin-top:30px"><button class="btn ghost" style="font-size:15px;background:#c0563c33" onclick="suReset()">🗑 ぜんぶ けして さいしょから（★・れんぞくも リセット）</button></p>`;
   if(S===2){ const L=[["ne","नेपाली"],["vi","Tiếng Việt"],["zh","中文"],["fil","Filipino"],["id","Indonesia"]]; const cur=(()=>{try{return localStorage.getItem("hlang")||"ne"}catch(e){return "ne"}})();
     body=`<h2>2. ぼこくご（ヒントの ことば）</h2><p>どの ことばで ヒントを みる？</p><div style="display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap">${L.map(([c,n])=>`<button class="btn" style="font-size:22px;${c===cur?"outline:5px solid #e0a82e":""}" onclick="suLang('${c}')">${n}</button>`).join("")}<button class="btn ghost" onclick="try{$('#optHint').checked=false}catch(e){};suNext()">ヒントは いらない</button></div>`; }
   if(S===3) body=`<h2>3. ペットを えらぼう</h2><div style="display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap">${Object.entries(PETS).map(([k,v])=>`<button class="btn" style="font-size:20px;${k===sp?"outline:5px solid #e0a82e;background:#fff3c4":""}" onclick="suSpecies('${k}')"><span style="font-size:52px;display:block">${v.em}</span>${v.label}</button>`).join("")}</div><p>なまえ：<input id="suPet" value="${pet.name.replace(/"/g,"&quot;")}" maxlength="8" style="font-size:24px;padding:6px;width:180px;text-align:center;border-radius:12px;border:3px solid #e0a82e"></p>`;
@@ -2082,6 +2088,7 @@ function setupView(){
 
 loadVoices();
 render();
+try{ if(sessionStorage.getItem("openSetup")){ sessionStorage.removeItem("openSetup"); setupStart(); } }catch(e){}
 try{ const hl=localStorage.getItem("hlang"); if(hl&&hl!=="ne") setHintLang(hl); }catch(e){}
 try{ if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{}); }catch(e){}
 </script>
