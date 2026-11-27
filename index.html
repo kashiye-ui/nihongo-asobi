@@ -333,6 +333,50 @@
   .jbtn{font:inherit;font-size:44px;font-weight:800;min-width:120px;min-height:100px;border-radius:26px;border:0;background:#fff;color:#2a2540;box-shadow:0 7px 0 var(--soft);cursor:pointer;text-shadow:none}
   .jbtn:active{transform:translateY(4px);box-shadow:0 3px 0 var(--soft)}.jbtn.good{background:#4be3a0}.jbtn.bad{background:#ff8c8c;animation:shk .25s}
   .petscreen .acts{grid-template-columns:repeat(5,1fr);gap:9px}.petscreen .act{padding:10px 2px}.petscreen .act .ae{font-size:40px}.petscreen .act b{font-size:17px}.petscreen .act small{font-size:11px}
+
+  /* ===== まなびチケット風テーマ（淡い水色・白い枠カード・オレンジ） ===== */
+  :root{--bg:#e8f3ff;--ink:#1f2a44;--accent:#ff6b3d;--ad:#d9481c;--mut:#5b6b8c;--soft:#cfe2fb;--line:#c3d9f8}
+  html,body{color:#1f2a44}
+  body{background:#e8f3ff !important}
+  .brand b{color:#1f2a44}.brand small{color:#5b6b8c}
+  .stars{background:#fff;border:3px solid var(--line);color:#1f2a44}
+  .btn{background:#ff6b3d;color:#fff;box-shadow:0 5px 0 #d9481c}
+  .btn.ghost{background:#fff;color:#1f2a44;border:3px solid var(--line);box-shadow:0 4px 0 #b4cdf0}
+  header .btn,header button{color:#1f2a44}
+  header .btn.ghost,header button.ghost{background:#fff;border:3px solid var(--line)}
+  .gear{background:#fff !important;border:3px solid var(--line) !important;box-shadow:0 4px 0 #b4cdf0 !important}
+  .unit{background:#fff !important;color:#1f2a44 !important;border:3px solid var(--line);box-shadow:none !important;border-left:12px solid #ff6b3d}
+  .u-g{border-left-color:#8b5cf6 !important}.unit.u-s{border-left-color:#ff6b9d !important}
+  .unit small{color:#5b6b8c}
+  .node{--nc:#fff;--nd:#b4cdf0}
+  .node.s{--nc:#fff0f5;--nd:#f2b5cb}.node.g{--nc:#f1ebff;--nd:#c9b6f5}
+  .node.done{--nc:#fff3c4;--nd:#e0b84a}
+  .node .c{border:4px solid var(--line);box-shadow:0 6px 0 var(--nd)}
+  .node b{color:#1f2a44}
+  .node .chk{border-color:#e8f3ff}
+  .node .go{background:#ff6b3d;color:#fff}.node .go:after{border-top-color:#ff6b3d}
+  .pbar{background:#cfe2fb}.pbar i{background:linear-gradient(90deg,#ff9a3d,#ff6b3d);box-shadow:none}
+  .qtitle{color:#1f2a44}
+  .card{border:3px solid var(--line);box-shadow:0 5px 0 #b4cdf0}
+  .spk{background:#ff6b3d !important;box-shadow:0 7px 0 #d9481c !important}
+  .xp{background:#fff;border:3px solid var(--line);color:#1f2a44}
+  .chip{background:#fff;color:#1f2a44;border:3px solid var(--line)}
+  .dtbox{background:#fff;border:3px solid var(--line);color:#1f2a44}
+  .dtbox .dt2{color:#ff6b3d !important}
+  .prog div{background:#fff;border:3px solid var(--line);color:#5b6b8c}.prog b{color:#1f2a44}
+  .clear h2,.clear{color:#1f2a44}
+  h1,h2,h3,p,label,small,li{color:inherit}
+  .dgbox{background:#fff;border:3px solid var(--line);color:#1f2a44}
+  .how{background:#fff !important;border:3px solid var(--line)}
+  .lhead .x{background:#fff;color:#1f2a44;border:3px solid var(--line)}
+  .mission,.petbox,.box{color:#1f2a44}
+  .mtile,.act{background:#fff !important;color:#1f2a44 !important;border:3px solid var(--line) !important;box-shadow:0 5px 0 #b4cdf0 !important}
+  .mtile small,.act small{color:#5b6b8c}
+  .mission{background:#fff !important;color:#1f2a44;border:3px solid var(--line);box-shadow:0 5px 0 #b4cdf0 !important}
+  .mission .t{color:#ff6b3d}
+  h3{color:#5b6b8c !important}
+  .mission .t+span,.mhd span{color:#e0861c !important}
+  #app .hdr,.home h3{color:#1f2a44}
 </style>
 </head>
 <body>
@@ -1067,7 +1111,7 @@ function missionDone(kind,ref){
 function wordsLearned(){ return COURSES[courseSel].scenes.filter(x=>isDone("scene:"+x.id)).reduce((a,x)=>a+x.items.length,0); }
 
 // ===== おうちのひと：しんちょく・ひきつぎ =====
-const SAVE_KEYS=["stats","stars","done","pet","skill","mis","courseSel","strict"];
+const SAVE_KEYS=["stats","stars","done","pet","skill","mis","courseSel","strict","qlv","klv","furi"];
 function parentView(){
   const SK=skillAll(), sc=COURSES[courseSel].scenes, ks=Object.keys(SK);
   const mastered=ks.filter(k=>k.startsWith("w:")&&SK[k].ok-SK[k].ng>=2).length, weak=ks.filter(k=>k.startsWith("w:")&&SK[k].ng>SK[k].ok);
@@ -1891,17 +1935,29 @@ function speakHint(t){
 function tapCard(i,sid){ speak(say(findScene(sid).items[i])); }
 
 let qs={sid:null,n:0};
+/* ===== 段階（ステップ）: 2つ→3つ→4つ→つづりも見る ===== */
+const QLV_NAMES=["2つから えらぶ","3つから えらぶ","4つから えらぶ","もじも みる"];
+function qlvAll(){ try{ return JSON.parse(localStorage.getItem("qlv")||"{}"); }catch(e){ return {}; } }
+function qlvGet(sid){ const v=qlvAll()[sid]; if(v) return v; return {l:(klvEff()>=3?2:(courseSel==="big"?1:0)),u:0,d:0}; }
+function qlvSave(sid,v){ const m=qlvAll(); m[sid]=v; try{ localStorage.setItem("qlv",JSON.stringify(m)); }catch(e){} }
+/* 1回分を全部1回目で正解→2回つづけたら上がる／3もん以上まちがえた回が2回で下がる */
+function qlvEnd(sid,miss){
+  const v=qlvGet(sid), o=v.l; let msg="";
+  if(miss===0){ v.u++; v.d=0>v.d?0:v.d; if(v.u>=2 && v.l<3){ v.l++; v.u=0; v.d=0; msg="up"; } }
+  else { v.u=0; if(miss>=3){ v.d++; if(v.d>=2 && v.l>0){ v.l--; v.d=0; msg="down"; } } }
+  qlvSave(sid,v); return {l:v.l,o,msg};
+}
 function quiz(sid){
-  if(qs.sid!==sid) qs={sid,n:0};
+  if(qs.sid!==sid) qs={sid,n:0,miss:0};
   const s = findScene(sid), N=5;
-  if(qs.n>=N){ return lessonClear(s); }
+  if(qs.n>=N){ return lessonClear(s,qlvEnd(sid,qs.miss||0)); }
   const SK=skillAll(), wk=i=>{ const v=SK[`w:${sid}:${i.ja}`]; return v?(v.ng>v.ok?4:v.ok-v.ng>=2?0.5:1):1.5; };
   let pick=Math.random()*s.items.reduce((a,i)=>a+wk(i),0), answer=s.items[0]; for(const i of s.items){ pick-=wk(i); if(pick<=0){ answer=i; break; } }
   const mst=masteryOf(sid);
-  const big = course==="big";
-  const exs = exOf(answer), cloze = exs.length && Math.random()<(mst<0.3?0.15:mst<0.6?0.45:0.8);
+  const QL=qlvGet(sid).l, big = course==="big"||QL>=3;
+  const exs = exOf(answer), cloze = QL>=2 && exs.length && Math.random()<(mst<0.3?0.15:mst<0.6?0.45:0.8);
   const sent = cloze ? exs[Math.floor(Math.random()*exs.length)] : null;
-  const others = shuffle(s.items.filter(x=>x!==answer && !(sent&&sent[0].includes(x.ja)))).slice(0,2);
+  const others = shuffle(s.items.filter(x=>x!==answer && !(sent&&sent[0].includes(x.ja)))).slice(0,QL===0?1:QL===1?2:3);
   const choices = shuffle([answer,...others]);
   const sayQ = ()=>speak(cloze?sent[0]:say(answer));
   const lang=opt().lang, trS = cloze&&opt().hint?sent[1]:"";
@@ -1923,16 +1979,16 @@ function quiz(sid){
         const body = `${answer.em} ${disp(answer)}${hint(answer)?"　"+hint(answer):""}` + (ex1?`<div class="exs">${ex1[0].replace(answer.ja,"<b>"+answer.ja+"</b>")}${opt().hint&&ex1[1]?"<br><small>"+ex1[1]+"</small>":""}</div>`:"");
         sheet(true,"せいかい！ ✨",body,"つぎへ ▶",()=>quiz(sid));
       }else{
-        el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
+        if(!missed){ qs.miss=(qs.miss||0)+1; } missed=true; el.classList.add("bad"); setTimeout(()=>el.classList.remove("bad"),400);
         sayQ();
         sheet(false,"おしい！","もういちど きいて みよう","もういちど",null);
       }
     };
   });
 }
-function lessonClear(s){
+function lessonClear(s,lv){
   doneAdd("scene:"+s.id); missionDone("word",s.id); confetti(); sfx.clear(); qs.sid=null;
-  $("#app").innerHTML=`<div class="clear">${petBody(200,100)}<h2>${s.em} ${s.title} クリア！</h2><div class="xp">⭐ +5</div>
+  $("#app").innerHTML=`<div class="clear">${petBody(200,100)}<h2>${s.em} ${s.title} クリア！</h2><div class="xp">⭐ +5</div>${lv&&lv.msg==="up"?`<div class="xp" style="color:#2e7d32">⬆️ ステップが あがった！ → ${QLV_NAMES[lv.l]}</div>`:lv&&lv.msg==="down"?`<div class="xp">⬇️ ひとつ もどって れんしゅう → ${QLV_NAMES[lv.l]}</div>`:""}
     <div class="bar"><button class="btn" onclick="go('home')">つぎの レッスンへ ▶</button><button class="btn ghost" onclick="go('quiz:${s.id}')">もういちど</button></div></div>`;
   speak("クリア！ すごい！");
 }
@@ -2068,7 +2124,7 @@ function suLang(l){ try{localStorage.setItem("hlang",l)}catch(e){} setHintLang(l
 function suSpecies(k){ const defs=Object.values(PETS).map(x=>x.name); if(defs.includes(pet.name)) pet.name=PETS[k].name; pet.species=k; savePet(); setupView(); speak(pet.name+"！",pvOf(k)); }
 function suReset(){
   if(!confirm("★・れんぞく・おぼえた ことば・ペットなど、ぜんぶ けして、さいしょから やりなおします。もとには もどせません。よろしいですか？")) return;
-  ["stats","stars","done","pet","skill","mis","jlv","slv","slvc","klv","setupDone","childName","furi","courseSel"].forEach(k=>{ try{localStorage.removeItem(k)}catch(e){} });
+  ["stats","stars","done","pet","skill","mis","qlv","jlv","slv","slvc","klv","setupDone","childName","furi","courseSel"].forEach(k=>{ try{localStorage.removeItem(k)}catch(e){} });
   try{ sessionStorage.setItem("openSetup","1"); }catch(e){}
   location.reload();
 }
